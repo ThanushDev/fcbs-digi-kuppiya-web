@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom'
 export default function GlobalSearch() {
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
-  const [open, setOpen] = useState(false)
   const ref = useRef(null)
 
   useEffect(() => {
@@ -23,18 +22,17 @@ export default function GlobalSearch() {
     if (!query.trim()) return
     navigate(`/dashboard/search?q=${encodeURIComponent(query.trim())}`)
     setQuery('')
-    setOpen(false)
   }
 
   return (
     <form onSubmit={handleSubmit} className="relative hidden md:block">
       <input ref={ref}
         value={query} onChange={(e) => setQuery(e.target.value)}
-        onFocus={() => setOpen(true)}
-        onBlur={() => setTimeout(() => setOpen(false), 200)}
         placeholder="Search... (/)"
-        className="w-56 rounded-lg border border-gray-700 bg-[#1b1f32] px-4 py-2 pl-9 text-sm text-white placeholder-gray-500 outline-none focus:border-indigo-500 transition" />
-      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">🔍</span>
+        className="w-56 input-field pl-9 text-sm" />
+      <svg xmlns="http://www.w3.org/2000/svg" className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+      </svg>
     </form>
   )
 }

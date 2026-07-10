@@ -21,14 +21,14 @@ export function ToastProvider({ children }) {
       <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3 max-w-sm">
         {toasts.map((t) => (
           <div key={t.id}
-            className={`animate-slide-in flex items-start gap-3 rounded-xl border px-5 py-4 shadow-2xl backdrop-blur-md ${
-              t.type === 'success' ? 'border-emerald-700/30 bg-emerald-900/40 text-emerald-300' :
-              t.type === 'error' ? 'border-red-700/30 bg-red-900/40 text-red-300' :
-              'border-gray-700/30 bg-gray-900/40 text-gray-200'
+            className={`animate-slide-in flex items-start gap-3 rounded-xl border px-5 py-4 shadow-lg ${
+              t.type === 'success' ? 'border-emerald-200 bg-emerald-50 text-emerald-800' :
+              t.type === 'error' ? 'border-red-200 bg-red-50 text-red-800' :
+              'border-gray-200 bg-white text-gray-800'
             }`}>
             <span className="text-lg shrink-0">{t.type === 'success' ? '✓' : t.type === 'error' ? '✕' : 'ℹ'}</span>
             <p className="text-sm flex-1">{t.message}</p>
-            <button onClick={() => remove(t.id)} className="text-current/50 hover:text-white text-lg leading-none shrink-0">&times;</button>
+            <button onClick={() => remove(t.id)} className="text-gray-400 hover:text-gray-700 text-lg leading-none shrink-0">&times;</button>
           </div>
         ))}
       </div>

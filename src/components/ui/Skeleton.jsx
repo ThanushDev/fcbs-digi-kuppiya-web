@@ -1,12 +1,12 @@
 export default function Skeleton({ className = '', variant = 'text' }) {
   return (
-    <div className={`animate-pulse rounded-lg bg-gray-800/60 ${variant === 'circle' ? 'rounded-full' : ''} ${className}`} />
+    <div className={`animate-pulse rounded-lg bg-gray-200 ${variant === 'circle' ? 'rounded-full' : ''} ${className}`} />
   )
 }
 
 export function CardSkeleton() {
   return (
-    <div className="rounded-2xl border border-gray-800 bg-[#141726] p-6">
+    <div className="card p-6">
       <Skeleton className="mb-4 h-14 w-14" variant="circle" />
       <Skeleton className="mb-2 h-5 w-3/4" />
       <Skeleton className="h-4 w-1/3" />

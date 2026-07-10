@@ -1,6 +1,6 @@
 import {
   collection, addDoc, getDocs, getDoc, doc, updateDoc, deleteDoc,
-  query, where, orderBy, serverTimestamp,
+  query, where, orderBy, serverTimestamp, onSnapshot
 } from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage'
 import { db, storage } from './firebase'
@@ -123,6 +123,36 @@ export async function deleteResource(id) {
   return deleteDoc(doc(db, 'resources', id))
 }
 
+/* ─── Resource type queries (Past Papers, Short Notes, Videos) ─── */
+export async function getResourcesBySubjectAndType(subjectId, type) {
+  const q = query(
+    resourcesCol,
+    where('subjectId', '==', subjectId),
+    where('type', '==', type),
+    orderBy('createdAt', 'desc')
+  )
+  const snap = await getDocs(q)
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+}
+
+export async function getAllResourcesByType(type) {
+  const q = query(resourcesCol, where('type', '==', type), orderBy('createdAt', 'desc'))
+  const snap = await getDocs(q)
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+}
+
+export async function addResourceItem(data) {
+  return addDoc(resourcesCol, { ...data, createdAt: serverTimestamp() })
+}
+
+export async function updateResourceItem(id, data) {
+  return updateDoc(doc(db, 'resources', id), data)
+}
+
+export async function deleteResourceItem(id) {
+  return deleteDoc(doc(db, 'resources', id))
+}
+
 /* ─── Quizzes ─── */
 const quizzesCol = collection(db, 'quizzes')
 
@@ -201,35 +231,50 @@ export async function submitAttempt({ quizId, userId, userName, userEmail, answe
   })
 }
 
-/* ─── Comments ─── */
+/* ─── 💬 Comments / Feedbacks (Real-time + Backward Compatibility) ─── */
 const commentsCol = collection(db, 'comments')
 
-export async function getComments(chapterId) {
-  const q = query(commentsCol, where('chapterId', '==', chapterId), orderBy('createdAt', 'desc'))
-  const snap = await getDocs(q)
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+// 1. අලුත් කමෙන්ට් එකක් Firebase එකට එකතු කිරීම
+export async function addComment(commentData) {
+  return addDoc(commentsCol, {
+    ...commentData,
+    createdAt: serverTimestamp(),
+  })
 }
 
+// 2. Dashboard එකට සහ Admin එකට ඕන වෙන Real-time Listener එක
+export function getCommentsLive(callback) {
+  const q = query(commentsCol, orderBy('createdAt', 'desc'))
+  return onSnapshot(q, (snapshot) => {
+    const comments = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }))
+    callback(comments)
+  })
+}
+
+// 3. Static එක පාරක් විතරක් ඔක්කොම ඇදලා ගන්න (Admin Export වලට)
 export async function getAllComments() {
   const q = query(commentsCol, orderBy('createdAt', 'desc'))
   const snap = await getDocs(q)
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }))
 }
 
-export async function addComment({ chapterId, content, userId, userDisplayName, userPhotoURL }) {
-  return addDoc(commentsCol, {
-    chapterId, content, userId, userDisplayName, userPhotoURL: userPhotoURL || '',
-    status: 'pending',
-    createdAt: serverTimestamp(),
-  })
-}
-
-export async function updateCommentStatus(id, status) {
-  return updateDoc(doc(db, 'comments', id), { status })
-}
-
+// 4. කමෙන්ට් එකක් ඩිලීට් කිරීම
 export async function deleteComment(id) {
   return deleteDoc(doc(db, 'comments', id))
+}
+
+/* ⚠️ VITE SYNTAX ERRORS මඟහරවා ගැනීමට පාවිච්චි කල පරණ FUNCTIONS ⚠️ */
+
+// SubjectDetail හෝ CommentSection.jsx බ්‍රේක් නොවී වැඩ කරන්න
+export async function getComments(chapterId) {
+  const q = query(commentsCol, orderBy('createdAt', 'desc'))
+  const snap = await getDocs(q)
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+}
+
+// පරණ CommentManagement.jsx එකේ updateCommentStatus ඉල්ලන නිසා
+export async function updateCommentStatus(id, status) {
+  return updateDoc(doc(db, 'comments', id), { status })
 }
 
 /* ─── Batch Permissions ─── */
@@ -244,8 +289,8 @@ export async function getBatchPermission(batchName) {
   const q = query(batchPermsCol, where('batchName', '==', batchName))
   const snap = await getDocs(q)
   if (snap.empty) return null
-  const doc = snap.docs[0]
-  return { id: doc.id, ...doc.data() }
+  const docSnap = snap.docs[0]
+  return { id: docSnap.id, ...docSnap.data() }
 }
 
 export async function setBatchPermission(batchName, semesterIds) {

@@ -28,7 +28,7 @@ export default function AdminDashboard() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white">Dashboard</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
         <p className="text-sm text-gray-400">Welcome back, {userData?.firstName || 'Admin'}</p>
       </div>
 
@@ -47,8 +47,8 @@ export default function AdminDashboard() {
         ))}
       </div>
 
-      <div className="mt-8 rounded-xl border border-gray-800 bg-[#141726] p-8 text-center">
-        <h2 className="mb-2 text-lg font-semibold text-white">Content Management</h2>
+      <div className="mt-8 rounded-xl border border-gray-200 bg-white p-8 text-center">
+        <h2 className="mb-2 text-lg font-semibold text-gray-900">Content Management</h2>
         <p className="text-gray-400">Use the sidebar to manage Semesters, Subjects, Chapters, and Resources.</p>
       </div>
     </div>

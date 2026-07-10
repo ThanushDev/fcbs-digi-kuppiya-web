@@ -44,32 +44,32 @@ export default function SubjectManagement() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold text-white">Subject Management</h1>
+      <h1 className="mb-6 text-2xl font-bold text-gray-900">Subject Management</h1>
 
-      <form onSubmit={handleSubmit} className="mb-8 rounded-xl border border-gray-800 bg-[#141726] p-5 space-y-4">
+      <form onSubmit={handleSubmit} className="mb-8 rounded-xl border border-gray-200 bg-white p-5 space-y-4">
         <div className="flex flex-wrap gap-3">
           <input type="text" placeholder="Subject Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
-            className="flex-1 min-w-[200px] rounded-lg border border-gray-700 bg-[#1b1f32] px-4 py-2.5 text-white outline-none focus:border-indigo-500" required />
+            className="flex-1 min-w-[200px] rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-gray-900 outline-none focus:border-indigo-500" required />
           <input type="text" placeholder="Subject Code" value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })}
-            className="w-32 rounded-lg border border-gray-700 bg-[#1b1f32] px-4 py-2.5 text-white outline-none focus:border-indigo-500" />
+            className="w-32 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-gray-900 outline-none focus:border-indigo-500" />
           <select value={form.semesterId} onChange={(e) => setForm({ ...form, semesterId: e.target.value })}
-            className="rounded-lg border border-gray-700 bg-[#1b1f32] px-4 py-2.5 text-white outline-none focus:border-indigo-500" required>
+            className="rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-gray-900 outline-none focus:border-indigo-500" required>
             <option value="">Select Semester</option>
             {semesters.map((s) => <option key={s.id} value={s.id}>{s.name} ({s.department})</option>)}
           </select>
-          <button type="submit" className="rounded-lg bg-indigo-600 px-6 py-2.5 font-semibold text-white hover:bg-indigo-700 transition">
+          <button type="submit" className="rounded-lg bg-indigo-600 px-6 py-2.5 font-semibold text-gray-900 hover:bg-indigo-700 transition">
             {editing ? 'Update' : 'Add Subject'}
           </button>
           {editing && <button type="button" onClick={() => { setEditing(null); setForm({ name: '', code: '', semesterId: '', description: '' }) }}
-            className="rounded-lg bg-gray-700 px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-600 transition">Cancel</button>}
+            className="rounded-lg bg-gray-700 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-600 transition">Cancel</button>}
         </div>
         <textarea placeholder="Description (optional)" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })}
-          className="w-full rounded-lg border border-gray-700 bg-[#1b1f32] px-4 py-2.5 text-white outline-none focus:border-indigo-500" rows={2} />
+          className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-gray-900 outline-none focus:border-indigo-500" rows={2} />
       </form>
 
       <div className="mb-4">
         <select value={filterSem} onChange={(e) => setFilterSem(e.target.value)}
-          className="rounded-lg border border-gray-700 bg-[#1b1f32] px-4 py-2 text-white outline-none focus:border-indigo-500">
+          className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-gray-900 outline-none focus:border-indigo-500">
           <option value="">All Semesters</option>
           {semesters.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
         </select>
@@ -84,7 +84,7 @@ export default function SubjectManagement() {
           {subjects.map((s) => {
             const sem = semesters.find((x) => x.id === s.semesterId)
             return (
-              <div key={s.id} className="rounded-xl border border-gray-800 bg-[#141726] p-5">
+              <div key={s.id} className="rounded-xl border border-gray-200 bg-white p-5">
                 <div className="mb-2 flex items-center justify-between">
                   <span className="rounded-lg bg-emerald-600/20 px-3 py-1 text-xs font-semibold text-emerald-400">{sem?.name || '—'}</span>
                   <div className="flex gap-2">
@@ -92,7 +92,7 @@ export default function SubjectManagement() {
                     <button onClick={() => handleDelete(s.id)} className="text-xs text-gray-400 hover:text-red-400 transition">Del</button>
                   </div>
                 </div>
-                <h3 className="text-lg font-bold text-white">{s.name}</h3>
+                <h3 className="text-lg font-bold text-gray-900">{s.name}</h3>
                 {s.code && <p className="text-xs text-gray-500 mt-1">{s.code}</p>}
                 {s.description && <p className="mt-2 text-xs text-gray-400 line-clamp-2">{s.description}</p>}
               </div>

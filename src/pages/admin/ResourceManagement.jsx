@@ -56,11 +56,11 @@ export default function ResourceManagement() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold text-white">Resource Management</h1>
+      <h1 className="mb-6 text-2xl font-bold text-gray-900">Resource Management</h1>
 
       <div className="mb-6">
         <select value={selectedChapter} onChange={(e) => setSelectedChapter(e.target.value)}
-          className="rounded-lg border border-gray-700 bg-[#1b1f32] px-4 py-2 text-white outline-none focus:border-indigo-500 w-80">
+          className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-gray-900 outline-none focus:border-indigo-500 w-80">
           <option value="">Select a Subject to see its chapters</option>
           {subjects.map((s) => (
             <option key={s.id} value={s.id}>{s.name} ({s.code || '—'})</option>
@@ -72,36 +72,36 @@ export default function ResourceManagement() {
         <>
           <div className="mb-6 flex gap-2">
             <button onClick={() => setTab('document')}
-              className={`rounded-lg px-5 py-2 text-sm font-semibold transition ${tab === 'document' ? 'bg-indigo-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>
+              className={`rounded-lg px-5 py-2 text-sm font-semibold transition ${tab === 'document' ? 'bg-indigo-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-100'}`}>
               Upload Document
             </button>
             <button onClick={() => setTab('video')}
-              className={`rounded-lg px-5 py-2 text-sm font-semibold transition ${tab === 'video' ? 'bg-indigo-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}>
+              className={`rounded-lg px-5 py-2 text-sm font-semibold transition ${tab === 'video' ? 'bg-indigo-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-100'}`}>
               Add YouTube Video
             </button>
           </div>
 
           {tab === 'document' ? (
-            <form onSubmit={handleDocSubmit} className="mb-8 flex flex-wrap gap-3 rounded-xl border border-gray-800 bg-[#141726] p-5">
+            <form onSubmit={handleDocSubmit} className="mb-8 flex flex-wrap gap-3 rounded-xl border border-gray-200 bg-white p-5">
               <input type="text" placeholder="Document Name" value={docForm.name} onChange={(e) => setDocForm({ ...docForm, name: e.target.value })}
-                className="flex-1 min-w-[200px] rounded-lg border border-gray-700 bg-[#1b1f32] px-4 py-2.5 text-white outline-none focus:border-indigo-500" required />
+                className="flex-1 min-w-[200px] rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-gray-900 outline-none focus:border-indigo-500" required />
               <input type="file" accept=".pdf,.doc,.docx" onChange={(e) => setDocForm({ ...docForm, file: e.target.files[0] })}
-                className="text-sm text-gray-400 file:mr-3 file:rounded-lg file:border-0 file:bg-indigo-600 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white" required />
-              <button type="submit" className="rounded-lg bg-indigo-600 px-6 py-2.5 font-semibold text-white hover:bg-indigo-700 transition">Upload</button>
+                className="text-sm text-gray-400 file:mr-3 file:rounded-lg file:border-0 file:bg-indigo-600 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-gray-900" required />
+              <button type="submit" className="rounded-lg bg-indigo-600 px-6 py-2.5 font-semibold text-gray-900 hover:bg-indigo-700 transition">Upload</button>
             </form>
           ) : (
-            <form onSubmit={handleVideoSubmit} className="mb-8 flex flex-wrap gap-3 rounded-xl border border-gray-800 bg-[#141726] p-5">
+            <form onSubmit={handleVideoSubmit} className="mb-8 flex flex-wrap gap-3 rounded-xl border border-gray-200 bg-white p-5">
               <input type="text" placeholder="Video Name" value={videoForm.name} onChange={(e) => setVideoForm({ ...videoForm, name: e.target.value })}
-                className="flex-1 min-w-[150px] rounded-lg border border-gray-700 bg-[#1b1f32] px-4 py-2.5 text-white outline-none focus:border-indigo-500" required />
+                className="flex-1 min-w-[150px] rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-gray-900 outline-none focus:border-indigo-500" required />
               <input type="text" placeholder="YouTube Video ID" value={videoForm.youtubeId} onChange={(e) => setVideoForm({ ...videoForm, youtubeId: e.target.value })}
-                className="w-40 rounded-lg border border-gray-700 bg-[#1b1f32] px-4 py-2.5 text-white outline-none focus:border-indigo-500" required />
+                className="w-40 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-gray-900 outline-none focus:border-indigo-500" required />
               <input type="text" placeholder="Duration (e.g. 12:30)" value={videoForm.duration} onChange={(e) => setVideoForm({ ...videoForm, duration: e.target.value })}
-                className="w-32 rounded-lg border border-gray-700 bg-[#1b1f32] px-4 py-2.5 text-white outline-none focus:border-indigo-500" />
-              <button type="submit" className="rounded-lg bg-indigo-600 px-6 py-2.5 font-semibold text-white hover:bg-indigo-700 transition">Add Video</button>
+                className="w-32 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-gray-900 outline-none focus:border-indigo-500" />
+              <button type="submit" className="rounded-lg bg-indigo-600 px-6 py-2.5 font-semibold text-gray-900 hover:bg-indigo-700 transition">Add Video</button>
             </form>
           )}
 
-          <h2 className="mb-4 text-lg font-semibold text-white">Resources for this Subject</h2>
+          <h2 className="mb-4 text-lg font-semibold text-gray-900">Resources for this Subject</h2>
 
           {loading ? (
             <div className="text-center py-8 text-gray-400">Loading...</div>
@@ -110,13 +110,13 @@ export default function ResourceManagement() {
           ) : (
             <div className="space-y-3">
               {resources.map((r) => (
-                <div key={r.id} className="flex items-center justify-between rounded-xl border border-gray-800 bg-[#141726] p-4">
+                <div key={r.id} className="flex items-center justify-between rounded-xl border border-gray-200 bg-white p-4">
                   <div className="flex items-center gap-4">
                     <span className={`flex h-8 w-8 items-center justify-center rounded-lg text-xs font-bold ${r.type === 'video' ? 'bg-red-600/20 text-red-400' : 'bg-blue-600/20 text-blue-400'}`}>
                       {r.type === 'video' ? '▶' : '📄'}
                     </span>
                     <div>
-                      <h3 className="font-semibold text-white">{r.name}</h3>
+                      <h3 className="font-semibold text-gray-900">{r.name}</h3>
                       <p className="text-xs text-gray-500">
                         {r.type === 'video' ? `YouTube: ${r.youtubeId} ${r.duration ? `| ${r.duration}` : ''}` : 'Document'}
                       </p>

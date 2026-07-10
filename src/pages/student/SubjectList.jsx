@@ -43,31 +43,31 @@ export default function SubjectList() {
   }
 
   if (!semester) {
-    return <div className="text-center py-16 text-gray-500">Semester not found.</div>
+    return <div className="text-center py-16 text-gray-400">Semester not found.</div>
   }
 
   return (
-    <div>
+    <div className="animate-fade-in">
       <div className="mb-6">
-        <Link to="/dashboard" className="text-sm text-indigo-400 hover:text-indigo-300 transition">&larr; Back to Semesters</Link>
-        <h1 className="mt-2 text-2xl font-bold text-white">{semester.name}</h1>
-        <p className="text-sm text-gray-400 capitalize">{semester.department} Department</p>
+        <Link to="/dashboard" className="text-sm text-indigo-600 hover:text-indigo-700 font-medium">&larr; Back to Semesters</Link>
+        <h1 className="mt-2 text-2xl font-bold text-gray-900">{semester.name}</h1>
+        <p className="text-sm text-gray-500 capitalize">{semester.department} Department</p>
       </div>
 
       {subjects.length === 0 ? (
-        <div className="text-center py-16 rounded-xl border border-gray-800 bg-[#141726]">
-          <p className="text-gray-500">No subjects available for this semester yet.</p>
+        <div className="flex h-48 items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-white">
+          <p className="text-sm text-gray-400">No subjects available for this semester yet.</p>
         </div>
       ) : (
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {subjects.map((sub) => (
             <Link key={sub.id} to={`/dashboard/subjects/${semesterId}/subject/${sub.id}`}
-              className="group rounded-2xl border border-gray-800 bg-[#141726] p-6 transition hover:border-emerald-500/50 hover:shadow-lg hover:shadow-emerald-500/5">
+              className="card card-hover group p-5">
               <div className="mb-3 flex items-center justify-between">
-                <span className="rounded-lg bg-emerald-600/20 px-3 py-1 text-xs font-semibold text-emerald-400">{sub.code || '—'}</span>
-                <span className="text-xs text-gray-500">{chapterCounts[sub.id] || 0} chapters</span>
+                <span className="badge badge-indigo">{sub.code || '—'}</span>
+                <span className="text-xs text-gray-400">{chapterCounts[sub.id] || 0} chapters</span>
               </div>
-              <h3 className="text-lg font-bold text-white group-hover:text-emerald-400 transition">{sub.name}</h3>
+              <h3 className="text-lg font-bold text-gray-900 group-hover:text-indigo-600 transition">{sub.name}</h3>
               {sub.description && <p className="mt-2 text-xs text-gray-500 line-clamp-2">{sub.description}</p>}
             </Link>
           ))}

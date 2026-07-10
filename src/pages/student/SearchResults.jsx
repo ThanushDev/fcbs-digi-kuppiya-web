@@ -40,14 +40,14 @@ export default function SearchResults() {
   }, [q])
 
   if (!q) return (
-    <div className="flex h-64 items-center justify-center rounded-2xl border border-dashed border-gray-800">
+    <div className="flex h-64 items-center justify-center rounded-2xl border border-dashed border-gray-200">
       <p className="text-sm text-gray-500">Enter a search term to find subjects, chapters, and resources.</p>
     </div>
   )
 
   return (
     <div>
-      <h1 className="mb-2 text-2xl font-bold text-white">Search Results</h1>
+      <h1 className="mb-2 text-2xl font-bold text-gray-900">Search Results</h1>
       <p className="mb-6 text-sm text-gray-400">Showing results for "{q}"</p>
 
       {loading ? (
@@ -59,10 +59,10 @@ export default function SearchResults() {
           <Section title="Subjects" count={results.subjects.length} empty="No subjects found." icon="⊡">
             {results.subjects.map((s) => (
               <Link key={s.id} to={`/dashboard/subjects/${s.semesterId}/subject/${s.id}`}
-                className="flex items-center gap-3 rounded-xl border border-gray-800 bg-[#141726] p-4 hover:border-indigo-500/50 transition">
+                className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-4 hover:border-indigo-500/50 transition">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-600/10 text-lg">⊡</div>
                 <div>
-                  <p className="font-semibold text-white">{s.name} <span className="text-xs text-gray-500">{s.code}</span></p>
+                  <p className="font-semibold text-gray-900">{s.name} <span className="text-xs text-gray-500">{s.code}</span></p>
                   <p className="text-xs text-gray-500">{s.description}</p>
                 </div>
               </Link>
@@ -72,10 +72,10 @@ export default function SearchResults() {
           <Section title="Chapters" count={results.chapters.length} empty="No chapters found." icon="▤">
             {results.chapters.map((ch) => (
               <Link key={ch.id} to={`/dashboard/subjects/${ch.semesterId}/subject/${ch.subjectId}`}
-                className="flex items-center gap-3 rounded-xl border border-gray-800 bg-[#141726] p-4 hover:border-indigo-500/50 transition">
+                className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-4 hover:border-indigo-500/50 transition">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-600/10 text-lg">▤</div>
                 <div>
-                  <p className="font-semibold text-white">{ch.title}</p>
+                  <p className="font-semibold text-gray-900">{ch.title}</p>
                   <p className="text-xs text-gray-500">in {ch.subjectName}</p>
                 </div>
               </Link>
@@ -84,10 +84,10 @@ export default function SearchResults() {
 
           <Section title="Resources" count={results.resources.length} empty="No resources found." icon="▦">
             {results.resources.map((r) => (
-              <div key={`${r.chapterId}-${r.id}`} className="flex items-center gap-3 rounded-xl border border-gray-800 bg-[#141726] p-4">
+              <div key={`${r.chapterId}-${r.id}`} className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-4">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-rose-600/10 text-lg">▦</div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-white truncate">{r.name}</p>
+                  <p className="font-semibold text-gray-900 truncate">{r.name}</p>
                   <p className="text-xs text-gray-500">{r.subjectName} / {r.chapterTitle}</p>
                 </div>
                 {r.fileURL ? (

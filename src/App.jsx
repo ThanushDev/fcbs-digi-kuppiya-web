@@ -1,5 +1,5 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
-import { AuthProvider } from './contexts/AuthContext'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { ToastProvider } from './contexts/ToastContext'
 import { ProtectedRoute, PublicOnlyRoute } from './components/layout/ProtectedRoute'
 import AdminLayout from './components/layout/AdminLayout'
@@ -16,11 +16,18 @@ import QuizTake from './pages/student/QuizTake'
 import QuizResult from './pages/student/QuizResult'
 import SearchResults from './pages/student/SearchResults'
 import Profile from './pages/student/Profile'
+import ToolViewer from './pages/student/ToolViewer'
+import GPACalculator from './pages/student/GPACalculator'
+import AttendanceCalculator from './pages/student/AttendanceCalculator'
+import CACalculator from './pages/student/CACalculator'
+import FinanceTracker from './pages/student/FinanceTracker'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import SemesterManagement from './pages/admin/SemesterManagement'
 import SubjectManagement from './pages/admin/SubjectManagement'
 import ChapterManagement from './pages/admin/ChapterManagement'
-import ResourceManagement from './pages/admin/ResourceManagement'
+import PastPaperManagement from './pages/admin/PastPaperManagement'
+import ShortNoteManagement from './pages/admin/ShortNoteManagement'
+import VideoManagement from './pages/admin/VideoManagement'
 import BatchManagement from './pages/admin/BatchManagement'
 import CommentManagement from './pages/admin/CommentManagement'
 import QuizManagement from './pages/admin/QuizManagement'
@@ -29,51 +36,84 @@ import SuperAdminDashboard from './pages/super-admin/SuperAdminDashboard'
 import AdminManagement from './pages/super-admin/AdminManagement'
 import UserManagement from './pages/super-admin/UserManagement'
 
+function NavigationGuard({ children }) {
+  const { user, needsProfileSetup } = useAuth()
+  const location = useLocation()
+
+  // ⚡ යූසර් ඇත්තටම ලොග් වෙලා ඉන්නවනම් සහ එයාගේ ප්‍රොෆයිල් එක මදි නම් විතරක් /setup එකට Force කරනවා
+  if (user && needsProfileSetup && location.pathname !== '/setup') {
+    return <Navigate to="/setup" replace />
+  }
+
+  return children
+}
+
 export default function App() {
   return (
     <AuthProvider>
       <ToastProvider>
-      <Routes>
-        <Route element={<PublicOnlyRoute />}>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-        </Route>
-
-        <Route path="/setup" element={<FirstTimeSetup />} />
-
-        <Route element={<ProtectedRoute allowedRoles={['student', 'admin', 'super_admin']} />}>
-          <Route element={<StudentLayout />}>
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/dashboard/subjects/:semesterId" element={<SubjectList />} />
-            <Route path="/dashboard/subjects/:semesterId/subject/:subjectId" element={<SubjectDetail />} />
-            <Route path="/dashboard/search" element={<SearchResults />} />
-            <Route path="/dashboard/quizzes" element={<QuizList />} />
-            <Route path="/dashboard/quizzes/:quizId" element={<QuizTake />} />
-            <Route path="/dashboard/quizzes/:quizId/result/:attemptId" element={<QuizResult />} />
-            <Route path="/profile" element={<Profile />} />
+        <Routes>
+          {/* Public Routes */}
+          <Route element={<PublicOnlyRoute />}>
+            <Route index element={<Login />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
           </Route>
-        </Route>
 
-        <Route element={<ProtectedRoute allowedRoles={['admin', 'super_admin']} />}>
-          <Route element={<AdminLayout />}>
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/admin/semesters" element={<SemesterManagement />} />
-            <Route path="/admin/subjects" element={<SubjectManagement />} />
-            <Route path="/admin/chapters" element={<ChapterManagement />} />
-            <Route path="/admin/resources" element={<ResourceManagement />} />
-            <Route path="/admin/comments" element={<CommentManagement />} />
-            <Route path="/admin/batches" element={<BatchManagement />} />
-            <Route path="/admin/quizzes" element={<QuizManagement />} />
-            <Route path="/admin/quizzes/:quizId/questions" element={<QuizEditor />} />
-            <Route path="/admin/super/dashboard" element={<SuperAdminDashboard />} />
-            <Route path="/admin/super/admins" element={<AdminManagement />} />
-            <Route path="/admin/super/users" element={<UserManagement />} />
+          {/* Setup Page Route */}
+          <Route path="/setup" element={<FirstTimeSetup />} />
+
+          {/* Student & Shared Protected Routes */}
+          <Route element={
+            <NavigationGuard>
+              <ProtectedRoute allowedRoles={['student', 'admin', 'super_admin']} />
+            </NavigationGuard>
+          }>
+            <Route element={<StudentLayout />}>
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/dashboard/subjects/:semesterId" element={<SubjectList />} />
+              <Route path="/dashboard/subjects/:semesterId/subject/:subjectId" element={<SubjectDetail />} />
+              <Route path="/dashboard/search" element={<SearchResults />} />
+              <Route path="/dashboard/quizzes" element={<QuizList />} />
+              <Route path="/dashboard/quizzes/:quizId" element={<QuizTake />} />
+              <Route path="/dashboard/quizzes/:quizId/result/:attemptId" element={<QuizResult />} />
+              <Route path="/profile" element={<Profile />} />
+              
+              <Route path="/dashboard/tools/:toolKey" element={<ToolViewer />} />
+              <Route path="/dashboard/gpa" element={<GPACalculator />} />
+              <Route path="/dashboard/attendance" element={<AttendanceCalculator />} />
+              <Route path="/dashboard/ca" element={<CACalculator />} />
+              <Route path="/dashboard/finance" element={<FinanceTracker />} />
+            </Route>
           </Route>
-        </Route>
 
-        <Route path="*" element={<Navigate to="/login" replace />} />
-      </Routes>
+          {/* Admin Protected Routes */}
+          <Route element={
+            <NavigationGuard>
+              <ProtectedRoute allowedRoles={['admin', 'super_admin']} />
+            </NavigationGuard>
+          }>
+            <Route element={<AdminLayout />}>
+              <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/admin/semesters" element={<SemesterManagement />} />
+              <Route path="/admin/subjects" element={<SubjectManagement />} />
+              <Route path="/admin/chapters" element={<ChapterManagement />} />
+              <Route path="/admin/past-papers" element={<PastPaperManagement />} />
+              <Route path="/admin/short-notes" element={<ShortNoteManagement />} />
+              <Route path="/admin/videos" element={<VideoManagement />} />
+              <Route path="/admin/comments" element={<CommentManagement />} />
+              <Route path="/admin/batches" element={<BatchManagement />} />
+              <Route path="/admin/quizzes" element={<QuizManagement />} />
+              <Route path="/admin/quizzes/:quizId/questions" element={<QuizEditor />} />
+              <Route path="/admin/super/dashboard" element={<SuperAdminDashboard />} />
+              <Route path="/admin/super/admins" element={<AdminManagement />} />
+              <Route path="/admin/super/users" element={<UserManagement />} />
+            </Route>
+          </Route>
+
+          <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
       </ToastProvider>
     </AuthProvider>
   )

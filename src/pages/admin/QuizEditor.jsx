@@ -67,15 +67,15 @@ export default function QuizEditor() {
     <div>
       <div className="mb-6">
         <Link to="/admin/quizzes" className="text-sm text-rose-400 hover:text-rose-300 transition">&larr; Back to Quizzes</Link>
-        <h1 className="mt-2 text-2xl font-bold text-white">{quiz.title}</h1>
+        <h1 className="mt-2 text-2xl font-bold text-gray-900">{quiz.title}</h1>
         <p className="text-sm text-gray-400">{quiz.timeLimit} min · {questions.length} questions</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="mb-8 rounded-xl border border-gray-800 bg-[#141726] p-5 space-y-4">
+      <form onSubmit={handleSubmit} className="mb-8 rounded-xl border border-gray-200 bg-white p-5 space-y-4">
         <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wide">{editingQ ? 'Edit Question' : 'Add Question'}</h2>
         <input type="text" placeholder="Question text" value={form.text} onChange={(e) => setForm({ ...form, text: e.target.value })}
-          className="w-full rounded-lg border border-gray-700 bg-[#1b1f32] px-4 py-2.5 text-white outline-none focus:border-rose-500" required />
-        <label className="flex items-center gap-2 text-sm text-gray-300">
+          className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-gray-900 outline-none focus:border-rose-500" required />
+        <label className="flex items-center gap-2 text-sm text-gray-600">
           <input type="checkbox" checked={form.allowMultiple} onChange={(e) => setForm({ ...form, allowMultiple: e.target.checked })} />
           Allow multiple correct answers
         </label>
@@ -83,18 +83,18 @@ export default function QuizEditor() {
           {form.options.map((opt, i) => (
             <div key={i} className="flex gap-2 items-center">
               <input type="text" placeholder={`Option ${i + 1}`} value={opt} onChange={(e) => handleOptionChange(i, e.target.value)}
-                className="flex-1 rounded-lg border border-gray-700 bg-[#1b1f32] px-4 py-2 text-white outline-none focus:border-rose-500 text-sm" required />
+                className="flex-1 rounded-lg border border-gray-200 bg-white px-4 py-2 text-gray-900 outline-none focus:border-rose-500 text-sm" required />
               {form.options.length > 2 && <button type="button" onClick={() => handleRemoveOption(i)} className="text-gray-500 hover:text-red-400 text-sm">✕</button>}
             </div>
           ))}
         </div>
         <div className="flex gap-3">
           <button type="button" onClick={handleAddOption} className="text-sm text-indigo-400 hover:text-indigo-300">+ Add option</button>
-          <button type="submit" className="rounded-lg bg-rose-600 px-6 py-2 font-semibold text-white hover:bg-rose-700 transition text-sm">
+          <button type="submit" className="rounded-lg bg-rose-600 px-6 py-2 font-semibold text-gray-900 hover:bg-rose-700 transition text-sm">
             {editingQ ? 'Update' : 'Add Question'}
           </button>
           {editingQ && <button type="button" onClick={() => { setEditingQ(null); setForm({ text: '', allowMultiple: false, options: ['', ''] }) }}
-            className="text-sm text-gray-400 hover:text-white">Cancel</button>}
+            className="text-sm text-gray-400 hover:text-gray-900">Cancel</button>}
         </div>
       </form>
 
@@ -103,11 +103,11 @@ export default function QuizEditor() {
       ) : (
         <div className="space-y-4">
           {questions.map((q, i) => (
-            <div key={q.id} className="rounded-xl border border-gray-800 bg-[#141726] p-5">
+            <div key={q.id} className="rounded-xl border border-gray-200 bg-white p-5">
               <div className="mb-3 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gray-800 text-xs font-bold text-gray-400">{i + 1}</span>
-                  <h3 className="font-semibold text-white">{q.text}</h3>
+                  <h3 className="font-semibold text-gray-900">{q.text}</h3>
                 </div>
                 <div className="flex gap-2">
                   <button onClick={() => handleEditQ(q)} className="text-xs text-gray-400 hover:text-indigo-400">Edit</button>
@@ -118,8 +118,8 @@ export default function QuizEditor() {
               <div className="grid grid-cols-2 gap-2">
                 {q.options.map((opt, idx) => (
                   <button key={idx} onClick={() => toggleCorrect(q.id, idx)}
-                    className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition ${opt.isCorrect ? 'border-emerald-500 bg-emerald-600/20 text-emerald-400' : 'border-gray-700 text-gray-400 hover:border-gray-600'}`}>
-                    <span className={`flex h-4 w-4 items-center justify-center rounded text-[10px] ${opt.isCorrect ? 'bg-emerald-500 text-white' : 'bg-gray-700 text-gray-500'}`}>
+                    className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition ${opt.isCorrect ? 'border-emerald-500 bg-emerald-600/20 text-emerald-400' : 'border-gray-200 text-gray-400 hover:border-gray-600'}`}>
+                    <span className={`flex h-4 w-4 items-center justify-center rounded text-[10px] ${opt.isCorrect ? 'bg-emerald-500 text-gray-900' : 'bg-gray-700 text-gray-500'}`}>
                       {opt.isCorrect ? '✓' : ''}
                     </span>
                     {opt.text}

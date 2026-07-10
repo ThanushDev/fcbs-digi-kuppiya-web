@@ -60,7 +60,7 @@ export default function SuperAdminDashboard() {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-white">Super Admin Dashboard</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Super Admin Dashboard</h1>
         <p className="text-sm text-gray-400">Full system overview — {userData?.firstName}</p>
       </div>
 
@@ -76,22 +76,22 @@ export default function SuperAdminDashboard() {
           { label: 'Resources', value: stats.resources, color: 'from-orange-600 to-orange-800' },
         ].map((s) => (
           <div key={s.label} className={`rounded-2xl bg-gradient-to-br ${s.color} p-5 shadow-lg`}>
-            <p className="text-sm font-medium text-white/80">{s.label}</p>
-            <p className="mt-1 text-3xl font-bold text-white">{s.value}</p>
+            <p className="text-sm font-medium text-gray-900/80">{s.label}</p>
+            <p className="mt-1 text-3xl font-bold text-gray-900">{s.value}</p>
           </div>
         ))}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-xl border border-gray-800 bg-[#141726] p-5">
-          <h2 className="mb-4 text-lg font-semibold text-white">Students by Batch</h2>
+        <div className="rounded-xl border border-gray-200 bg-white p-5">
+          <h2 className="mb-4 text-lg font-semibold text-gray-900">Students by Batch</h2>
           <div className="space-y-4">
             {batchStats.map((b) => {
               const maxVal = Math.max(...batchStats.map((x) => x.total)) || 1
               return (
                 <div key={b.batch}>
                   <div className="mb-1 flex justify-between text-sm">
-                    <span className="text-white font-medium">Batch {b.batch}</span>
+                    <span className="text-gray-900 font-medium">Batch {b.batch}</span>
                     <span className="text-gray-400">{b.total}</span>
                   </div>
                   <div className="flex h-2 gap-1 rounded-full bg-gray-800 overflow-hidden">
@@ -108,16 +108,16 @@ export default function SuperAdminDashboard() {
           </div>
         </div>
 
-        <div className="rounded-xl border border-gray-800 bg-[#141726] p-5">
-          <h2 className="mb-4 text-lg font-semibold text-white">Recent Registrations</h2>
+        <div className="rounded-xl border border-gray-200 bg-white p-5">
+          <h2 className="mb-4 text-lg font-semibold text-gray-900">Recent Registrations</h2>
           <div className="space-y-3">
             {recentUsers.map((u) => (
               <div key={u.id} className="flex items-center gap-3 rounded-lg bg-gray-800/30 p-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold text-white shrink-0">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-600 text-xs font-bold text-gray-900 shrink-0">
                   {u.firstName?.[0] || '?'}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-white truncate">{u.firstName} {u.lastName}</p>
+                  <p className="text-sm font-medium text-gray-900 truncate">{u.firstName} {u.lastName}</p>
                   <p className="text-[10px] text-gray-500">{u.email} · {u.department?.toUpperCase()} · {u.batch}</p>
                 </div>
                 <span className={`rounded px-2 py-0.5 text-[10px] font-semibold ${u.role === 'admin' ? 'bg-amber-600/20 text-amber-400' : 'bg-indigo-600/20 text-indigo-400'}`}>

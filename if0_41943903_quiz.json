@@ -1,0 +1,47 @@
+[
+{"type":"header","version":"4.9.0.1","comment":"Export to JSON plugin for PHPMyAdmin"},
+{"type":"database","name":"if0_41943903_quiz"},
+{"type":"table","name":"admins","database":"if0_41943903_quiz","data":
+[
+{"id":"1","username":"fcbsofficial2223@gmail.com","password":"$2y$10$P4l8mh4HsU\/t8PrnRzZkF.h6i5V0uEx5Yy2WBhV7EEWk8fzXy7EGO","created_at":"2025-10-19 09:50:03"}
+]
+}
+,{"type":"table","name":"attempts","database":"if0_41943903_quiz","data":
+[
+
+]
+}
+,{"type":"table","name":"attempt_answers","database":"if0_41943903_quiz","data":
+[
+
+]
+}
+,{"type":"table","name":"options","database":"if0_41943903_quiz","data":
+[
+{"id":"1","question_id":"1","option_text":"Henry Fayol","is_correct":"1","created_at":"2025-10-22 07:53:41"},
+{"id":"2","question_id":"1","option_text":"Frederick Taylor","is_correct":"0","created_at":"2025-10-22 07:53:41"},
+{"id":"3","question_id":"1","option_text":"Elton Mayo","is_correct":"0","created_at":"2025-10-22 07:53:41"},
+{"id":"4","question_id":"1","option_text":"Max Weber","is_correct":"0","created_at":"2025-10-22 07:53:41"},
+{"id":"5","question_id":"2","option_text":"Planning","is_correct":"0","created_at":"2025-10-22 07:54:56"},
+{"id":"6","question_id":"2","option_text":"Organizing","is_correct":"0","created_at":"2025-10-22 07:54:56"},
+{"id":"7","question_id":"2","option_text":"Cooperating","is_correct":"1","created_at":"2025-10-22 07:54:56"},
+{"id":"8","question_id":"2","option_text":"Controlling","is_correct":"0","created_at":"2025-10-22 07:54:56"}
+]
+}
+,{"type":"table","name":"questions","database":"if0_41943903_quiz","data":
+[
+{"id":"1","quiz_id":"1","question_text":"Who is known as the Father of Modern Management?","allow_multiple":"0","created_at":"2025-10-22 07:53:41"},
+{"id":"2","quiz_id":"1","question_text":"Which of the following is NOT a function of management?","allow_multiple":"0","created_at":"2025-10-22 07:54:56"}
+]
+}
+,{"type":"table","name":"quizzes","database":"if0_41943903_quiz","data":
+[
+{"id":"1","title":"Principles of Management","time_limit":"10","password":"pom2025","created_at":"2025-10-22 07:52:31"}
+]
+}
+,{"type":"table","name":"users","database":"if0_41943903_quiz","data":
+[
+
+]
+}
+]

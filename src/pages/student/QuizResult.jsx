@@ -26,7 +26,7 @@ export default function QuizResult() {
   if (loading) return (
     <div className="max-w-3xl mx-auto">
       <Skeleton className="mb-6 h-4 w-28" />
-      <div className="mb-8 rounded-2xl border border-gray-800 bg-[#141726] p-8 text-center">
+      <div className="mb-8 rounded-2xl border border-gray-200 bg-white p-8 text-center">
         <Skeleton className="mx-auto h-24 w-24 rounded-full mb-4" />
         <Skeleton className="mx-auto h-10 w-32 mb-2" />
         <Skeleton className="mx-auto h-6 w-20" />
@@ -48,12 +48,12 @@ export default function QuizResult() {
         <Link to="/dashboard/quizzes" className="text-sm text-indigo-400 hover:text-indigo-300 transition">&larr; Back to Quizzes</Link>
       </div>
 
-      <div className="mb-8 rounded-2xl border border-gray-800 bg-[#141726] p-8 text-center">
-        <h1 className="text-2xl font-bold text-white mb-2">{quiz.title} — Results</h1>
+      <div className="mb-8 rounded-2xl border border-gray-200 bg-white p-8 text-center">
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">{quiz.title} — Results</h1>
         <div className={`inline-flex items-center justify-center rounded-full w-24 h-24 text-4xl font-bold mb-4 ${
           percentage >= 60 ? 'bg-emerald-600/20 text-emerald-400' : 'bg-red-600/20 text-red-400'
         }`}>{grade}</div>
-        <div className="text-5xl font-bold text-white mb-2">{attempt.score} <span className="text-2xl text-gray-500">/ {attempt.total}</span></div>
+        <div className="text-5xl font-bold text-gray-900 mb-2">{attempt.score} <span className="text-2xl text-gray-500">/ {attempt.total}</span></div>
         <p className="text-lg text-gray-400">{percentage}%</p>
       </div>
 
@@ -66,7 +66,7 @@ export default function QuizResult() {
                 <span className={`flex h-7 w-7 items-center justify-center rounded-lg text-xs font-bold ${ans?.isCorrect ? 'bg-emerald-600 text-white' : 'bg-red-600 text-white'}`}>
                   {ans?.isCorrect ? '✓' : '✕'}
                 </span>
-                <h3 className="font-semibold text-white">{q.text}</h3>
+                <h3 className="font-semibold text-gray-900">{q.text}</h3>
               </div>
               <div className="grid gap-2">
                 {q.options.map((opt, idx) => {
@@ -75,7 +75,7 @@ export default function QuizResult() {
                     <div key={idx} className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm ${
                       opt.isCorrect ? 'border-emerald-600 bg-emerald-600/10 text-emerald-400' :
                       selected ? 'border-red-600 bg-red-600/10 text-red-400' :
-                      'border-gray-700 text-gray-500'
+                      'border-gray-200 text-gray-500'
                     }`}>
                       <span className={`flex h-4 w-4 items-center justify-center rounded text-[10px] ${
                         opt.isCorrect ? 'bg-emerald-600 text-white' :

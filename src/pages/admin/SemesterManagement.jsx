@@ -44,27 +44,27 @@ export default function SemesterManagement() {
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold text-white">Semester Management</h1>
+      <h1 className="mb-6 text-2xl font-bold text-gray-900">Semester Management</h1>
 
-      <form onSubmit={handleSubmit} className="mb-8 flex flex-wrap gap-3 rounded-xl border border-gray-800 bg-[#141726] p-5">
+      <form onSubmit={handleSubmit} className="mb-8 flex flex-wrap gap-3 rounded-xl border border-gray-200 bg-white p-5">
         <select value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
-          className="rounded-lg border border-gray-700 bg-[#1b1f32] px-4 py-2.5 text-white outline-none focus:border-indigo-500">
+          className="rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-gray-900 outline-none focus:border-indigo-500">
           <option value="">Select Semester</option>
           {SEMESTERS.map((s) => <option key={s} value={s}>{s}</option>)}
         </select>
         <select value={form.department} onChange={(e) => setForm({ ...form, department: e.target.value })}
-          className="rounded-lg border border-gray-700 bg-[#1b1f32] px-4 py-2.5 text-white outline-none focus:border-indigo-500">
+          className="rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-gray-900 outline-none focus:border-indigo-500">
           <option value="">All Departments</option>
           <option value="bms">BMS</option>
           <option value="lcs">LCS</option>
           <option value="both">Both</option>
         </select>
         <button type="submit"
-          className="rounded-lg bg-indigo-600 px-6 py-2.5 font-semibold text-white hover:bg-indigo-700 transition">
+          className="rounded-lg bg-indigo-600 px-6 py-2.5 font-semibold text-gray-900 hover:bg-indigo-700 transition">
           {editing ? 'Update' : 'Add Semester'}
         </button>
         {editing && <button type="button" onClick={() => { setEditing(null); setForm({ name: '', department: '' }) }}
-          className="rounded-lg bg-gray-700 px-4 py-2.5 text-sm text-gray-300 hover:bg-gray-600 transition">Cancel</button>}
+          className="rounded-lg bg-gray-700 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-600 transition">Cancel</button>}
       </form>
 
       {loading ? (
@@ -74,7 +74,7 @@ export default function SemesterManagement() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {semesters.map((s) => (
-            <div key={s.id} className="rounded-xl border border-gray-800 bg-[#141726] p-5">
+            <div key={s.id} className="rounded-xl border border-gray-200 bg-white p-5">
               <div className="mb-2 flex items-center justify-between">
                 <span className="rounded-lg bg-indigo-600/20 px-3 py-1 text-xs font-semibold text-indigo-400">{s.department}</span>
                 <div className="flex gap-2">
@@ -82,7 +82,7 @@ export default function SemesterManagement() {
                   <button onClick={() => handleDelete(s.id)} className="text-xs text-gray-400 hover:text-red-400 transition">Del</button>
                 </div>
               </div>
-              <h3 className="text-lg font-bold text-white">{s.name}</h3>
+              <h3 className="text-lg font-bold text-gray-900">{s.name}</h3>
             </div>
           ))}
         </div>
