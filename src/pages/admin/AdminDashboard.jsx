@@ -16,33 +16,37 @@ export default function AdminDashboard() {
   const [dbBatches, setDbBatches] = useState([])
 
   const loadData = async () => {
-    const usersSnap = await getDocs(collection(db, 'users'))
-    const bmsSnap = await getDocs(query(collection(db, 'users'), where('department', '==', 'bms')))
-    const lcsSnap = await getDocs(query(collection(db, 'users'), where('department', '==', 'lcs')))
-    const semSnap = await getDocs(collection(db, 'semesters'))
-    const subSnap = await getDocs(collection(db, 'subjects'))
-    setStats({
-      users: usersSnap.size,
-      bms: bmsSnap.size,
-      lcs: lcsSnap.size,
-      semesters: semSnap.size,
-      subjects: subSnap.size,
-    })
-
-    // Fetch notifications
-    const notifSnap = await getDocs(query(collection(db, 'global_notifications'), orderBy('createdAt', 'desc')))
-    const notifList = notifSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }))
-    setNotifications(notifList)
-
-    // 🛠️ Dynamic විදිහට batchPermissions collection එකෙන් active batches ටික විතරක් ගන්නවා
     try {
-      const batchesRef = collection(db, 'batchPermissions')
-      const q = query(batchesRef, where('active', '==', true), orderBy('createdAt', 'desc'))
-      const batchSnap = await getDocs(q)
+      // 🚀 Performance Optimisation: Promises එක පාර parallel රන් වෙන්න දෙනවා මචං
+      const [usersSnap, bmsSnap, lcsSnap, semSnap, subSnap, notifSnap, batchSnap] = await Promise.all([
+        getDocs(collection(db, 'users')),
+        getDocs(query(collection(db, 'users'), where('department', '==', 'bms'))),
+        getDocs(query(collection(db, 'users'), where('department', '==', 'lcs'))),
+        getDocs(collection(db, 'semesters')),
+        getDocs(collection(db, 'subjects')),
+        getDocs(query(collection(db, 'global_notifications'), orderBy('createdAt', 'desc'))),
+        getDocs(query(collection(db, 'batchPermissions'), where('active', '==', true), orderBy('createdAt', 'desc')))
+      ])
+
+      // Stats Update
+      setStats({
+        users: usersSnap.size,
+        bms: bmsSnap.size,
+        lcs: lcsSnap.size,
+        semesters: semSnap.size,
+        subjects: subSnap.size,
+      })
+
+      // Notifications Update
+      const notifList = notifSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+      setNotifications(notifList)
+
+      // 🛠️ Dynamic Batches සෙට් එක අප්ඩේට් කරනවා
       const batchList = batchSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }))
       setDbBatches(batchList)
+
     } catch (err) {
-      console.error("Error fetching batches: ", err)
+      console.error("Dashboard data loading error: ", err)
     }
   }
 
@@ -106,7 +110,7 @@ export default function AdminDashboard() {
         ))}
       </div>
 
-      {/* 🛠️ NOTIFICATION CREATION FORM */}
+      {/* 📢 NOTIFICATION CREATION FORM */}
       <div className="grid gap-6 md:grid-cols-2 mt-8">
         <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
           <h2 className="text-lg font-bold text-gray-900 mb-4">📢 Broadcast New Notification / Zoom</h2>
@@ -122,7 +126,6 @@ export default function AdminDashboard() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1">Target Audience</label>
-                {/* 🔄 මෙතන කලින් තිබ්බ static options අයින් කරලා dynamic loop එකක් දැම්මා මචං */}
                 <select value={noticeForm.targetBatch} onChange={(e) => setNoticeForm({...noticeForm, targetBatch: e.target.value})} className="w-full text-sm p-2 border border-gray-200 rounded-lg bg-white outline-none">
                   <option value="all">All Batches</option>
                   {dbBatches.map((batch) => (
@@ -153,7 +156,7 @@ export default function AdminDashboard() {
           </form>
         </div>
 
-        {/* 🛠️ ACTIVE NOTIFICATIONS LIST & REMOVE */}
+        {/* 📋 ACTIVE NOTIFICATIONS LIST & REMOVE */}
         <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm flex flex-col">
           <h2 className="text-lg font-bold text-gray-900 mb-4">📋 Active Broadcasts ({notifications.length})</h2>
           <div className="space-y-3 flex-grow overflow-y-auto max-h-[340px] pr-1">
