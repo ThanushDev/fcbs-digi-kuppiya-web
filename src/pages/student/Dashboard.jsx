@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
-import { getBatchPermission } from '../../services/firestore'
-import { addComment } from '../../services/firestore'
+import { getBatchPermission, getSemesters, addComment } from '../../services/firestore' // 🎯 getSemesters import කළා මචං
 import logo from '../../assets/logo.png' 
 
 const semesterIcons = ['📘', '📗', '📕', '📙', '📔', '📓', '📔', '📓']
@@ -17,17 +16,6 @@ const SEMESTER_THEMES = [
   { bg: 'bg-gradient-to-br from-violet-50 to-purple-100/40', border: 'border-violet-200/80 hover:border-violet-400', text: 'text-violet-900', iconBg: 'bg-violet-500/10 text-violet-600' },
   { bg: 'bg-gradient-to-br from-cyan-50 to-blue-100/40', border: 'border-cyan-200/80 hover:border-cyan-400', text: 'text-cyan-900', iconBg: 'bg-cyan-500/10 text-cyan-600' },
   { bg: 'bg-gradient-to-br from-slate-50 to-gray-200/40', border: 'border-slate-200/80 hover:border-slate-400', text: 'text-slate-900', iconBg: 'bg-slate-500/10 text-slate-600' },
-]
-
-const FIX_SEMESTERS = [
-  { id: '11', name: 'Y1S1', department: 'both' },
-  { id: '12', name: 'Y1S2', department: 'both' },
-  { id: '21', name: 'Y2S1', department: 'both' },
-  { id: '22', name: 'Y2S2', department: 'both' },
-  { id: '31', name: 'Y3S1', department: 'both' },
-  { id: '32', name: 'Y3S2', department: 'both' },
-  { id: '41', name: 'Y4S1', department: 'both' },
-  { id: '42', name: 'Y4S2', department: 'both' },
 ]
 
 const MENTORS = [
@@ -85,23 +73,35 @@ export default function Dashboard() {
     return () => clearInterval(interval)
   }, [])
 
+  // 🔄 Live Firestore Data Fetching Logic
   useEffect(() => {
     const load = async () => {
       if (!userData) return;
       try {
         setLoading(true)
         const dept = userData?.department || ''
-        let filtered = FIX_SEMESTERS.filter((s) => s.department === dept || s.department === 'both')
         const batch = userData?.batch || ''
 
+        // 1️⃣ Admin Panel එකෙන් දාන සෙමෙස්ටර්ස් Firestore එකෙන් කෙලින්ම ගන්නවා
+        const allSemesters = await getSemesters()
+        
+        // 2️⃣ ශිෂ්‍යයාගේ Department එකට අදාළ සෙමෙස්ටර්ස් විතරක් Filter කරනවා
+        let filtered = allSemesters.filter((s) => s.department === dept || s.department === 'both')
+
+        // 3️⃣ Batch Permission එක චෙක් කරනවා
         if (batch) {
           const perm = await getBatchPermission(batch)
           if (perm && perm.semesterIds) {
+            // Admin panel එකෙන් හැදෙන Firestore Document ID එක පර්මිෂන් Array එකේ තියෙනවද බලනවා
             filtered = filtered.filter((s) => perm.semesterIds.includes(s.id))
           } else {
             filtered = []
           }
         }
+
+        // 4️⃣ සෙමෙස්ටර් පිළිවෙළට සකස් කරනවා (Order field එක අනුව)
+        filtered.sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+
         setSemesters(filtered)
       } catch (error) {
         console.error("Error loading semesters:", error)
@@ -145,7 +145,7 @@ export default function Dashboard() {
           <p className="mt-1 text-sm text-gray-500">Select a semester to view your subjects and learning materials.</p>
         </div>
 
-        {/* 🛠️ 2. Academic Tools Strip (සුදු පාට සම්පූර්ණයෙන්ම නැති කරලා Gradient Layout කලා) */}
+        {/* 🛠️ 2. Academic Tools Strip */}
         <div className="flex flex-wrap gap-2.5">
           {academicTools.map((tool) => {
             if (tool.isQuiz && !userData?.quizEnabled) return null
@@ -164,7 +164,6 @@ export default function Dashboard() {
               </a>
             )
           })}
-          
         </div>
 
         {/* 🎯 3. Semester Grid */}
@@ -207,7 +206,7 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* 👥 4. Mentors Section (Card එකට Soft Slate Gradient එකක් දැම්මා) */}
+        {/* 👥 4. Mentors Section */}
         <div className="mt-12 bg-gradient-to-br from-slate-50 to-blue-50/30 rounded-2xl shadow-sm border border-slate-200/80 p-6 md:p-8 overflow-hidden">
           <div className="mb-6 border-b border-slate-100 pb-4 flex justify-between items-center">
             <div>
@@ -276,7 +275,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* 💬 5. Feedback Form Section (යටින් වැටෙන ලයිස්තුව අයින් කළා මචං 🎯) */}
+        {/* 💬 5. Feedback Form Section */}
         <div className="mt-12 bg-gradient-to-br from-indigo-50/40 to-purple-50/40 rounded-2xl shadow-sm border border-indigo-100/80 p-6 md:p-8 space-y-4">
           <div>
             <h3 className="text-sm font-bold text-indigo-950 uppercase tracking-wide">Dashboard Feedback</h3>
