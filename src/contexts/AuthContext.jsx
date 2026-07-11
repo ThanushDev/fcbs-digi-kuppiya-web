@@ -1,8 +1,7 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { onAuthStateChanged } from 'firebase/auth'
-import { doc, getDoc } from 'firestore' // ඔයාගේ firestore import එක
-import { doc as fsDoc, getDoc as fsGetDoc } from 'firebase/firestore' // fallback
-import { auth, db } from '../services/firebase' // 👈 නිවැරදි path එක විතරක් ඉතුරු කළා!
+import { doc, getDoc } from 'firebase/firestore' // 👈 මෙන්න මේ නිවැරදි එක විතරයි ඕනේ මචං!
+import { auth, db } from '../services/firebase'
 
 const AuthContext = createContext(null)
 
@@ -17,8 +16,8 @@ export function AuthProvider({ children }) {
     if (!currentUid) return
 
     try {
-      const docRef = fsDoc(db, 'users', currentUid)
-      const docSnap = await fsGetDoc(docRef)
+      const docRef = doc(db, 'users', currentUid)
+      const docSnap = await getDoc(docRef)
       setUserData(docSnap.exists() ? docSnap.data() : null)
     } catch (error) {
       setUserData(null)
@@ -29,8 +28,8 @@ export function AuthProvider({ children }) {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       try {
         if (firebaseUser) {
-          const docRef = fsDoc(db, 'users', firebaseUser.uid)
-          const docSnap = await fsGetDoc(docRef)
+          const docRef = doc(db, 'users', firebaseUser.uid)
+          const docSnap = await getDoc(docRef)
           
           if (docSnap.exists()) {
             setUserData(docSnap.data())
@@ -70,9 +69,11 @@ export function AuthProvider({ children }) {
   )
 
   return (
-    <AuthContext.Provider value={{ user, userData, loading, role, isAdmin, isSuperAdmin, needsProfileSetup, refreshUserData }}>
-      {!loading && children}
-    </AuthContext.Provider>
+    <div className="w-full">
+      <AuthContext.Provider value={{ user, userData, loading, role, isAdmin, isSuperAdmin, needsProfileSetup, refreshUserData }}>
+        {!loading && children}
+      </AuthContext.Provider>
+    </div>
   )
 }
 
