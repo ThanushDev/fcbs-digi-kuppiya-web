@@ -96,7 +96,7 @@ export default function ForgotPassword() {
               disabled={loading} 
               className="w-full py-2.5 text-xs font-extrabold tracking-wider rounded-xl text-white bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-500 hover:opacity-90 transition duration-200 active:scale-[0.99] border border-purple-400/20 mt-1"
             >
-              {loading ? 'SENDING LINK...' : 'INITIATE DECRYPTION / RESET'}
+              {loading ? 'SENDING LINK...' : 'Rest Password'}
             </button>
           </form>
 
