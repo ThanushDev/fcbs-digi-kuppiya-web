@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
-// 🎯 ඔයාගේ පරණ සර්විස් ෆන්ෂන්ස් ටික විතරක් මෙතනින් කෙලින්ම ගන්නවා
 import { getSemesters, getBatchPermission, addComment } from '../../services/firestore' 
+// 🎯 Firebase Imports
+import { collection, getDocs, query, where, orderBy } from 'firebase/firestore'
+import { db } from '../../services/firebase'
 import logo from '../../assets/logo.png' 
 
 const semesterIcons = ['📘', '📗', '📕', '📙', '📔', '📓', '📔', '📓']
@@ -66,6 +68,11 @@ export default function Dashboard() {
   const [commentText, setCommentText] = useState('')
   const [submittingComment, setSubmittingComment] = useState(false)
 
+  // 🔔 Notification States
+  const [allNotifications, setAllNotifications] = useState([])
+  const [activePopup, setActivePopup] = useState(null)
+  const [showHistory, setShowHistory] = useState(false)
+
   useEffect(() => {
     const interval = setInterval(() => {
       setActiveMentorIdx((prev) => (prev + 1) % MENTORS.length)
@@ -73,7 +80,7 @@ export default function Dashboard() {
     return () => clearInterval(interval)
   }, [])
 
-  // 🔄 Safe Live Fetching Logic
+  // 🔄 Live Fetching Semesters & Notifications
   useEffect(() => {
     const load = async () => {
       if (!userData) return;
@@ -82,51 +89,44 @@ export default function Dashboard() {
         const dept = userData?.department || ''
         const userBatch = userData?.batch ? String(userData.batch).trim() : ''
 
-        // 1️⃣ සර්විස් එකෙන් සෙමෙස්ටර්ස් ගන්නවා
+        // --- FETCH SEMESTERS ---
         const allSemesters = await getSemesters()
-        
         let filtered = [];
 
         if (userBatch) {
-          // 2️⃣ ඔයාගේ සර්විස් එකේ තියෙන getBatchPermission එක රන් කරනවා
           const perm = await getBatchPermission(userBatch)
-          
-          const idToNameMap = {
-            '11': 'Y1S1', '12': 'Y1S2',
-            '21': 'Y2S1', '22': 'Y2S2',
-            '31': 'Y3S1', '32': 'Y3S2',
-            '41': 'Y4S1', '42': 'Y4S2'
-          };
-
+          const idToNameMap = { '11': 'Y1S1', '12': 'Y1S2', '21': 'Y2S1', '22': 'Y2S2', '31': 'Y3S1', '32': 'Y3S2', '41': 'Y4S1', '42': 'Y4S2' };
           let allowedIds = [];
-          if (perm && perm.semesterIds) {
-            allowedIds = perm.semesterIds;
-          }
-
+          if (perm && perm.semesterIds) allowedIds = perm.semesterIds;
           const allowedNames = allowedIds.map(id => idToNameMap[String(id)]).filter(Boolean);
 
-          // 💡 CRITICAL FALLBACK FIX: 
-          // සෙමෙස්ටර්ස් වල 'order' නැති නිසා getSemesters() එකෙන් 2ක් විතරක් ආවොත්, 
-          //Allowed Names 6ම තියෙන හින්දා ඩෑෂ්බෝඩ් එක හිස් නොවී පාලනය වෙන්න Fallback එකක් දානවා.
           if (allowedNames.length > 0 && allSemesters.length >= allowedNames.length) {
-            filtered = allSemesters.filter((s) => {
-              return s.name ? allowedNames.includes(String(s.name).trim()) : false;
-            });
+            filtered = allSemesters.filter((s) => s.name ? allowedNames.includes(String(s.name).trim()) : false);
           } else {
-            // Firestore එකේ order ෆීල්ඩ් එක නැති සෙමෙස්ටර්ස් ඇඩ්මින් පැනල් එකෙන් හදලා ඉවර වෙනකම් 
-            // දැනට ඩිපාර්ට්මන්ට් එකට අදාළව තියෙන ඔක්කොම සෙමෙස්ටර්ස් ටික ඩෑෂ්බෝඩ් එකට මුදා හරිනවා.
             filtered = allSemesters.filter((s) => s.department === dept || s.department === 'both');
           }
         } else {
           filtered = allSemesters.filter((s) => s.department === dept || s.department === 'both')
         }
 
-        // 3️⃣ Sorting & State Setting
         filtered.sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
         setSemesters(filtered)
 
+        // --- FETCH NOTIFICATIONS ---
+        const notifSnap = await getDocs(query(collection(db, 'global_notifications'), orderBy('createdAt', 'desc')))
+        const notifList = notifSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+        
+        // Filter notifications for this specific user's batch or all
+        const userNotifs = notifList.filter(n => n.targetBatch === 'all' || n.targetBatch === userBatch)
+        setAllNotifications(userNotifs)
+
+        // Trigger latest notification as popup modal on login
+        if (userNotifs.length > 0) {
+          setActivePopup(userNotifs[0])
+        }
+
       } catch (error) {
-        console.error("Error loading semesters:", error)
+        console.error("Error loading system data:", error)
       } finally {
         setLoading(false)
       }
@@ -158,12 +158,74 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="animate-fade-in space-y-8 flex flex-col min-h-screen p-2 sm:p-4">
+    <div className="animate-fade-in space-y-8 flex flex-col min-h-screen p-2 sm:p-4 relative">
+      
+      {/* 📹 POPUP NOTIFICATION MODAL (LOG IN UNAAMA SCREEN EKE ENNA) */}
+      {activePopup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in">
+          <div className="relative w-full max-w-md p-6 bg-white/90 border border-indigo-100 rounded-2xl shadow-2xl backdrop-blur-xl animate-scale-in">
+            <button onClick={() => setActivePopup(null)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 font-bold transition text-lg">✕</button>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-2xl">{activePopup.type === 'zoom' ? '📹' : activePopup.type === 'resource' ? '📁' : '📢'}</span>
+              <span className="text-[10px] font-extrabold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full uppercase tracking-wider">{activePopup.type}</span>
+            </div>
+            <h3 className="text-lg font-black text-slate-900 leading-tight mb-2">{activePopup.title}</h3>
+            <p className="text-sm text-slate-600 leading-relaxed mb-5 whitespace-pre-wrap">{activePopup.message}</p>
+            {activePopup.type === 'zoom' && activePopup.zoomLink && (
+              <a href={activePopup.zoomLink} target="_blank" rel="noopener noreferrer" className="block w-full py-2.5 text-center bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold text-xs rounded-xl shadow-md hover:opacity-90 transition">
+                Join Zoom Meeting Now 🚀
+              </a>
+            )}
+            <p className="text-[10px] text-gray-400 mt-4 text-right">Published: {new Date(activePopup.createdAt).toLocaleString()}</p>
+          </div>
+        </div>
+      )}
+
+      {/* 🔔 NOTIFICATION HISTORY DRAWER (WWERADILAWATH CLOSE UNOTH BALANNA) */}
+      {showHistory && (
+        <div className="fixed inset-y-0 right-0 z-50 w-full max-w-sm bg-white shadow-2xl border-l border-gray-100 p-6 flex flex-col animate-slide-in">
+          <div className="flex justify-between items-center border-b pb-4 mb-4">
+            <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">🔔 Notifications History</h3>
+            <button onClick={() => setShowHistory(false)} className="text-gray-400 hover:text-gray-600 font-bold text-lg">✕</button>
+          </div>
+          <div className="space-y-4 flex-grow overflow-y-auto pr-1">
+            {allNotifications.length === 0 ? (
+              <p className="text-xs text-gray-400 text-center py-10">No notifications broadcasted yet.</p>
+            ) : (
+              allNotifications.map((n) => (
+                <div key={n.id} className="p-3.5 bg-slate-50 border border-slate-100 rounded-xl space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[9px] font-bold uppercase bg-white text-slate-700 px-2 py-0.5 rounded border">{n.type}</span>
+                    <span className="text-[10px] text-gray-400 font-medium">{new Date(n.createdAt).toLocaleDateString()}</span>
+                  </div>
+                  <h4 className="text-sm font-bold text-slate-900">{n.title}</h4>
+                  <p className="text-xs text-slate-600 leading-relaxed">{n.message}</p>
+                  {n.type === 'zoom' && n.zoomLink && (
+                    <a href={n.zoomLink} target="_blank" rel="noopener noreferrer" className="inline-block mt-1 text-[11px] font-bold text-blue-600 hover:underline">
+                      🔗 Click here to join
+                    </a>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="flex-grow space-y-8">
         {/* Welcome Section */}
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Welcome, {userData?.firstName || 'Student'}</h1>
-          <p className="mt-1 text-sm text-gray-500">Select a semester to view your subjects and learning materials.</p>
+        <div className="flex justify-between items-start gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Welcome, {userData?.firstName || 'Student'}</h1>
+            <p className="mt-1 text-sm text-gray-500">Select a semester to view your subjects and learning materials.</p>
+          </div>
+          {/* Notification Trigger Bell Icon */}
+          <button onClick={() => setShowHistory(true)} className="relative p-2.5 bg-slate-100 hover:bg-slate-200/80 rounded-xl transition group shrink-0">
+            <span className="text-xl">🔔</span>
+            {allNotifications.length > 0 && (
+              <span className="absolute top-1 right-1 flex h-2 w-2 rounded-full bg-red-500 animate-ping" />
+            )}
+          </button>
         </div>
 
         {/* Academic Tools Strip */}

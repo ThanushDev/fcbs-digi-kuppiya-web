@@ -1,32 +1,77 @@
 import { useState, useEffect } from 'react'
-import { collection, getDocs, query, where } from 'firebase/firestore'
+import { collection, getDocs, query, where, addDoc, deleteDoc, doc, orderBy } from 'firebase/firestore'
 import { db } from '../../services/firebase'
 import { useAuth } from '../../contexts/AuthContext'
 
 export default function AdminDashboard() {
   const { userData } = useAuth()
   const [stats, setStats] = useState({ users: 0, bms: 0, lcs: 0, semesters: 0, subjects: 0 })
+  
+  // Notification States
+  const [notifications, setNotifications] = useState([])
+  const [noticeForm, setNoticeForm] = useState({ title: '', message: '', targetBatch: 'all', type: 'notice', zoomLink: '' })
+  const [submitting, setSubmitting] = useState(false)
+
+  const loadData = async () => {
+    const usersSnap = await getDocs(collection(db, 'users'))
+    const bmsSnap = await getDocs(query(collection(db, 'users'), where('department', '==', 'bms')))
+    const lcsSnap = await getDocs(query(collection(db, 'users'), where('department', '==', 'lcs')))
+    const semSnap = await getDocs(collection(db, 'semesters'))
+    const subSnap = await getDocs(collection(db, 'subjects'))
+    setStats({
+      users: usersSnap.size,
+      bms: bmsSnap.size,
+      lcs: lcsSnap.size,
+      semesters: semSnap.size,
+      subjects: subSnap.size,
+    })
+
+    // Fetch notifications
+    const notifSnap = await getDocs(query(collection(db, 'global_notifications'), orderBy('createdAt', 'desc')))
+    const notifList = notifSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+    setNotifications(notifList)
+  }
 
   useEffect(() => {
-    const load = async () => {
-      const usersSnap = await getDocs(collection(db, 'users'))
-      const bmsSnap = await getDocs(query(collection(db, 'users'), where('department', '==', 'bms')))
-      const lcsSnap = await getDocs(query(collection(db, 'users'), where('department', '==', 'lcs')))
-      const semSnap = await getDocs(collection(db, 'semesters'))
-      const subSnap = await getDocs(collection(db, 'subjects'))
-      setStats({
-        users: usersSnap.size,
-        bms: bmsSnap.size,
-        lcs: lcsSnap.size,
-        semesters: semSnap.size,
-        subjects: subSnap.size,
-      })
-    }
-    load()
+    loadData()
   }, [])
 
+  const handleNotificationSubmit = async (e) => {
+    e.preventDefault()
+    if (!noticeForm.title.trim() || !noticeForm.message.trim()) return
+    setSubmitting(true)
+    try {
+      await addDoc(collection(db, 'global_notifications'), {
+        title: noticeForm.title,
+        message: noticeForm.message,
+        targetBatch: noticeForm.targetBatch,
+        type: noticeForm.type,
+        zoomLink: noticeForm.type === 'zoom' ? noticeForm.zoomLink : '',
+        createdAt: new Date().toISOString()
+      })
+      setNoticeForm({ title: '', message: '', targetBatch: 'all', type: 'notice', zoomLink: '' })
+      alert('Notification broadcasted successfully!')
+      loadData()
+    } catch (err) {
+      alert('Error creating notification.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleDeleteNotification = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this notification?')) return
+    try {
+      await deleteDoc(doc(db, 'global_notifications', id))
+      alert('Notification deleted!')
+      loadData()
+    } catch (err) {
+      alert('Error deleting notification.')
+    }
+  }
+
   return (
-    <div>
+    <div className="space-y-6">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
         <p className="text-sm text-gray-400">Welcome back, {userData?.firstName || 'Admin'}</p>
@@ -45,6 +90,77 @@ export default function AdminDashboard() {
             <p className="mt-1 text-4xl font-bold text-white">{s.value}</p>
           </div>
         ))}
+      </div>
+
+      {/* 🛠️ NOTIFICATION CREATION FORM */}
+      <div className="grid gap-6 md:grid-cols-2 mt-8">
+        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+          <h2 className="text-lg font-bold text-gray-900 mb-4">📢 Broadcast New Notification / Zoom</h2>
+          <form onSubmit={handleNotificationSubmit} className="space-y-4">
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">Notification Title</label>
+              <input type="text" value={noticeForm.title} onChange={(e) => setNoticeForm({...noticeForm, title: e.target.value})} className="w-full text-sm p-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500" placeholder="e.g., New Zoom Meeting Tonight" required />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">Message / Description</label>
+              <textarea rows="2" value={noticeForm.message} onChange={(e) => setNoticeForm({...noticeForm, message: e.target.value})} className="w-full text-sm p-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 resize-none" placeholder="Enter notice details..." required />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">Target Audience</label>
+                <select value={noticeForm.targetBatch} onChange={(e) => setNoticeForm({...noticeForm, targetBatch: e.target.value})} className="w-full text-sm p-2 border border-gray-200 rounded-lg bg-white outline-none">
+                  <option value="all">All Batches</option>
+                  <option value="21/22">Batch 21/22</option>
+                  <option value="22/23">Batch 22/23</option>
+                  <option value="23/24">Batch 23/24</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">Type</label>
+                <select value={noticeForm.type} onChange={(e) => setNoticeForm({...noticeForm, type: e.target.value})} className="w-full text-sm p-2 border border-gray-200 rounded-lg bg-white outline-none">
+                  <option value="notice">General Notice 📝</option>
+                  <option value="zoom">Zoom Meeting 📹</option>
+                  <option value="resource">New Resource Added 📁</option>
+                </select>
+              </div>
+            </div>
+            {noticeForm.type === 'zoom' && (
+              <div className="animate-fade-in">
+                <label className="block text-xs font-semibold text-gray-600 mb-1">Zoom Invitation Link</label>
+                <input type="url" value={noticeForm.zoomLink} onChange={(e) => setNoticeForm({...noticeForm, zoomLink: e.target.value})} className="w-full text-sm p-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500" placeholder="https://zoom.us/j/..." required />
+              </div>
+            )}
+            <button type="submit" disabled={submitting} className="w-full py-2 bg-indigo-600 text-white font-bold text-xs rounded-lg hover:bg-indigo-700 transition disabled:opacity-50">
+              {submitting ? 'Broadcasting...' : 'Broadcast Announcement 🚀'}
+            </button>
+          </form>
+        </div>
+
+        {/* 🛠️ ACTIVE NOTIFICATIONS LIST & REMOVE */}
+        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm flex flex-col">
+          <h2 className="text-lg font-bold text-gray-900 mb-4">📋 Active Broadcasts ({notifications.length})</h2>
+          <div className="space-y-3 flex-grow overflow-y-auto max-h-[340px] pr-1">
+            {notifications.length === 0 ? (
+              <p className="text-xs text-gray-400 text-center py-8">No active notifications found.</p>
+            ) : (
+              notifications.map((n) => (
+                <div key={n.id} className="p-3 bg-gray-50 rounded-xl border border-gray-100 flex justify-between items-start gap-2">
+                  <div className="space-y-1">
+                    <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-full ${n.type === 'zoom' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'}`}>
+                      {n.type} • {n.targetBatch}
+                    </span>
+                    <h4 className="text-sm font-bold text-gray-800">{n.title}</h4>
+                    <p className="text-xs text-gray-500 line-clamp-2">{n.message}</p>
+                    <p className="text-[10px] text-gray-400">{new Date(n.createdAt).toLocaleDateString()}</p>
+                  </div>
+                  <button onClick={() => handleDeleteNotification(n.id)} className="p-1 text-red-500 hover:bg-red-50 rounded transition text-xs font-bold">
+                    🗑️
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
       </div>
 
       <div className="mt-8 rounded-xl border border-gray-200 bg-white p-8 text-center">
