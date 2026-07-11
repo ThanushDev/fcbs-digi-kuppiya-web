@@ -60,7 +60,7 @@ export default function ForgotPassword() {
               <img src={logo} alt="Uniflow Logo" className="h-full w-full object-contain filter drop-shadow-[0_0_12px_rgba(168,85,247,0.4)]" />
             </div>
             <h2 className="text-xl font-black tracking-widest bg-gradient-to-r from-purple-400 via-indigo-200 to-cyan-400 bg-clip-text text-transparent">
-              UNIFLOW
+              FCBS DIGI KUPPIYA
             </h2>
             <p className="mt-0.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Reset Portal Access</p>
           </div>
@@ -80,7 +80,7 @@ export default function ForgotPassword() {
           {/* Form Section */}
           <form onSubmit={handleSubmit} className="space-y-3.5">
             <div>
-              <label className="mb-1 block text-[10px] font-bold tracking-wider text-purple-400 uppercase">University Email</label>
+              <label className="mb-1 block text-[10px] font-bold tracking-wider text-purple-400 uppercase">Email Address</label>
               <input 
                 type="email" 
                 value={email} 
