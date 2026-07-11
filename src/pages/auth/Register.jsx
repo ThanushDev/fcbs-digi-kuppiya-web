@@ -22,6 +22,8 @@ export default function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    
+    // 🛡️ Validation Checks
     if (!validateEmail(form.email)) return showToast('Invalid email address', 'error')
     if (!validateMobile(form.mobile)) return showToast('Mobile must be exactly 10 digits', 'error')
     if (!validateRegNumber(form.regNumber, form.batch)) {
@@ -34,6 +36,7 @@ export default function Register() {
 
     setLoading(true)
     try {
+      // 🚀 සර්විස් එකට මුළු දත්ත Object එකම ක්‍රමවත්ව යවනවා
       await registerUser({
         email: form.email,
         password: form.password,
@@ -49,23 +52,21 @@ export default function Register() {
       showToast('Account created successfully! Please sign in.', 'success')
       navigate('/login')
     } catch (err) {
-      showToast(err.message, 'error')
+      // Firebase එකෙන් එන ඕනෑම error එකක් Toast එකෙන් පෙන්වනවා
+      showToast(err.message || 'Registration failed. Try again.', 'error')
+    } finally {
+      setLoading(false)
     }
-    setLoading(false)
   }
 
   return (
-    // 🎯 h-screen එකක් ඇතුළේ overflow-y-auto දාලා ඕනෑම කුඩා ස්ක්‍රීන් එකකත් බටන් එක ගාවටම ස්ක්‍රෝල් වෙන්න හැදුවා
     <div className="flex h-screen w-screen items-center justify-center bg-gray-50 p-4 overflow-y-auto">
       <div className="w-full max-w-lg animate-slide-up my-auto py-4">
-        {/* Padding සහ Margin පොඩ්ඩක් compact කළා සිරස් ඉඩ ඉතුරු කරගන්න */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 md:p-8">
           <div className="mb-4 text-center">
-            {/* Logo එක h-20 වලට පොඩ්ඩක් කුඩා කළා vertical space එක බැලන්ස් කරන්න */}
             <div className="mx-auto mb-2 flex h-20 w-20 items-center justify-center bg-transparent">
               <img src={logo} alt="Uniflow Logo" className="h-full w-full object-contain" />
             </div>
-            
             <h2 className="text-xl font-bold text-gray-900 tracking-wide">FCBS DIGI KUPPIYA</h2>
             <p className="mt-0.5 text-xs text-gray-500">Register for your fcbs kuppiya account</p>
           </div>

@@ -1,78 +1,44 @@
-import { createContext, useContext, useEffect, useState, useCallback } from 'react'
-import { onAuthStateChanged } from 'firebase/auth'
-import { doc, getDoc } from 'firebase/firestore'
-import { auth, db } from '../services/firebase'
+import { auth, db } from './firebase' // ඔයාගේ firebase config එක තියෙන path එක හරියටම දාන්න
+import { createUserWithEmailAndPassword } from 'firebase/auth'
+import { doc, setDoc } from 'firebase/firestore'
 
-const AuthContext = createContext(null)
+/**
+ * නව පරිශීලකයෙකු Firebase Auth සහ Firestore වෙත ලියාපදිංචි කිරීම.
+ */
+export const registerUser = async (userData) => {
+  const {
+    email,
+    password,
+    firstName,
+    lastName,
+    mobile,
+    department,
+    batch,
+    regNumber,
+    photoFile
+  } = userData;
 
-export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null)
-  const [userData, setUserData] = useState(null)
-  const [loading, setLoading] = useState(true)
+  // 1. Firebase Authentication එකේ යූසර්ව ක්‍රියේට් කරනවා (සඟල වරහන් {} නැතුව කෙලින්ම String පාස් කර ඇත)
+  const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+  const user = userCredential.user;
 
-  // 🔄 refreshUserData Logic
-  const refreshUserData = useCallback(async (uid) => {
-    const currentUid = uid || auth.currentUser?.uid
-    if (!currentUid) return
+  // 💡 දැනට Photo Upload Logic එකක් නැත්නම් default URL එකක් සෙට් කරනවා
+  let finalPhotoURL = "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"; 
 
-    try {
-      const docRef = doc(db, 'users', currentUid)
-      const docSnap = await getDoc(docRef)
-      setUserData(docSnap.exists() ? docSnap.data() : null)
-    } catch (error) {
-      setUserData(null)
-    }
-  }, [])
+  // 2. Firestore 'users' Collection එක ඇතුළේ යූසර්ගේ Profile දත්ත ටික සේව් කරනවා
+  await setDoc(doc(db, 'users', user.uid), {
+    uid: user.uid,
+    firstName,
+    lastName,
+    email,
+    mobile,
+    department: department.toLowerCase(),
+    batch,
+    regNumber,
+    role: 'student', // Default රෝල් එක student විදිහට දෙනවා
+    photoURL: finalPhotoURL,
+    createdAt: new Date().toISOString()
+  });
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      try {
-        if (firebaseUser) {
-          const docRef = doc(db, 'users', firebaseUser.uid)
-          const docSnap = await getDoc(docRef)
-          
-          if (docSnap.exists()) {
-            setUserData(docSnap.data())
-          } else {
-            setUserData(null)
-          }
-          setUser(firebaseUser)
-        } else {
-          setUser(null)
-          setUserData(null)
-        }
-      } catch (error) {
-        // Errors නිහඬව හැන්ඩ්ල් කර ඇත
-      } finally {
-        setLoading(false)
-      }
-    })
-
-    return unsubscribe
-  }, [])
-
-  // 👥 Roles සහ Profile Setup Logic
-  const role = userData?.role || 'guest'
-  const isAdmin = role === 'admin' || role === 'super_admin'
-  const isSuperAdmin = role === 'super_admin'
-  
-  // 🛡️ Profile Check Logic
-  const userPhoto = userData?.photoURL || userData?.profilePic || userData?.profile_pic
-  const isPhotoBrokenOrMissing = !userPhoto || String(userPhoto).includes('profile_')
-
-  const needsProfileSetup = !!user && role === 'student' && (
-    isPhotoBrokenOrMissing || 
-    !userData?.regNumber || 
-    userData?.regNumber.trim() === "" || 
-    !userData?.department || 
-    userData?.department.trim() === ""
-  )
-
-  return (
-    <AuthContext.Provider value={{ user, userData, loading, role, isAdmin, isSuperAdmin, needsProfileSetup, refreshUserData }}>
-      {!loading && children}
-    </AuthContext.Provider>
-  )
-}
-
-export const useAuth = () => useContext(AuthContext)
+  return user;
+};
