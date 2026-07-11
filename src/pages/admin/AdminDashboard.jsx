@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { collection, getDocs, query, where, addDoc, deleteDoc, doc, orderBy } from 'firebase/firestore'
+import { collection, getDocs, query, where, addDoc, deleteDoc, doc } from 'firebase/firestore'
 import { db } from '../../services/firebase'
 import { useAuth } from '../../contexts/AuthContext'
 
@@ -17,18 +17,40 @@ export default function AdminDashboard() {
 
   const loadData = async () => {
     try {
-      // 🚀 Performance Optimisation: Promises එක පාර parallel රන් වෙන්න දෙනවා මචං
-      const [usersSnap, bmsSnap, lcsSnap, semSnap, subSnap, notifSnap, batchSnap] = await Promise.all([
+      // 1. Active Batches ටික විතරක් ගන්නවා (Index errors bypass කරන්න client-side sort කරනවා)
+      let batchList = [];
+      try {
+        const batchesRef = collection(db, 'batchPermissions')
+        const q = query(batchesRef, where('active', '==', true))
+        const batchSnap = await getDocs(q)
+        
+        batchList = batchSnap.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+
+        // 🔥 createdAt timestamp එක අනුව අලුත්ම ඒවා උඩට එන්න JS වලින් sort කරනවා
+        batchList.sort((a, b) => {
+          const dateA = a.createdAt?.seconds ? a.createdAt.seconds : 0;
+          const dateB = b.createdAt?.seconds ? b.createdAt.seconds : 0;
+          return dateB - dateA;
+        });
+
+        setDbBatches(batchList)
+      } catch (batchErr) {
+        console.error("❌ Batches Fetch Error:", batchErr)
+      }
+
+      // 2. ඉතිරි ස්ටැට්ස් සහ නොටිෆිකේෂන් ටික parallel ලෝඩ් කරනවා
+      const [usersSnap, bmsSnap, lcsSnap, semSnap, subSnap, notifSnap] = await Promise.all([
         getDocs(collection(db, 'users')),
         getDocs(query(collection(db, 'users'), where('department', '==', 'bms'))),
         getDocs(query(collection(db, 'users'), where('department', '==', 'lcs'))),
         getDocs(collection(db, 'semesters')),
         getDocs(collection(db, 'subjects')),
-        getDocs(query(collection(db, 'global_notifications'), orderBy('createdAt', 'desc'))),
-        getDocs(query(collection(db, 'batchPermissions'), where('active', '==', true), orderBy('createdAt', 'desc')))
+        getDocs(collection(db, 'global_notifications'))
       ])
 
-      // Stats Update
       setStats({
         users: usersSnap.size,
         bms: bmsSnap.size,
@@ -37,16 +59,13 @@ export default function AdminDashboard() {
         subjects: subSnap.size,
       })
 
-      // Notifications Update
+      // Notifications ටිකත් JS වලින් sort කරගන්නවා index error නොවදින්න
       const notifList = notifSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+      notifList.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
       setNotifications(notifList)
 
-      // 🛠️ Dynamic Batches සෙට් එක අප්ඩේට් කරනවා
-      const batchList = batchSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }))
-      setDbBatches(batchList)
-
     } catch (err) {
-      console.error("Dashboard data loading error: ", err)
+      console.error("Dashboard general data loading error: ", err)
     }
   }
 
@@ -110,7 +129,6 @@ export default function AdminDashboard() {
         ))}
       </div>
 
-      {/* 📢 NOTIFICATION CREATION FORM */}
       <div className="grid gap-6 md:grid-cols-2 mt-8">
         <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
           <h2 className="text-lg font-bold text-gray-900 mb-4">📢 Broadcast New Notification / Zoom</h2>
@@ -156,7 +174,6 @@ export default function AdminDashboard() {
           </form>
         </div>
 
-        {/* 📋 ACTIVE NOTIFICATIONS LIST & REMOVE */}
         <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm flex flex-col">
           <h2 className="text-lg font-bold text-gray-900 mb-4">📋 Active Broadcasts ({notifications.length})</h2>
           <div className="space-y-3 flex-grow overflow-y-auto max-h-[340px] pr-1">
