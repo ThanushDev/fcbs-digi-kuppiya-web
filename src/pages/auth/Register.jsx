@@ -1,10 +1,13 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { registerUser } from '../../services/auth' 
 import { useToast } from '../../contexts/ToastContext'
-import { DEPARTMENTS, BATCHES } from '../../utils/constants'
+import { DEPARTMENTS } from '../../utils/constants'
 import { validateEmail, validateMobile, validateRegNumber, validatePassword } from '../../utils/validators'
 import logo from '../../assets/logo.png' 
+// 🛠️ Firebase මෙවලම් ටික import කරගන්නවා
+import { collection, getDocs, query, where, orderBy } from 'firebase/firestore'
+import { db } from '../../services/firebase'
 
 export default function Register() {
   const navigate = useNavigate()
@@ -16,6 +19,25 @@ export default function Register() {
   const [photo, setPhoto] = useState(null)
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+
+  // 🔄 Dynamic Batches සඳහා අලුත් State එකක්
+  const [dbBatches, setDbBatches] = useState([])
+
+  // 🛠️ පැත්තකින් Firestore එකෙන් active බැච් ටික විතරක් ඇදලා ගන්නවා
+  useEffect(() => {
+    const fetchBatches = async () => {
+      try {
+        const batchesRef = collection(db, 'batchPermissions')
+        const q = query(batchesRef, where('active', '==', true), orderBy('createdAt', 'desc'))
+        const batchSnap = await getDocs(q)
+        const batchList = batchSnap.docs.map(doc => doc.data().batchName)
+        setDbBatches(batchList)
+      } catch (err) {
+        console.error("Error loading register batches:", err)
+      }
+    }
+    fetchBatches()
+  }, [])
 
   const set = (key) => (e) => setForm({ ...form, [key]: e.target.value })
   const handlePhoto = (e) => setPhoto(e.target.files[0])
@@ -69,11 +91,10 @@ export default function Register() {
       <div className="relative w-full max-w-lg z-10 my-auto">
         <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 via-indigo-500/20 to-cyan-500/20 rounded-3xl blur-xl opacity-70 -z-10" />
 
-        {/* --- REGISTER CARD (Balanced Version) --- */}
+        {/* --- REGISTER CARD --- */}
         <div className="bg-[#0b1528]/60 backdrop-blur-2xl rounded-3xl shadow-[0_0_50px_rgba(168,85,247,0.15)] border border-white/[0.08] p-5 md:p-7 relative overflow-hidden">
           <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-purple-500/30 to-transparent" />
 
-          {/* Header Section - Sized down just a bit to save top space */}
           <div className="mb-4 text-center">
             <div className="mx-auto mb-1 flex h-14 w-14 items-center justify-center bg-transparent cursor-pointer">
               <img src={logo} alt="Uniflow Logo" className="h-full w-full object-contain filter drop-shadow-[0_0_12px_rgba(168,85,247,0.4)]" />
@@ -84,7 +105,6 @@ export default function Register() {
             <p className="mt-0.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Create Portal Identity Record</p>
           </div>
 
-          {/* Form Section - Comfortable space-y-3.5 and py-1.5 inputs */}
           <form onSubmit={handleSubmit} className="space-y-3.5">
             <div className="grid grid-cols-2 gap-3.5">
               <div>
@@ -123,9 +143,10 @@ export default function Register() {
               </div>
               <div>
                 <label className="mb-1 block text-[10px] font-bold tracking-wider text-purple-400 uppercase">Batch</label>
+                {/* 🔄 මෙන්න මෙතන BATCHES වෙනුවට dbBatches map කරලා dynamic හැදුවා මචං */}
                 <select value={form.batch} onChange={set('batch')} className="w-full px-3 py-1.5 text-xs rounded-xl bg-[#09101d] border border-white/10 text-white focus:outline-none focus:ring-1 focus:ring-purple-500/40 font-medium cursor-pointer" required>
                   <option value="" className="bg-[#0b1528]">Select Batch</option>
-                  {BATCHES.map((b) => <option key={b} value={b} className="bg-[#0b1528]">{b}</option>)}
+                  {dbBatches.map((b) => <option key={b} value={b} className="bg-[#0b1528]">{b}</option>)}
                 </select>
               </div>
             </div>
@@ -155,7 +176,6 @@ export default function Register() {
             </button>
           </form>
 
-          {/* Footer Section */}
           <p className="mt-4 text-center text-[11px] text-slate-400 border-t border-white/[0.08] pt-2.5 tracking-wide font-medium">
             Already have an account? <Link to="/login" className="text-purple-400 hover:text-purple-300 font-bold uppercase tracking-wider ml-0.5">Sign In</Link>
           </p>

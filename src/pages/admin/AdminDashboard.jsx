@@ -12,6 +12,9 @@ export default function AdminDashboard() {
   const [noticeForm, setNoticeForm] = useState({ title: '', message: '', targetBatch: 'all', type: 'notice', zoomLink: '' })
   const [submitting, setSubmitting] = useState(false)
 
+  // Dynamic Batches State
+  const [dbBatches, setDbBatches] = useState([])
+
   const loadData = async () => {
     const usersSnap = await getDocs(collection(db, 'users'))
     const bmsSnap = await getDocs(query(collection(db, 'users'), where('department', '==', 'bms')))
@@ -30,6 +33,17 @@ export default function AdminDashboard() {
     const notifSnap = await getDocs(query(collection(db, 'global_notifications'), orderBy('createdAt', 'desc')))
     const notifList = notifSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }))
     setNotifications(notifList)
+
+    // 🛠️ Dynamic විදිහට batchPermissions collection එකෙන් active batches ටික විතරක් ගන්නවා
+    try {
+      const batchesRef = collection(db, 'batchPermissions')
+      const q = query(batchesRef, where('active', '==', true), orderBy('createdAt', 'desc'))
+      const batchSnap = await getDocs(q)
+      const batchList = batchSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+      setDbBatches(batchList)
+    } catch (err) {
+      console.error("Error fetching batches: ", err)
+    }
   }
 
   useEffect(() => {
@@ -108,11 +122,14 @@ export default function AdminDashboard() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1">Target Audience</label>
+                {/* 🔄 මෙතන කලින් තිබ්බ static options අයින් කරලා dynamic loop එකක් දැම්මා මචං */}
                 <select value={noticeForm.targetBatch} onChange={(e) => setNoticeForm({...noticeForm, targetBatch: e.target.value})} className="w-full text-sm p-2 border border-gray-200 rounded-lg bg-white outline-none">
                   <option value="all">All Batches</option>
-                  <option value="21/22">Batch 21/22</option>
-                  <option value="22/23">Batch 22/23</option>
-                  <option value="23/24">Batch 23/24</option>
+                  {dbBatches.map((batch) => (
+                    <option key={batch.id} value={batch.batchName}>
+                      Batch {batch.batchName}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div>
