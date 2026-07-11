@@ -1,4 +1,5 @@
-import { auth, db } from './firebase' // ඔයාගේ firebase config එක තියෙන path එක හරියටම දාන්න
+//  මේක තමයි නිවැරදි ලයින් එක (මේක ෆයිල් එකේ ඉතුරු වෙන්න ඇරලා අරක විතරක් මකන්න)
+import { auth, db } from '../services/firebase' // ඔයාගේ firebase config එක තියෙන path එක හරියටම දාන්න
 import { createUserWithEmailAndPassword } from 'firebase/auth'
 import { doc, setDoc } from 'firebase/firestore'
 
