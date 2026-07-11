@@ -44,10 +44,13 @@ export const loginUser = async (emailOrReg, password) => {
   }
 };
 
-// 2. Register User Function 🎯 (අලුතින් ඇතුළත් කළා)
-export const registerUser = async (email, password, extraData = {}) => {
+// 2. Register User Function 🎯 (Object Destructuring දාලා සුපිරියටම හැදුවා)
+export const registerUser = async (userData) => {
+  // ඔයා Register.jsx එකෙන් යවන Object එක ඇතුළෙන් email සහ password වෙන් කරලා ගන්නවා
+  const { email, password, ...extraData } = userData;
+
   try {
-    // Firebase Auth එකේ එකවුන්ට් එක හදනවා
+    // Firebase Auth එකේ එකවුන්ට් එක හදනවා (දැන් කෙලින්ම String යන්නේ)
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
@@ -58,7 +61,7 @@ export const registerUser = async (email, password, extraData = {}) => {
       role: 'student', // Default role එක student විදිහට සෙට් වෙනවා
       createdAt: new Date().toISOString(),
       requiresPasswordReset: false, // අලුත් යූසර්ස්ලාට මේක false
-      ...extraData // ඉතිරි විස්තර (firstName, lastName, regNumber වගේ ඒවා)
+      ...extraData // ඉතිරි විස්තර (firstName, lastName, regNumber, mobile, department, batch) ඔක්කොම ඔටෝ සේව් වෙනවා
     });
 
     return user;
