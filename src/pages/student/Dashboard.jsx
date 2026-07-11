@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
-import { getBatchPermission, getSemesters, addComment } from '../../services/firestore' // 🎯 getSemesters import කළා මචං
+// 🎯 ඔයාගේ පරණ සර්විස් ෆන්ෂන්ස් ටික විතරක් මෙතනින් කෙලින්ම ගන්නවා
+import { getSemesters, getBatchPermission, addComment } from '../../services/firestore' 
 import logo from '../../assets/logo.png' 
 
 const semesterIcons = ['📘', '📗', '📕', '📙', '📔', '📓', '📔', '📓']
 
-// 🎨 සෙමෙස්ටර් කාඩ්ස් වලට මාරුවෙන් මාරුවට වැටෙන Premium Gradients
 const SEMESTER_THEMES = [
   { bg: 'bg-gradient-to-br from-blue-50 to-indigo-100/40', border: 'border-blue-200/80 hover:border-blue-400', text: 'text-blue-900', iconBg: 'bg-blue-500/10 text-blue-600' },
   { bg: 'bg-gradient-to-br from-emerald-50 to-teal-100/40', border: 'border-emerald-200/80 hover:border-emerald-400', text: 'text-emerald-900', iconBg: 'bg-emerald-500/10 text-emerald-600' },
@@ -21,7 +21,7 @@ const SEMESTER_THEMES = [
 const MENTORS = [
   { name: "Mr.Thanush Nethsika", nickname: "සයිබර්", batch: "22/23", role: "Author of Uniflow", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614075/cyber_jz6wx6.jpg" },
   { name: "Ms. Imalsha Sathsarani", batch: "22/23", role: "Economics", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614075/ima_h6xjz3.jpg" },
-  { name: "Ms. Kasuni Gaurika", batch: "22/23", role: "Mathematics", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614075/kasuni_omcklq.jpg" },
+  { name: "Ms. Kasuni Gaurika", batch: "22/23", role: "Mathematics", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614076/nawodhya_ylxmlr.jpg" },
   { name: "Ms. Kavindi Nawodhya", batch: "22/23", role: "Mathematics", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614076/nawodhya_ylxmlr.jpg" },
   { name: "Ms. Jayathri Indrachapa", nickname: "මෙඩුසා", batch: "22/23", role: "Mathematics", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614067/chapa_drbwzz.jpg" },
   { name: "Ms. Kavithma Damindi", batch: "22/23", role: "Management", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614072/kavithma_mmfkmr.jpg" },
@@ -73,36 +73,58 @@ export default function Dashboard() {
     return () => clearInterval(interval)
   }, [])
 
-  // 🔄 Live Firestore Data Fetching Logic
+  // 🔄 Safe Live Fetching Logic
   useEffect(() => {
     const load = async () => {
       if (!userData) return;
       try {
         setLoading(true)
         const dept = userData?.department || ''
-        const batch = userData?.batch || ''
+        const userBatch = userData?.batch ? String(userData.batch).trim() : ''
 
-        // 1️⃣ Admin Panel එකෙන් දාන සෙමෙස්ටර්ස් Firestore එකෙන් කෙලින්ම ගන්නවා
+        // 1️⃣ සර්විස් එකෙන් සෙමෙස්ටර්ස් ගන්නවා
         const allSemesters = await getSemesters()
         
-        // 2️⃣ ශිෂ්‍යයාගේ Department එකට අදාළ සෙමෙස්ටර්ස් විතරක් Filter කරනවා
-        let filtered = allSemesters.filter((s) => s.department === dept || s.department === 'both')
+        let filtered = [];
 
-        // 3️⃣ Batch Permission එක චෙක් කරනවා
-        if (batch) {
-          const perm = await getBatchPermission(batch)
+        if (userBatch) {
+          // 2️⃣ ඔයාගේ සර්විස් එකේ තියෙන getBatchPermission එක රන් කරනවා
+          const perm = await getBatchPermission(userBatch)
+          
+          const idToNameMap = {
+            '11': 'Y1S1', '12': 'Y1S2',
+            '21': 'Y2S1', '22': 'Y2S2',
+            '31': 'Y3S1', '32': 'Y3S2',
+            '41': 'Y4S1', '42': 'Y4S2'
+          };
+
+          let allowedIds = [];
           if (perm && perm.semesterIds) {
-            // Admin panel එකෙන් හැදෙන Firestore Document ID එක පර්මිෂන් Array එකේ තියෙනවද බලනවා
-            filtered = filtered.filter((s) => perm.semesterIds.includes(s.id))
-          } else {
-            filtered = []
+            allowedIds = perm.semesterIds;
           }
+
+          const allowedNames = allowedIds.map(id => idToNameMap[String(id)]).filter(Boolean);
+
+          // 💡 CRITICAL FALLBACK FIX: 
+          // සෙමෙස්ටර්ස් වල 'order' නැති නිසා getSemesters() එකෙන් 2ක් විතරක් ආවොත්, 
+          //Allowed Names 6ම තියෙන හින්දා ඩෑෂ්බෝඩ් එක හිස් නොවී පාලනය වෙන්න Fallback එකක් දානවා.
+          if (allowedNames.length > 0 && allSemesters.length >= allowedNames.length) {
+            filtered = allSemesters.filter((s) => {
+              return s.name ? allowedNames.includes(String(s.name).trim()) : false;
+            });
+          } else {
+            // Firestore එකේ order ෆීල්ඩ් එක නැති සෙමෙස්ටර්ස් ඇඩ්මින් පැනල් එකෙන් හදලා ඉවර වෙනකම් 
+            // දැනට ඩිපාර්ට්මන්ට් එකට අදාළව තියෙන ඔක්කොම සෙමෙස්ටර්ස් ටික ඩෑෂ්බෝඩ් එකට මුදා හරිනවා.
+            filtered = allSemesters.filter((s) => s.department === dept || s.department === 'both');
+          }
+        } else {
+          filtered = allSemesters.filter((s) => s.department === dept || s.department === 'both')
         }
 
-        // 4️⃣ සෙමෙස්ටර් පිළිවෙළට සකස් කරනවා (Order field එක අනුව)
+        // 3️⃣ Sorting & State Setting
         filtered.sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-
         setSemesters(filtered)
+
       } catch (error) {
         console.error("Error loading semesters:", error)
       } finally {
@@ -137,20 +159,18 @@ export default function Dashboard() {
 
   return (
     <div className="animate-fade-in space-y-8 flex flex-col min-h-screen p-2 sm:p-4">
-      
       <div className="flex-grow space-y-8">
-        {/* 1. Welcome Section */}
+        {/* Welcome Section */}
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Welcome, {userData?.firstName || 'Student'}</h1>
           <p className="mt-1 text-sm text-gray-500">Select a semester to view your subjects and learning materials.</p>
         </div>
 
-        {/* 🛠️ 2. Academic Tools Strip */}
+        {/* Academic Tools Strip */}
         <div className="flex flex-wrap gap-2.5">
           {academicTools.map((tool) => {
             if (tool.isQuiz && !userData?.quizEnabled) return null
             const sharedClass = `px-3 py-1.5 rounded-xl text-xs font-bold transition bg-gradient-to-br ${tool.theme} border shadow-sm hover:shadow-md hover:-translate-y-0.5 duration-200 transform`
-            
             if (tool.isInternalTool) {
               return (
                 <Link key={tool.name} to={tool.path} className={sharedClass}>
@@ -166,7 +186,7 @@ export default function Dashboard() {
           })}
         </div>
 
-        {/* 🎯 3. Semester Grid */}
+        {/* Semester Grid */}
         <div>
           {loading ? (
             <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
@@ -206,7 +226,7 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* 👥 4. Mentors Section */}
+        {/* Mentors Section */}
         <div className="mt-12 bg-gradient-to-br from-slate-50 to-blue-50/30 rounded-2xl shadow-sm border border-slate-200/80 p-6 md:p-8 overflow-hidden">
           <div className="mb-6 border-b border-slate-100 pb-4 flex justify-between items-center">
             <div>
@@ -256,11 +276,9 @@ export default function Dashboard() {
                         </span>
                       )}
                     </div>
-                    
                     <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wider mt-0.5">
                       {mentor.role}
                     </p>
-
                     <div className="mt-3 flex items-center justify-center sm:justify-start gap-2 text-xs font-medium text-slate-500">
                       <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded-md border border-indigo-100/40 font-bold">
                         Batch: {mentor.batch}
@@ -275,7 +293,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* 💬 5. Feedback Form Section */}
+        {/* Feedback Form Section */}
         <div className="mt-12 bg-gradient-to-br from-indigo-50/40 to-purple-50/40 rounded-2xl shadow-sm border border-indigo-100/80 p-6 md:p-8 space-y-4">
           <div>
             <h3 className="text-sm font-bold text-indigo-950 uppercase tracking-wide">Dashboard Feedback</h3>
@@ -302,10 +320,9 @@ export default function Dashboard() {
             </div>
           </form>
         </div>
-
       </div>
 
-      {/* 6. Footer Section */}
+      {/* Footer Section */}
       <footer className="mt-auto pt-8 pb-4 border-t border-gray-100">
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">
@@ -327,7 +344,6 @@ export default function Dashboard() {
           </div>
         </div>
       </footer>
-
     </div>
   )
 }
