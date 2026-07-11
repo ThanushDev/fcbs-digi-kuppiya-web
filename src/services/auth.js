@@ -1,6 +1,35 @@
-import { auth, db } from './firebase'; // 🎯 ඔයාගේ firebase setup එකට අනුව path එක නිවැරදිද බලන්න
+import { auth, db } from './firebase'; 
 import { signInWithEmailAndPassword, sendPasswordResetEmail, createUserWithEmailAndPassword } from 'firebase/auth';
 import { collection, query, where, getDocs, doc, setDoc } from 'firebase/firestore';
+
+// 🎯 Vercel / Vite එකෙන් Variables කියවගන්නේ මෙහෙමයි
+const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
+
+// Cloudinary Helper Function
+const uploadImageToCloudinary = async (file) => {
+  if (!CLOUD_NAME) {
+    console.warn("Cloudinary Cloud Name is missing in environment variables. Using default photo.");
+    return null;
+  }
+
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('upload_preset', UPLOAD_PRESET);
+
+  try {
+    const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+      method: 'POST',
+      body: formData,
+    });
+    if (!response.ok) throw new Error('Cloudinary upload failed');
+    const data = await response.json();
+    return data.secure_url;
+  } catch (error) {
+    console.error("Cloudinary error:", error);
+    return null;
+  }
+};
 
 // ==========================================
 // 1. Login User Function
@@ -8,7 +37,6 @@ import { collection, query, where, getDocs, doc, setDoc } from 'firebase/firesto
 export const loginUser = async (emailOrReg, password) => {
   let finalEmail = emailOrReg;
 
-  // 📧 ඊමේල් එකක් නෙවෙයි නම් (Reg No එකක් නම්) ඒකට අදාළ ඊමේල් එක Firestore එකෙන් සොයනවා
   if (!emailOrReg.includes('@')) {
     const q = query(collection(db, "users"), where("regNumber", "==", emailOrReg));
     const querySnapshot = await getDocs(q);
@@ -24,7 +52,6 @@ export const loginUser = async (emailOrReg, password) => {
       throw new Error("OLD_USER_DETECTED");
     }
   } else {
-    // ඊමේල් එකක් නම්, ඒ යූසර් පරණ කෙනෙක්ද කියලා චෙක් කරනවා
     const q = query(collection(db, "users"), where("email", "==", emailOrReg));
     const querySnapshot = await getDocs(q);
     if (!querySnapshot.empty) {
@@ -49,30 +76,35 @@ export const loginUser = async (emailOrReg, password) => {
 };
 
 // ==========================================
-// 2. Register User Function 🎯 (Fixed Supported Data Issue)
+// 2. Register User Function (Fixed Upload Issue)
 // ==========================================
 export const registerUser = async (userData) => {
-  // 🛡️ photoFile (Raw File Object) එක මෙතනින් වෙන් කරලා ගන්නවා 
-  // එතකොට extraData එක ඇතුළට File object එක ගිහින් Firestore crash වෙන්නේ නැහැ.
   const { email, password, photoFile, ...extraData } = userData;
 
   try {
-    // I. Firebase Auth එකේ එකවුන්ට් එක හදනවා (Strings විදිහට පාස් වේ)
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
-    // 💡 දැනට photo upload logic එකක් නැති නිසා default profile pic URL එකක් දෙනවා
-    const defaultPhotoURL = "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
+    // Default image එකක් මුලින් සෙට් කරනවා
+    let finalPhotoURL = "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"; 
+    
+    // යූසර් ඉමේජ් එකක් තෝරලා තියෙනවා නම් ඒක Cloudinary එකට අප්ලෝඩ් කරනවා
+    if (photoFile) {
+      const uploadedUrl = await uploadImageToCloudinary(photoFile);
+      if (uploadedUrl) {
+        finalPhotoURL = uploadedUrl;
+      }
+    }
 
-    // II. Firestore එකේ users collection එක ඇතුළේ දත්ත සේව් කරනවා
     await setDoc(doc(db, "users", user.uid), {
       uid: user.uid,
       email: email,
-      role: 'student', // Default role එක student විදිහට සෙට් වේ
-      photoURL: defaultPhotoURL,
+      role: 'student', 
+      photoURL: finalPhotoURL,
+      profile_pic: finalPhotoURL, 
       createdAt: new Date().toISOString(),
       requiresPasswordReset: false, 
-      ...extraData // firstName, lastName, regNumber, mobile, department, batch ටික මෙතනට වදී
+      ...extraData 
     });
 
     return user;

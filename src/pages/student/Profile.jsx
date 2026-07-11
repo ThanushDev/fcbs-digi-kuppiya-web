@@ -7,8 +7,9 @@ import { useToast } from '../../contexts/ToastContext'
 import { db, auth } from '../../services/firebase'
 import { validateMobile, validateRegNumber } from '../../utils/validators'
 
-const CLOUD_NAME = 'your_cloud_name'
-const UPLOAD_PRESET = 'kuppiya_preset'
+// 🎯 Vercel / Vite එකෙන් Variables කියවගන්නේ මෙහෙමයි
+const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
+const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
 
 export default function Profile() {
   const { user, userData, refreshUserData } = useAuth()
@@ -35,15 +36,24 @@ export default function Profile() {
   }
 
   const uploadToCloudinary = async (file) => {
+    if (!CLOUD_NAME) {
+      throw new Error('Cloudinary Cloud Name is missing in environment variables.')
+    }
+
     const formData = new FormData()
     formData.append('file', file)
     formData.append('upload_preset', UPLOAD_PRESET)
-    formData.append('cloud_name', CLOUD_NAME)
+
     const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
       method: 'POST',
       body: formData,
     })
-    if (!response.ok) throw new Error('Cloudinary upload failed')
+    
+    if (!response.ok) {
+      const errData = await response.json()
+      throw new Error(errData.error?.message || 'Cloudinary upload failed')
+    }
+    
     const data = await response.json()
     return data.secure_url
   }
