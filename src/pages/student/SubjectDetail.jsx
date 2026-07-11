@@ -45,7 +45,7 @@ export default function SubjectDetail() {
       setLoading(false)
     }
     load()
-  }, [subjectId])
+  } , [subjectId])
 
   if (loading) return (
     <div>
@@ -176,17 +176,28 @@ function VideoGridPlayer({ items }) {
     )
   }
 
+  // 🎯 Fix කරපු තැන: ID එකක් විතරක් දුන්නත්, Full Link එකක් දුන්නත් දෙකම වැඩ කරන විදිහට හැදුවා
   const getYoutubeId = (url) => {
     if (!url) return null;
+    
+    // Trim කරලා space අයින් කරනවා
+    const cleanedUrl = url.trim();
+    
+    // ප්‍රවේශමෙන් බලන්න: අකුරු 11ක ID එකක් විතරක් නම් කෙළින්ම ඒක රිටර්න් කරනවා
+    if (cleanedUrl.length === 11 && !cleanedUrl.includes('/') && !cleanedUrl.includes('?')) {
+      return cleanedUrl;
+    }
+    
+    // Full URL එකක් ආවොත් විතරක් Regex එකෙන් කඩනවා
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|shorts\/)([^#\&\?]*).*/;
-    const match = url.match(regExp);
+    const match = cleanedUrl.match(regExp);
     return (match && match[2].length === 11) ? match[2] : null;
   }
 
   return (
     <div className="space-y-6">
       {activeVideo && (
-        <div className="rounded-2xl overflow-hidden border border-gray-200 bg-black aspect-video max-w-4xl mx-auto shadow-md">
+        <div className="rounded-2xl overflow-hidden border border-gray-200 bg-black aspect-video max-w-4xl mx-auto shadow-md animate-fade-in">
           <iframe src={`https://www.youtube.com/embed/${activeVideo}?autoplay=1`} className="h-full w-full border-none"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen title="Embedded Video Player" />
         </div>
@@ -210,11 +221,14 @@ function VideoGridPlayer({ items }) {
                     }}
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">Invalid Link</div>
+                  <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs font-semibold bg-gray-50">Invalid Link</div>
                 )}
-                <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-80 group-hover:opacity-100 transition">
-                  <div className="h-12 w-12 rounded-full bg-red-600 text-white flex items-center justify-center pl-1 text-lg shadow-lg transform group-hover:scale-110 transition duration-200">▶</div>
-                </div>
+                
+                {ytId && (
+                  <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-80 group-hover:opacity-100 transition">
+                    <div className="h-12 w-12 rounded-full bg-red-600 text-white flex items-center justify-center pl-1 text-lg shadow-lg transform group-hover:scale-110 transition duration-200">▶</div>
+                  </div>
+                )}
               </div>
 
               <div className="p-4">
