@@ -5,8 +5,8 @@ import { useToast } from '../../contexts/ToastContext'
 import { DEPARTMENTS } from '../../utils/constants'
 import { validateEmail, validateMobile, validateRegNumber, validatePassword } from '../../utils/validators'
 import logo from '../../assets/logo.png' 
-// 🛠️ Firebase මෙවලම් ටික import කරගන්නවා
-import { collection, getDocs, query, where, orderBy } from 'firebase/firestore'
+// 🛠️ Firebase මෙවලම්
+import { collection, getDocs, query, where } from 'firebase/firestore'
 import { db } from '../../services/firebase'
 
 export default function Register() {
@@ -20,17 +20,24 @@ export default function Register() {
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
 
-  // 🔄 Dynamic Batches සඳහා අලුත් State එකක්
+  // 🔄 Dynamic Batches සඳහා State එක
   const [dbBatches, setDbBatches] = useState([])
 
-  // 🛠️ පැත්තකින් Firestore එකෙන් active බැච් ටික විතරක් ඇදලා ගන්නවා
+  // 🛠️ Firestore එකෙන් active බැච් ටික ඇදලා ගන්නවා
   useEffect(() => {
     const fetchBatches = async () => {
       try {
         const batchesRef = collection(db, 'batchPermissions')
-        const q = query(batchesRef, where('active', '==', true), orderBy('createdAt', 'desc'))
+        // 💡 Composite Index ප්‍රශ්න මඟහරවා ගන්න orderBy එක ඉවත් කර සරල Query එකක් දැම්මා
+        const q = query(batchesRef, where('active', '==', true))
         const batchSnap = await getDocs(q)
-        const batchList = batchSnap.docs.map(doc => doc.data().batchName)
+        
+        // Data ටික අරන් client-side එකෙන් sort කරගන්නවා
+        const batchList = batchSnap.docs
+          .map(doc => doc.data())
+          .sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)) // අලුත්ම ඒවා උඩට
+          .map(data => data.batchName)
+
         setDbBatches(batchList)
       } catch (err) {
         console.error("Error loading register batches:", err)
@@ -143,7 +150,6 @@ export default function Register() {
               </div>
               <div>
                 <label className="mb-1 block text-[10px] font-bold tracking-wider text-purple-400 uppercase">Batch</label>
-                {/* 🔄 මෙන්න මෙතන BATCHES වෙනුවට dbBatches map කරලා dynamic හැදුවා මචං */}
                 <select value={form.batch} onChange={set('batch')} className="w-full px-3 py-1.5 text-xs rounded-xl bg-[#09101d] border border-white/10 text-white focus:outline-none focus:ring-1 focus:ring-purple-500/40 font-medium cursor-pointer" required>
                   <option value="" className="bg-[#0b1528]">Select Batch</option>
                   {dbBatches.map((b) => <option key={b} value={b} className="bg-[#0b1528]">{b}</option>)}
