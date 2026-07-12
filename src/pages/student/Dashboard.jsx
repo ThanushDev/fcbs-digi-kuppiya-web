@@ -1,14 +1,12 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom' // 🛠️ useNavigate එකතු කළා Modal එකෙන් redirect කරන්න
 import { useAuth } from '../../contexts/AuthContext'
 import { getSemesters, getBatchPermission, addComment } from '../../services/firestore' 
-// 🎯 Firebase Imports
 import { collection, getDocs, query, where, orderBy } from 'firebase/firestore'
 import { db } from '../../services/firebase'
 import logo from '../../assets/logo.png' 
 
 const semesterIcons = ['📘', '📗', '📕', '📙', '📔', '📓', '📔', '📓']
-
 const SEMESTER_THEMES = [
   { bg: 'bg-gradient-to-br from-blue-50 to-indigo-100/40', border: 'border-blue-200/80 hover:border-blue-400', text: 'text-blue-900', iconBg: 'bg-blue-500/10 text-blue-600' },
   { bg: 'bg-gradient-to-br from-emerald-50 to-teal-100/40', border: 'border-emerald-200/80 hover:border-emerald-400', text: 'text-emerald-900', iconBg: 'bg-emerald-500/10 text-emerald-600' },
@@ -21,7 +19,7 @@ const SEMESTER_THEMES = [
 ]
 
 const MENTORS = [
-  { name: "Mr.Thanush Nethsika", nickname: "සයිබර්", batch: "22/23", role: "Author of Uniflow", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614075/cyber_jz6wx6.jpg" },
+  { name: "Mr.Thanush Nethsika", nickname: "සයිබර්", batch: "22/23", role: "Author of FCBS DIGI KUPPIYA", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614075/cyber_jz6wx6.jpg" },
   { name: "Ms. Imalsha Sathsarani", batch: "22/23", role: "Economics", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614075/ima_h6xjz3.jpg" },
   { name: "Ms. Kasuni Gaurika", batch: "22/23", role: "Mathematics", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614076/nawodhya_ylxmlr.jpg" },
   { name: "Ms. Kavindi Nawodhya", batch: "22/23", role: "Mathematics", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614076/nawodhya_ylxmlr.jpg" },
@@ -61,6 +59,7 @@ const academicTools = [
 
 export default function Dashboard() {
   const { userData } = useAuth()
+  const navigate = useNavigate()
   const [semesters, setSemesters] = useState([])
   const [loading, setLoading] = useState(true)
   const [activeMentorIdx, setActiveMentorIdx] = useState(0)
@@ -73,6 +72,10 @@ export default function Dashboard() {
   const [activePopup, setActivePopup] = useState(null)
   const [showHistory, setShowHistory] = useState(false)
 
+  // 🔄 Specialization Modal States
+  const [specModalOpen, setSpecModalOpen] = useState(false)
+  const [selectedSemId, setSelectedSemId] = useState('')
+
   useEffect(() => {
     const interval = setInterval(() => {
       setActiveMentorIdx((prev) => (prev + 1) % MENTORS.length)
@@ -80,7 +83,6 @@ export default function Dashboard() {
     return () => clearInterval(interval)
   }, [])
 
-  // 🔄 Live Fetching Semesters & Notifications
   useEffect(() => {
     const load = async () => {
       if (!userData) return;
@@ -89,7 +91,7 @@ export default function Dashboard() {
         const dept = userData?.department || ''
         const userBatch = userData?.batch ? String(userData.batch).trim() : ''
 
-        // --- FETCH SEMESTERS ---
+        // Fetch Semesters
         const allSemesters = await getSemesters()
         let filtered = [];
 
@@ -112,15 +114,12 @@ export default function Dashboard() {
         filtered.sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
         setSemesters(filtered)
 
-        // --- FETCH NOTIFICATIONS ---
+        // Fetch Notifications
         const notifSnap = await getDocs(query(collection(db, 'global_notifications'), orderBy('createdAt', 'desc')))
         const notifList = notifSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }))
-        
-        // Filter notifications for this specific user's batch or all
         const userNotifs = notifList.filter(n => n.targetBatch === 'all' || n.targetBatch === userBatch)
         setAllNotifications(userNotifs)
 
-        // Trigger latest notification as popup modal on login
         if (userNotifs.length > 0) {
           setActivePopup(userNotifs[0])
         }
@@ -134,10 +133,27 @@ export default function Dashboard() {
     load()
   }, [userData?.department, userData?.batch])
 
+  // 🛠️ Handle Semester Click (BMS Year 3/4 intercept කරන ලොජික් එක මචං)
+  const handleSemesterClick = (s, e) => {
+    const isBMS = userData?.department === 'bms'
+    const isYear3or4 = s.name?.includes('Y3') || s.name?.includes('Y4')
+
+    if (isBMS && isYear3or4) {
+      e.preventDefault() // Link එකට auto යන එක නවත්තනවා
+      setSelectedSemId(s.id)
+      setSpecModalOpen(true) // Modal එක පෙන්වනවා
+    }
+  }
+
+  // 🚀 Modal එකෙන් select කරාම යන්න ඕන route එක (Query parameter එකක් විදියට specialization එක යවනවා)
+  const handleSpecSelect = (specType) => {
+    setSpecModalOpen(false)
+    navigate(`/dashboard/subjects/${selectedSemId}?spec=${specType}`)
+  }
+
   const handleCommentSubmit = async (e) => {
     e.preventDefault()
     if (!commentText.trim()) return
-
     try {
       setSubmittingComment(true)
       await addComment({
@@ -160,7 +176,7 @@ export default function Dashboard() {
   return (
     <div className="animate-fade-in space-y-8 flex flex-col min-h-screen p-2 sm:p-4 relative">
       
-      {/* 📹 POPUP NOTIFICATION MODAL (LOG IN UNAAMA SCREEN EKE ENNA) */}
+      {/* 📹 POPUP NOTIFICATION MODAL */}
       {activePopup && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in">
           <div className="relative w-full max-w-md p-6 bg-white/90 border border-indigo-100 rounded-2xl shadow-2xl backdrop-blur-xl animate-scale-in">
@@ -181,7 +197,37 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* 🔔 NOTIFICATION HISTORY DRAWER (WWERADILAWATH CLOSE UNOTH BALANNA) */}
+      {/* 🔮 🚀 Dynamic Specialization Pop-up Modal මචං */}
+      {specModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
+          <div className="relative w-full max-w-md p-6 bg-[#0b1528] border border-white/10 rounded-3xl shadow-[0_0_50px_rgba(168,85,247,0.2)] animate-scale-in text-center">
+            <button onClick={() => setSpecModalOpen(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white transition">✕</button>
+            <h3 className="text-xl font-black text-white tracking-wide mb-1"> Select Academic Path</h3>
+            <p className="text-xs text-slate-400 mb-6">Choose your degree stream to map relevant subjects.</p>
+            
+            <div className="grid grid-cols-1 gap-2.5">
+              {[
+                { type: 'all', label: 'General Degree', color: 'hover:border-slate-400 bg-slate-900/50' },
+                { type: 'accounting', label: 'Accounting Specialization', color: 'hover:border-blue-400 bg-blue-950/20' },
+                { type: 'marketing', label: 'Marketing Specialization', color: 'hover:border-emerald-400 bg-emerald-950/20' },
+                { type: 'hrm', label: 'HRM Specialization', color: 'hover:border-rose-400 bg-rose-950/20' },
+                { type: 'management', label: 'Management Specialization', color: 'hover:border-purple-400 bg-purple-950/20' },
+                { type: 'info_management', label: 'Information Management Specialization', color: 'hover:border-cyan-400 bg-cyan-950/20' },
+              ].map((spec) => (
+                <button
+                  key={spec.type}
+                  onClick={() => handleSpecSelect(spec.type)}
+                  className={`w-full py-3 px-4 rounded-xl text-left border border-white/10 text-sm font-bold text-slate-200 ${spec.color} transition duration-200 transform hover:-translate-x-1`}
+                >
+                  {spec.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 🔔 NOTIFICATION HISTORY DRAWER */}
       {showHistory && (
         <div className="fixed inset-y-0 right-0 z-50 w-full max-w-sm bg-white shadow-2xl border-l border-gray-100 p-6 flex flex-col animate-slide-in">
           <div className="flex justify-between items-center border-b pb-4 mb-4">
@@ -219,7 +265,6 @@ export default function Dashboard() {
             <h1 className="text-2xl font-bold text-gray-900">Welcome, {userData?.firstName || 'Student'}</h1>
             <p className="mt-1 text-sm text-gray-500">Select a semester to view your subjects and learning materials.</p>
           </div>
-          {/* Notification Trigger Bell Icon */}
           <button onClick={() => setShowHistory(true)} className="relative p-2.5 bg-slate-100 hover:bg-slate-200/80 rounded-xl transition group shrink-0">
             <span className="text-xl">🔔</span>
             {allNotifications.length > 0 && (
@@ -268,6 +313,7 @@ export default function Dashboard() {
                   <Link 
                     key={s.id} 
                     to={`/dashboard/subjects/${s.id}`}
+                    onClick={(e) => handleSemesterClick(s, e)} // 🛠️ Click Event එක බාධා කරලා Modal එකට හරවනවා
                     className={`group p-5 flex flex-col justify-between min-h-[140px] rounded-2xl border shadow-sm transition-all duration-300 transform hover:-translate-y-1 hover:shadow-md ${theme.bg} ${theme.border}`}
                   >
                     <div>
@@ -297,13 +343,7 @@ export default function Dashboard() {
             </div>
             <div className="flex space-x-1.5">
               {MENTORS.map((_, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setActiveMentorIdx(idx)}
-                  className={`h-1.5 rounded-full transition-all duration-300 ${
-                    activeMentorIdx === idx ? 'w-5 bg-indigo-600' : 'w-1.5 bg-slate-300 hover:bg-slate-400'
-                  }`}
-                />
+                <button key={idx} onClick={() => setActiveMentorIdx(idx)} className={`h-1.5 rounded-full transition-all duration-300 ${activeMentorIdx === idx ? 'w-5 bg-indigo-600' : 'w-1.5 bg-slate-300 hover:bg-slate-400'}`} />
               ))}
             </div>
           </div>
@@ -312,39 +352,19 @@ export default function Dashboard() {
             {MENTORS.map((mentor, index) => {
               const isActive = index === activeMentorIdx
               return (
-                <div
-                  key={mentor.name}
-                  className={`absolute w-full flex flex-col sm:flex-row items-center gap-6 transition-all duration-700 ease-in-out transform ${
-                    isActive 
-                      ? 'opacity-100 scale-100 translate-x-0 pointer-events-auto' 
-                      : 'opacity-0 scale-95 translate-x-4 pointer-events-none'
-                  }`}
-                >
+                <div key={mentor.name} className={`absolute w-full flex flex-col sm:flex-row items-center gap-6 transition-all duration-700 ease-in-out transform ${isActive ? 'opacity-100 scale-100 translate-x-0 pointer-events-auto' : 'opacity-0 scale-95 translate-x-4 pointer-events-none'}`}>
                   <div className="relative h-24 w-24 sm:h-28 sm:w-28 flex-shrink-0">
                     <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded-2xl rotate-6 opacity-15 animate-pulse"></div>
-                    <img
-                      src={mentor.image}
-                      alt={mentor.name}
-                      className="h-full w-full object-cover rounded-2xl border border-slate-100 shadow-sm relative z-10"
-                    />
+                    <img src={mentor.image} alt={mentor.name} className="h-full w-full object-cover rounded-2xl border border-slate-100 shadow-sm relative z-10" />
                   </div>
-
                   <div className="text-center sm:text-left flex-1">
                     <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2.5 justify-center sm:justify-start">
                       <h4 className="text-xl font-bold text-slate-900">{mentor.name}</h4>
-                      {mentor.nickname && (
-                        <span className="text-[10px] font-semibold px-2 py-0.5 bg-white/80 text-slate-600 rounded-full w-max mx-auto sm:mx-0 border border-slate-200/50">
-                          "{mentor.nickname}"
-                        </span>
-                      )}
+                      {mentor.nickname && <span className="text-[10px] font-semibold px-2 py-0.5 bg-white/80 text-slate-600 rounded-full w-max mx-auto sm:mx-0 border border-slate-200/50">"{mentor.nickname}"</span>}
                     </div>
-                    <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wider mt-0.5">
-                      {mentor.role}
-                    </p>
+                    <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wider mt-0.5">{mentor.role}</p>
                     <div className="mt-3 flex items-center justify-center sm:justify-start gap-2 text-xs font-medium text-slate-500">
-                      <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded-md border border-indigo-100/40 font-bold">
-                        Batch: {mentor.batch}
-                      </span>
+                      <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded-md border border-indigo-100/40 font-bold">Batch: {mentor.batch}</span>
                       <span className="w-1 bg-slate-300 h-1 rounded-full"></span>
                       <span className="text-[11px]">Faculty Mentor</span>
                     </div>
@@ -361,23 +381,11 @@ export default function Dashboard() {
             <h3 className="text-sm font-bold text-indigo-950 uppercase tracking-wide">Dashboard Feedback</h3>
             <p className="text-xs text-indigo-700/70 mt-0.5">Have suggestions or issues regarding LMS? Submit directly to admin.</p>
           </div>
-
           <form onSubmit={handleCommentSubmit} className="space-y-3">
-            <textarea
-              rows="3"
-              value={commentText}
-              onChange={(e) => setCommentText(e.target.value)}
-              placeholder="Write your suggestions or feedback here mchn..."
-              className="w-full text-sm p-3 bg-white/80 border border-indigo-100 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:bg-white transition outline-none resize-none placeholder-gray-400 shadow-inner"
-              maxLength={500}
-            />
+            <textarea rows="3" value={commentText} onChange={(e) => setCommentText(e.target.value)} placeholder="Write your suggestions or feedback here mchn..." className="w-full text-sm p-3 bg-white/80 border border-indigo-100 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:bg-white transition outline-none resize-none placeholder-gray-400 shadow-inner" maxLength={500} />
             <div className="flex justify-end">
-              <button
-                type="submit"
-                disabled={submittingComment || !commentText.trim()}
-                className="px-5 py-2.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50"
-              >
-                {submittingComment ? 'Submitting...' : 'Submit Feedback 🚀'}
+              <button type="submit" disabled={submittingComment || !commentText.trim()} className="px-5 py-2.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50">
+                {submittingComment ? 'Submitting...' : 'Submit Feedback '}
               </button>
             </div>
           </form>
@@ -389,20 +397,11 @@ export default function Dashboard() {
         <div className="flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">
             <img src={logo} alt="Uniflow Logo" className="h-7 w-auto opacity-80 object-contain" />
-            <span className="text-sm font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent tracking-tight">
-              FCBS DIGI KUPPIYA
-            </span>
+            <span className="text-sm font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent tracking-tight">FCBS DIGI KUPPIYA</span>
           </div>
           <div className="text-center md:text-right space-y-0.5">
-            <p className="text-xs font-medium text-gray-400 tracking-wide">
-              &copy; {new Date().getFullYear()} FCBS DIGI KUPPIYA. All rights reserved.
-            </p>
-            <p className="text-[11px] text-gray-400 font-medium">
-              Developed by{' '}
-              <span className="font-semibold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent hover:opacity-80 transition cursor-default">
-                Mr.Thanush
-              </span>
-            </p>
+            <p className="text-xs font-medium text-gray-400 tracking-wide">&copy; {new Date().getFullYear()} FCBS DIGI KUPPIYA. All rights reserved.</p>
+            <p className="text-[11px] text-gray-400 font-medium">Developed by <span className="font-semibold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent hover:opacity-80 transition cursor-default">Mr.Thanush</span></p>
           </div>
         </div>
       </footer>

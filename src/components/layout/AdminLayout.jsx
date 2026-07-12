@@ -2,6 +2,8 @@ import { useState, useRef, useEffect } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { logoutUser } from '../../services/auth'
+// 🖼️ ඔයාගේ logo image එක import කරගත්තා මචං
+import logo from '../../assets/logo.png'
 
 export default function AdminLayout() {
   const { userData } = useAuth()
@@ -101,11 +103,12 @@ export default function AdminLayout() {
 
       {/* Sidebar */}
       <aside className={`fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-gray-200 shadow-sm flex flex-col transition-transform duration-300 ease-out md:static md:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        {/* Logo */}
+        {/* Logo Section */}
         <div className="flex h-16 items-center gap-3 border-b border-gray-100 px-5 shrink-0">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-600 text-sm font-bold text-white shadow-sm">FK</div>
+          {/* 🔄 නිල් පාට කොටුව වෙනුවට ඔයාගේ logo.png එක මෙතනට දැම්මා */}
+          <img src={logo} alt="Logo" className="h-9 w-9 object-contain" />
           <div>
-            <p className="text-sm font-semibold text-gray-900">Uniflow</p>
+            <p className="text-sm font-semibold text-gray-900">FCBS DIGI KUPPIYA</p>
             <p className="text-[10px] text-gray-500">Admin Panel</p>
           </div>
         </div>
@@ -133,7 +136,7 @@ export default function AdminLayout() {
                 className={({ isActive }) => `sidebar-item ${isActive ? 'active' : ''}`}>
                 <span className="w-5 flex items-center justify-center shrink-0">
                   <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2-2v12a2 2 0 002 2z" />
                   </svg>
                 </span>
                 Analytics
