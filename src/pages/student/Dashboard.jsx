@@ -21,7 +21,7 @@ const SEMESTER_THEMES = [
 const MENTORS = [
   { name: "Mr.Thanush Nethsika", nickname: "සයිබර්", batch: "22/23", role: "Author of FCBS DIGI KUPPIYA", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614075/cyber_jz6wx6.jpg" },
   { name: "Ms. Imalsha Sathsarani", batch: "22/23", role: "Economics", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614075/ima_h6xjz3.jpg" },
-  { name: "Ms. Kasuni Gaurika", batch: "22/23", role: "Mathematics", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614076/nawodhya_ylxmlr.jpg" },
+  { name: "Ms. Kasuni Gaurika", batch: "22/23", role: "Mathematics", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614075/kasuni_omcklq.jpg" },
   { name: "Ms. Kavindi Nawodhya", batch: "22/23", role: "Mathematics", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614076/nawodhya_ylxmlr.jpg" },
   { name: "Ms. Jayathri Indrachapa", nickname: "මෙඩුසා", batch: "22/23", role: "Mathematics", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614067/chapa_drbwzz.jpg" },
   { name: "Ms. Kavithma Damindi", batch: "22/23", role: "Management", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614072/kavithma_mmfkmr.jpg" },
