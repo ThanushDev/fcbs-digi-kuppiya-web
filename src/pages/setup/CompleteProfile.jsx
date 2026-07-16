@@ -21,6 +21,16 @@ export default function CompleteProfile() {
       const batchMsg = batch ? ` for batch ${batch} (must start with ${batch.split('/')[0]} or ${parseInt(batch.split('/')[1]) - 1})` : ''
       return showToast(`Invalid registration number${batchMsg}`, 'error')
     }
+
+    // 💡 අලුත් Validation එක (BMS/LCS ms/cs check)
+    const userDept = userData?.department?.toLowerCase() || ''
+    if (userDept === 'bms' && !regNumber.toLowerCase().includes('/ms/')) {
+      return showToast('Registration number for BMS must contain "ms" (e.g., 22/ms/001)', 'error')
+    }
+    if (userDept === 'lcs' && !regNumber.toLowerCase().includes('/cs/')) {
+      return showToast('Registration number for LCS must contain "cs" (e.g., 22/cs/001)', 'error')
+    }
+
     setLoading(true)
     try {
       await updateDoc(doc(db, 'users', user.uid), { regNumber })
@@ -66,7 +76,7 @@ export default function CompleteProfile() {
             <div className="text-left">
               <label className="mb-1.5 block text-xs font-medium text-gray-600">Registration Number</label>
               <input type="text" value={regNumber} onChange={(e) => setRegNumber(e.target.value)}
-                placeholder={userData?.department === 'bms' ? '22/MS/001' : '22/CS/001'}
+                placeholder={userData?.department === 'bms' ? '22/ms/000' : '22/cs/000'}
                 className="input-field" required autoFocus />
               <p className="mt-1.5 text-[10px] text-gray-400">
                 {userData?.batch

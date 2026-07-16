@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react'
 import { getSemesters, addSemester, updateSemester, deleteSemester } from '../../services/firestore'
-import { SEMESTERS } from '../../utils/constants'
+
+// 🎯 පැරණි විදිහටම ලස්සනට Y1S1 ආකෘතියෙන් විතරක් Y4S2 වෙනකම් දැම්මා
+const LOCAL_SEMESTERS = [
+  'Y1S1', 'Y1S2', 'Y2S1', 'Y2S2', 'Y3S1', 'Y3S2', 'Y4S1', 'Y4S2'
+]
 
 export default function SemesterManagement() {
   const [semesters, setSemesters] = useState([])
@@ -20,7 +24,7 @@ export default function SemesterManagement() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!form.name || !form.department) return
-    const payload = { name: form.name, department: form.department, order: SEMESTERS.indexOf(form.name) }
+    const payload = { name: form.name, department: form.department, order: LOCAL_SEMESTERS.indexOf(form.name) }
     if (editing) {
       await updateSemester(editing, payload)
       setEditing(null)
@@ -50,7 +54,7 @@ export default function SemesterManagement() {
         <select value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
           className="rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-gray-900 outline-none focus:border-indigo-500">
           <option value="">Select Semester</option>
-          {SEMESTERS.map((s) => <option key={s} value={s}>{s}</option>)}
+          {LOCAL_SEMESTERS.map((s) => <option key={s} value={s}>{s}</option>)}
         </select>
         <select value={form.department} onChange={(e) => setForm({ ...form, department: e.target.value })}
           className="rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-gray-900 outline-none focus:border-indigo-500">
@@ -76,7 +80,9 @@ export default function SemesterManagement() {
           {semesters.map((s) => (
             <div key={s.id} className="rounded-xl border border-gray-200 bg-white p-5">
               <div className="mb-2 flex items-center justify-between">
-                <span className="rounded-lg bg-indigo-600/20 px-3 py-1 text-xs font-semibold text-indigo-400">{s.department}</span>
+                <span className={`rounded-lg px-3 py-1 text-xs font-bold uppercase ${s.department === 'bms' ? 'bg-indigo-100 text-indigo-700' : s.department === 'lcs' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-700'}`}>
+                  {s.department}
+                </span>
                 <div className="flex gap-2">
                   <button onClick={() => handleEdit(s)} className="text-xs text-gray-400 hover:text-indigo-400 transition">Edit</button>
                   <button onClick={() => handleDelete(s.id)} className="text-xs text-gray-400 hover:text-red-400 transition">Del</button>

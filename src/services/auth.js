@@ -2,11 +2,9 @@ import { auth, db } from './firebase';
 import { signInWithEmailAndPassword, sendPasswordResetEmail, createUserWithEmailAndPassword } from 'firebase/auth';
 import { collection, query, where, getDocs, doc, setDoc } from 'firebase/firestore';
 
-// 🎯 Vercel / Vite එකෙන් Variables කියවගන්නේ මෙහෙමයි
 const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
 const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
 
-// Cloudinary Helper Function
 const uploadImageToCloudinary = async (file) => {
   if (!CLOUD_NAME) {
     console.warn("Cloudinary Cloud Name is missing in environment variables. Using default photo.");
@@ -31,9 +29,6 @@ const uploadImageToCloudinary = async (file) => {
   }
 };
 
-// ==========================================
-// 1. Login User Function
-// ==========================================
 export const loginUser = async (emailOrReg, password) => {
   let finalEmail = emailOrReg;
 
@@ -75,20 +70,17 @@ export const loginUser = async (emailOrReg, password) => {
   }
 };
 
-// ==========================================
-// 2. Register User Function (Fixed Upload Issue)
-// ==========================================
 export const registerUser = async (userData) => {
+  // 💡 SAFE EXECUTION: userData එක null/undefined ද කියලා check කරනවා crash නොවෙන්න
+  if (!userData) throw new Error("No user data provided");
   const { email, password, photoFile, ...extraData } = userData;
 
   try {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
-    // Default image එකක් මුලින් සෙට් කරනවා
     let finalPhotoURL = "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"; 
     
-    // යූසර් ඉමේජ් එකක් තෝරලා තියෙනවා නම් ඒක Cloudinary එකට අප්ලෝඩ් කරනවා
     if (photoFile) {
       const uploadedUrl = await uploadImageToCloudinary(photoFile);
       if (uploadedUrl) {
@@ -96,6 +88,7 @@ export const registerUser = async (userData) => {
       }
     }
 
+    // Firestore එකට සේව් කරන object එක
     await setDoc(doc(db, "users", user.uid), {
       uid: user.uid,
       email: email,
@@ -104,6 +97,7 @@ export const registerUser = async (userData) => {
       profile_pic: finalPhotoURL, 
       createdAt: new Date().toISOString(),
       requiresPasswordReset: false, 
+      hasValidFace: userData.hasValidFace !== undefined ? userData.hasValidFace : true,
       ...extraData 
     });
 
@@ -113,9 +107,6 @@ export const registerUser = async (userData) => {
   }
 };
 
-// ==========================================
-// 3. Reset Password Function
-// ==========================================
 export const resetPassword = async (email) => {
   try {
     await sendPasswordResetEmail(auth, email);
@@ -128,9 +119,6 @@ export const resetPassword = async (email) => {
   }
 };
 
-// ==========================================
-// 4. Logout User Function
-// ==========================================
 export const logoutUser = async () => {
   try {
     await auth.signOut();

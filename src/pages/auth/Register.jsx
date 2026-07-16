@@ -62,6 +62,14 @@ export default function Register() {
     if (!form.department) return showToast('Select a department', 'error')
     if (!form.batch) return showToast('Select a batch', 'error')
 
+    // 💡 අලුත් Validation එක (BMS/LCS ms/cs check)
+    if (form.department.toLowerCase() === 'bms' && !form.regNumber.toLowerCase().includes('/ms/')) {
+      return showToast('Registration number for BMS must contain "ms" (e.g., 22/ms/00)', 'error')
+    }
+    if (form.department.toLowerCase() === 'lcs' && !form.regNumber.toLowerCase().includes('/cs/')) {
+      return showToast('Registration number for LCS must contain "cs" (e.g., 22/cs/00)', 'error')
+    }
+
     setLoading(true)
     try {
       await registerUser({

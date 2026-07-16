@@ -8,7 +8,6 @@ export default function ChapterManagement() {
   const [loading, setLoading] = useState(true)
   const [filterSubject, setFilterSubject] = useState('')
   
-  // 1. Form state එකට driveLink එකතු කළා
   const [form, setForm] = useState({ title: '', subjectId: '', order: '', driveLink: '' })
   const [editing, setEditing] = useState(null)
 
@@ -30,12 +29,11 @@ export default function ChapterManagement() {
     e.preventDefault()
     if (!form.title || !form.subjectId) return
     
-    // 2. Payload එකට driveLink එකතු කළා
     const payload = { 
       title: form.title, 
       subjectId: form.subjectId, 
       order: Number(form.order) || 0,
-      driveLink: form.driveLink || '' // හිස්ව තිබ්බොත් empty string එකක් යන්නේ
+      driveLink: form.driveLink || '' 
     }
     
     if (editing) {
@@ -45,14 +43,12 @@ export default function ChapterManagement() {
       await addChapter(payload)
     }
     
-    // Form එක reset කරද්දී driveLink එකත් reset කරනවා
     setForm({ title: '', subjectId: filterSubject, order: '', driveLink: '' })
     load()
   }
 
   const handleEdit = (c) => {
     setEditing(c.id)
-    // 3. Edit කරද්දී තිබ්බ driveLink එක form එකට ගන්නවා
     setForm({ 
       title: c.title, 
       subjectId: c.subjectId, 
@@ -67,7 +63,11 @@ export default function ChapterManagement() {
     load()
   }
 
-  const getSubjectName = (id) => subjects.find((s) => s.id === id)?.name || '—'
+  const getSubjectDetails = (id) => {
+    const s = subjects.find((sub) => sub.id === id)
+    if (!s) return null
+    return s
+  }
 
   return (
     <div>
@@ -75,11 +75,13 @@ export default function ChapterManagement() {
 
       <div className="mb-6">
         <select value={filterSubject} onChange={(e) => { setFilterSubject(e.target.value); setForm({ ...form, subjectId: e.target.value, driveLink: '' }) }}
-          className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-gray-900 outline-none focus:border-indigo-500 w-64">
+          className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-gray-900 outline-none focus:border-indigo-500 min-w-[300px]">
           <option value="">Select a Subject first</option>
-          {subjects.map((s) => (
-            <option key={s.id} value={s.id}>{s.name} ({semesters.find((x) => x.id === s.semesterId)?.name || '—'})</option>
-          ))}
+          {subjects.map((s) => {
+            const dept = s.department ? `[${s.department.toUpperCase()}]` : ''
+            const spec = s.specialization && s.specialization !== 'all' ? `[${s.specialization}]` : ''
+            return <option key={s.id} value={s.id}>{dept} {spec} {s.name}</option>
+          })}
         </select>
       </div>
 
@@ -88,7 +90,6 @@ export default function ChapterManagement() {
           <input type="text" placeholder="Chapter Title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })}
             className="flex-1 min-w-[200px] rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-gray-900 outline-none focus:border-indigo-500" required />
           
-          {/* 4. අලුතෙන් එකතු කරපු Google Drive Link Input Field එක */}
           <input type="url" placeholder="Google Drive Link (Optional)" value={form.driveLink} onChange={(e) => setForm({ ...form, driveLink: e.target.value })}
             className="flex-1 min-w-[250px] rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-gray-900 outline-none focus:border-indigo-500" />
 
@@ -109,31 +110,45 @@ export default function ChapterManagement() {
         <div className="text-center py-12 text-gray-500">{filterSubject ? 'No chapters yet for this subject.' : 'Select a subject above.'}</div>
       ) : (
         <div className="space-y-3">
-          {chapters.map((c) => (
-            <div key={c.id} className="flex items-center justify-between rounded-xl border border-gray-200 bg-white p-4">
-              <div className="flex items-center gap-4 w-full justify-between">
-                <div className="flex items-center gap-4">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-800 text-xs font-bold text-gray-400">{c.order || '—'}</span>
-                  <div>
-                    <h3 className="font-semibold text-gray-900">{c.title}</h3>
-                    <p className="text-xs text-gray-500">{getSubjectName(c.subjectId)}</p>
+          {chapters.map((c) => {
+            const subject = getSubjectDetails(c.subjectId)
+            return (
+              <div key={c.id} className="flex items-center justify-between rounded-xl border border-gray-200 bg-white p-4">
+                <div className="flex items-center gap-4 w-full justify-between">
+                  <div className="flex items-center gap-4">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-800 text-xs font-bold text-gray-400">{c.order || '—'}</span>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">{c.title}</h3>
+                      <div className="flex items-center gap-2 mt-1">
+                        <p className="text-xs text-gray-500">{subject?.name || '—'}</p>
+                        {subject?.department && (
+                          <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase ${subject.department === 'bms' ? 'bg-indigo-100 text-indigo-800' : 'bg-emerald-100 text-emerald-800'}`}>
+                            {subject.department}
+                          </span>
+                        )}
+                        {subject?.specialization && subject.specialization !== 'all' && (
+                          <span className="text-[9px] px-1.5 py-0.5 rounded font-bold uppercase bg-amber-100 text-amber-800">
+                            {subject.specialization.replace('_', ' ')}
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </div>
 
-                {/* 5. UI එකේ Drive Link එකක් තියෙනවා නම් ඒක බලාගන්න ලින්ක් එකක් දැම්මා */}
-                {c.driveLink && (
-                  <a href={c.driveLink} target="_blank" rel="noreferrer" className="text-xs text-indigo-400 hover:underline bg-indigo-950/40 border border-indigo-900/50 px-2.5 py-1 rounded-md">
-                    🔗 Drive Link
-                  </a>
-                )}
+                  {c.driveLink && (
+                    <a href={c.driveLink} target="_blank" rel="noreferrer" className="text-xs text-indigo-400 hover:underline bg-indigo-950/40 border border-indigo-900/50 px-2.5 py-1 rounded-md">
+                      🔗 Drive Link
+                    </a>
+                  )}
+                </div>
+                
+                <div className="flex gap-2 ml-4">
+                  <button onClick={() => handleEdit(c)} className="rounded px-3 py-1 text-xs text-gray-400 hover:text-indigo-400 transition">Edit</button>
+                  <button onClick={() => handleDelete(c.id)} className="rounded px-3 py-1 text-xs text-gray-400 hover:text-red-400 transition">Del</button>
+                </div>
               </div>
-              
-              <div className="flex gap-2 ml-4">
-                <button onClick={() => handleEdit(c)} className="rounded px-3 py-1 text-xs text-gray-400 hover:text-indigo-400 transition">Edit</button>
-                <button onClick={() => handleDelete(c.id)} className="rounded px-3 py-1 text-xs text-gray-400 hover:text-red-400 transition">Del</button>
-              </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
     </div>

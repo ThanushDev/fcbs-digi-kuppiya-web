@@ -19,19 +19,19 @@ const SEMESTER_THEMES = [
 ]
 
 const MENTORS = [
-  { name: "Mr.Thanush Nethsika", nickname: "සයිබර්", batch: "22/23", role: "Author of FCBS DIGI KUPPIYA", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614075/cyber_jz6wx6.jpg" },
-  { name: "Ms. Imalsha Sathsarani", batch: "22/23", role: "Economics", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614075/ima_h6xjz3.jpg" },
-  { name: "Ms. Kasuni Gaurika", batch: "22/23", role: "Mathematics", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614075/kasuni_omcklq.jpg" },
-  { name: "Ms. Kavindi Nawodhya", batch: "22/23", role: "Mathematics", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614076/nawodhya_ylxmlr.jpg" },
-  { name: "Ms. Jayathri Indrachapa", nickname: "මෙඩුසා", batch: "22/23", role: "Mathematics", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614067/chapa_drbwzz.jpg" },
-  { name: "Ms. Kavithma Damindi", batch: "22/23", role: "Management", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614072/kavithma_mmfkmr.jpg" },
-  { name: "Ms.Naduni Rathnayaka", batch: "22/23", role: "MIS", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614073/naduni_u9czqe.jpg" },
-  { name: "Ms.Liyoni Kaushalya", nickname: "ආල්‍යා", batch: "21/22", role: "MIS", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614069/liyoni_c4yb0l.jpg" },
-  { name: "Ms. Thakshila Wijesekara", nickname: "රපුන්සල්", batch: "21/22", role: "MIS", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614084/rapunsall_rbr0y0.jpg" },
-  { name: "Ms. Dakshila Dilshani", batch: "22/23", role: "Accounting", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614072/dakshi_vvtivc.jpg" },
-  { name: "Ms. Shashini Herath", nickname: "ශ්‍රිනී", batch: "21/22", role: "Accounting", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614078/shashini_rhwepa.jpg" },
-  { name: "Ms. Lihini Himasha", nickname: "ලාරා", batch: "21/22", role: "Accounting", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614071/lihini_s8ymh1.jpg" },
-  { name: "Ms. Diwangani Kavindya", nickname: "විනී", batch: "21/22", role: "Accounting", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614068/diwangani_cyokye.jpg" },
+  { name: "Mr.Thanush Nethsika", nickname: "සයිබර්", batch: "22/23", role: "Author of FCBS DIGI KUPPIYA", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614075/cyber_jz6wx6.jpg", department: "both" },
+  { name: "Ms. Imalsha Sathsarani", batch: "22/23", role: "Economics", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614075/ima_h6xjz3.jpg", department: "bms" },
+  { name: "Ms. Kasuni Gaurika", batch: "22/23", role: "Mathematics", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614075/kasuni_omcklq.jpg", department: "bms" },
+  { name: "Ms. Kavindi Nawodhya", batch: "22/23", role: "Mathematics", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614076/nawodhya_ylxmlr.jpg", department: "bms" },
+  { name: "Ms. Jayathri Indrachapa", nickname: "මෙඩුසා", batch: "22/23", role: "Mathematics", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614067/chapa_drbwzz.jpg", department: "bms" },
+  { name: "Ms. Kavithma Damindi", batch: "22/23", role: "Management", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614072/kavithma_mmfkmr.jpg", department: "bms" },
+  { name: "Ms.Naduni Rathnayaka", batch: "22/23", role: "MIS", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614073/naduni_u9czqe.jpg", department: "bms" },
+  { name: "Ms.Liyoni Kaushalya", nickname: "ආල්‍යා", batch: "21/22", role: "MIS", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614069/liyoni_c4yb0l.jpg", department: "bms" },
+  { name: "Ms. Thakshila Wijesekara", nickname: "රපුන්සල්", batch: "21/22", role: "MIS", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614084/rapunsall_rbr0y0.jpg", department: "bms" },
+  { name: "Ms. Dakshila Dilshani", batch: "22/23", role: "Accounting", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614072/dakshi_vvtivc.jpg", department: "bms" },
+  { name: "Ms. Shashini Herath", nickname: "ශ්‍රිනී", batch: "21/22", role: "Accounting", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614078/shashini_rhwepa.jpg", department: "bms" },
+  { name: "Ms. Lihini Himasha", nickname: "ලාරා", batch: "21/22", role: "Accounting", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614071/lihini_s8ymh1.jpg", department: "bms" },
+  { name: "Ms. Diwangani Kavindya", nickname: "විනී", batch: "21/22", role: "Accounting", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614068/diwangani_cyokye.jpg", department: "bms" },
 ]
 
 const formatSemesterName = (name) => {
@@ -67,43 +67,47 @@ export default function Dashboard() {
   const [commentText, setCommentText] = useState('')
   const [submittingComment, setSubmittingComment] = useState(false)
 
-  // 🔔 Notification States
   const [allNotifications, setAllNotifications] = useState([])
   const [activePopup, setActivePopup] = useState(null)
   const [showHistory, setShowHistory] = useState(false)
 
-  // 🔄 Specialization Modal States
   const [specModalOpen, setSpecModalOpen] = useState(false)
+  const [specModalDept, setSpecModalDept] = useState('bms') 
   const [selectedSemId, setSelectedSemId] = useState('')
 
-  // 🤖 Groq AI Chatbot States
   const [isChatOpen, setIsChatOpen] = useState(false)
   const [chatMessages, setChatMessages] = useState([{ role: 'assistant', text: 'Hi! I am the DIGI KUPPIYA AI Assistant. How can I help you with your studies today?' }])
   const [chatInput, setChatInput] = useState('')
   const [isChatLoading, setIsChatLoading] = useState(false)
   const chatEndRef = useRef(null)
 
+  const userDept = (userData?.department || '').toLowerCase()
+  const displayMentors = MENTORS.filter(m => m.department === 'both' || m.department === userDept)
+
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [chatMessages, isChatOpen])
 
   useEffect(() => {
+    if(displayMentors.length === 0) return;
     const interval = setInterval(() => {
-      setActiveMentorIdx((prev) => (prev + 1) % MENTORS.length)
+      setActiveMentorIdx((prev) => (prev + 1) % displayMentors.length)
     }, 4000)
     return () => clearInterval(interval)
-  }, [])
+  }, [displayMentors.length])
 
   useEffect(() => {
     const load = async () => {
       if (!userData) return;
       try {
         setLoading(true)
-        const dept = userData?.department || ''
+        const dept = (userData?.department || '').toLowerCase()
         const userBatch = userData?.batch ? String(userData.batch).trim() : ''
 
         const allSemesters = await getSemesters()
-        let filtered = [];
+        
+        let deptFiltered = allSemesters.filter((s) => s.department === dept || s.department === 'both');
+        let finalFiltered = deptFiltered;
 
         if (userBatch) {
           const perm = await getBatchPermission(userBatch)
@@ -112,21 +116,25 @@ export default function Dashboard() {
           if (perm && perm.semesterIds) allowedIds = perm.semesterIds;
           const allowedNames = allowedIds.map(id => idToNameMap[String(id)]).filter(Boolean);
 
-          if (allowedNames.length > 0 && allSemesters.length >= allowedNames.length) {
-            filtered = allSemesters.filter((s) => s.name ? allowedNames.includes(String(s.name).trim()) : false);
-          } else {
-            filtered = allSemesters.filter((s) => s.department === dept || s.department === 'both');
+          if (allowedNames.length > 0) {
+            finalFiltered = deptFiltered.filter((s) => s.name && allowedNames.includes(String(s.name).trim()));
           }
-        } else {
-          filtered = allSemesters.filter((s) => s.department === dept || s.department === 'both')
         }
 
-        filtered.sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-        setSemesters(filtered)
+        finalFiltered.sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+        setSemesters(finalFiltered)
 
         const notifSnap = await getDocs(query(collection(db, 'global_notifications'), orderBy('createdAt', 'desc')))
         const notifList = notifSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }))
-        const userNotifs = notifList.filter(n => n.targetBatch === 'all' || n.targetBatch === userBatch)
+        
+        // 🎯 Notifications Filter (Batch + Department දෙකම බලනවා)
+        const userNotifs = notifList.filter(n => {
+          const matchBatch = n.targetBatch === 'all' || n.targetBatch === userBatch;
+          // Purano notifications (targetDepartment field eka nathi ewa) harayanna epa, ewa all kiyala hithamu
+          const matchDept = !n.targetDepartment || n.targetDepartment === 'all' || n.targetDepartment === dept;
+          return matchBatch && matchDept;
+        })
+        
         setAllNotifications(userNotifs)
 
         if (userNotifs.length > 0) {
@@ -143,12 +151,24 @@ export default function Dashboard() {
   }, [userData?.department, userData?.batch])
 
   const handleSemesterClick = (s, e) => {
-    const isBMS = userData?.department === 'bms'
-    const isYear3or4 = s.name?.includes('Y3') || s.name?.includes('Y4')
+    const dept = (userData?.department || '').toLowerCase()
+    const isBMS = dept === 'bms'
+    const isLCS = dept === 'lcs'
+    
+    const sName = s.name || ''
+    const isYear3or4 = sName.includes('Y3') || sName.includes('Y4') || sName.includes('Year III') || sName.includes('Year IV')
+    const isYear2orAbove = isYear3or4 || sName.includes('Y2') || sName.includes('Year II')
 
     if (isBMS && isYear3or4) {
       e.preventDefault() 
       setSelectedSemId(s.id)
+      setSpecModalDept('bms')
+      setSpecModalOpen(true) 
+    } 
+    else if (isLCS && isYear2orAbove) {
+      e.preventDefault() 
+      setSelectedSemId(s.id)
+      setSpecModalDept('lcs')
       setSpecModalOpen(true) 
     }
   }
@@ -234,12 +254,27 @@ export default function Dashboard() {
     }
   }
 
+  const bmsModalOptions = [
+    { type: 'all', label: 'General Degree', color: 'hover:border-slate-400 bg-slate-900/50' },
+    { type: 'accounting', label: 'Accounting Specialization', color: 'hover:border-blue-400 bg-blue-950/20' },
+    { type: 'marketing', label: 'Marketing Specialization', color: 'hover:border-emerald-400 bg-emerald-950/20' },
+    { type: 'hrm', label: 'HRM Specialization', color: 'hover:border-rose-400 bg-rose-950/20' },
+    { type: 'management', label: 'Management Specialization', color: 'hover:border-purple-400 bg-purple-950/20' },
+    { type: 'info_management', label: 'Information Management Specialization', color: 'hover:border-cyan-400 bg-cyan-950/20' },
+  ]
+
+  const lcsModalOptions = [
+    { type: 'all', label: 'Common / General Subjects', color: 'hover:border-slate-400 bg-slate-900/50' },
+    { type: 'communication', label: 'Communication Studies', color: 'hover:border-blue-400 bg-blue-950/20' },
+    { type: 'languages', label: 'Languages', color: 'hover:border-emerald-400 bg-emerald-950/20' }
+  ]
+
+  const activeModalOptions = specModalDept === 'bms' ? bmsModalOptions : lcsModalOptions
+
   return (
     <>
-      {/* MAIN CONTAINER */}
       <div className="animate-fade-in space-y-8 flex flex-col min-h-screen p-2 sm:p-4 relative">
         
-        {/* POPUP NOTIFICATION MODAL */}
         {activePopup && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in">
             <div className="relative w-full max-w-md p-6 bg-white/90 border border-indigo-100 rounded-2xl shadow-2xl backdrop-blur-xl animate-scale-in">
@@ -260,7 +295,6 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Specialization Pop-up Modal */}
         {specModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
             <div className="relative w-full max-w-md p-6 bg-[#0b1528] border border-white/10 rounded-3xl shadow-[0_0_50px_rgba(168,85,247,0.2)] animate-scale-in text-center">
@@ -269,14 +303,7 @@ export default function Dashboard() {
               <p className="text-xs text-slate-400 mb-6">Choose your degree stream to map relevant subjects.</p>
               
               <div className="grid grid-cols-1 gap-2.5">
-                {[
-                  { type: 'all', label: 'General Degree', color: 'hover:border-slate-400 bg-slate-900/50' },
-                  { type: 'accounting', label: 'Accounting Specialization', color: 'hover:border-blue-400 bg-blue-950/20' },
-                  { type: 'marketing', label: 'Marketing Specialization', color: 'hover:border-emerald-400 bg-emerald-950/20' },
-                  { type: 'hrm', label: 'HRM Specialization', color: 'hover:border-rose-400 bg-rose-950/20' },
-                  { type: 'management', label: 'Management Specialization', color: 'hover:border-purple-400 bg-purple-950/20' },
-                  { type: 'info_management', label: 'Information Management Specialization', color: 'hover:border-cyan-400 bg-cyan-950/20' },
-                ].map((spec) => (
+                {activeModalOptions.map((spec) => (
                   <button
                     key={spec.type}
                     onClick={() => handleSpecSelect(spec.type)}
@@ -290,7 +317,6 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* NOTIFICATION HISTORY DRAWER */}
         {showHistory && (
           <div className="fixed inset-y-0 right-0 z-50 w-full max-w-sm bg-white shadow-2xl border-l border-gray-100 p-6 flex flex-col animate-slide-in">
             <div className="flex justify-between items-center border-b pb-4 mb-4">
@@ -322,7 +348,6 @@ export default function Dashboard() {
         )}
 
         <div className="flex-grow space-y-8">
-          {/* Welcome Section */}
           <div className="flex justify-between items-start gap-4">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Welcome, {userData?.firstName || 'Student'}</h1>
@@ -336,7 +361,6 @@ export default function Dashboard() {
             </button>
           </div>
 
-          {/* Academic Tools Strip */}
           <div className="flex flex-wrap gap-2.5">
             {academicTools.map((tool) => {
               if (tool.isQuiz && !userData?.quizEnabled) return null
@@ -356,7 +380,6 @@ export default function Dashboard() {
             })}
           </div>
 
-          {/* Semester Grid */}
           <div>
             {loading ? (
               <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
@@ -397,7 +420,6 @@ export default function Dashboard() {
             )}
           </div>
 
-          {/* Mentors Section */}
           <div className="mt-12 bg-gradient-to-br from-slate-50 to-blue-50/30 rounded-2xl shadow-sm border border-slate-200/80 p-6 md:p-8 overflow-hidden">
             <div className="mb-6 border-b border-slate-100 pb-4 flex justify-between items-center">
               <div>
@@ -405,14 +427,14 @@ export default function Dashboard() {
                 <p className="text-xs text-slate-500 mt-0.5">Learn from the experienced undergraduates</p>
               </div>
               <div className="flex space-x-1.5">
-                {MENTORS.map((_, idx) => (
+                {displayMentors.map((_, idx) => (
                   <button key={idx} onClick={() => setActiveMentorIdx(idx)} className={`h-1.5 rounded-full transition-all duration-300 ${activeMentorIdx === idx ? 'w-5 bg-indigo-600' : 'w-1.5 bg-slate-300 hover:bg-slate-400'}`} />
                 ))}
               </div>
             </div>
 
             <div className="relative min-h-[220px] sm:min-h-[140px] flex items-center justify-center">
-              {MENTORS.map((mentor, index) => {
+              {displayMentors.map((mentor, index) => {
                 const isActive = index === activeMentorIdx
                 return (
                   <div key={mentor.name} className={`absolute w-full flex flex-col sm:flex-row items-center gap-6 transition-all duration-700 ease-in-out transform ${isActive ? 'opacity-100 scale-100 translate-x-0 pointer-events-auto' : 'opacity-0 scale-95 translate-x-4 pointer-events-none'}`}>
@@ -429,7 +451,7 @@ export default function Dashboard() {
                       <div className="mt-3 flex items-center justify-center sm:justify-start gap-2 text-xs font-medium text-slate-500">
                         <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded-md border border-indigo-100/40 font-bold">Batch: {mentor.batch}</span>
                         <span className="w-1 bg-slate-300 h-1 rounded-full"></span>
-                        <span className="text-[11px]">Faculty Mentor</span>
+                        <span className="text-[11px] capitalize">Department: {mentor.department}</span>
                       </div>
                     </div>
                   </div>
@@ -438,7 +460,6 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Feedback Form Section */}
           <div className="mt-12 bg-gradient-to-br from-indigo-50/40 to-purple-50/40 rounded-2xl shadow-sm border border-indigo-100/80 p-6 md:p-8 space-y-4">
             <div>
               <h3 className="text-sm font-bold text-indigo-950 uppercase tracking-wide">Dashboard Feedback</h3>
@@ -455,7 +476,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Footer Section */}
         <footer className="mt-auto pt-8 pb-4 border-t border-gray-100">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2.5">
@@ -470,12 +490,9 @@ export default function Dashboard() {
         </footer>
       </div>
 
-      {/* 🤖 GROQ POWERED AI CHATBOT UI - (Moved Outside of Main Div for Perfect Fixed Position) */}
       <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end pointer-events-none">
-        {/* Chat Window */}
         {isChatOpen && (
           <div className="mb-4 w-80 sm:w-96 h-[400px] bg-white rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.3)] border border-gray-200 flex flex-col overflow-hidden animate-scale-in origin-bottom-right pointer-events-auto">
-            {/* Chat Header */}
             <div className="bg-gradient-to-r from-orange-600 to-amber-600 p-4 flex justify-between items-center text-white">
               <div className="flex items-center gap-2">
                 <span className="text-xl">🤖</span>
@@ -487,7 +504,6 @@ export default function Dashboard() {
               <button onClick={() => setIsChatOpen(false)} className="text-orange-100 hover:text-white transition text-lg">✕</button>
             </div>
 
-            {/* Chat Messages */}
             <div className="flex-1 p-4 overflow-y-auto bg-gray-50 space-y-3">
               {chatMessages.map((msg, idx) => (
                 <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -506,7 +522,6 @@ export default function Dashboard() {
               <div ref={chatEndRef} />
             </div>
 
-            {/* Chat Input Area */}
             <form onSubmit={handleChatSubmit} className="p-3 bg-white border-t border-gray-100 flex gap-2">
               <input 
                 type="text" 
@@ -529,7 +544,6 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Floating Toggle Button */}
         <button 
           onClick={() => setIsChatOpen(!isChatOpen)}
           className="h-14 w-14 bg-gradient-to-r from-orange-600 to-amber-600 text-white rounded-full shadow-xl flex items-center justify-center hover:scale-105 hover:shadow-2xl transition-all duration-300 border-2 border-white/20 pointer-events-auto"

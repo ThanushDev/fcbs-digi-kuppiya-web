@@ -89,7 +89,7 @@ export default function Login() {
               <div>
                 <label className="mb-1.5 block text-[11px] font-bold tracking-wider text-cyan-400 uppercase">Email / Registration No</label>
                 <input type="text" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  className="w-full px-4 py-2.5 rounded-xl bg-slate-950/50 border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 text-sm font-medium" placeholder="you@example.com or 22/ms/00" required />
+                  className="w-full px-4 py-2.5 rounded-xl bg-slate-950/50 border border-white/10 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-cyan-500/40 text-sm font-medium" placeholder="you@example.com or 22/ms or cs/00" required />
               </div>
               <div>
                 <label className="mb-1.5 block text-[11px] font-bold tracking-wider text-cyan-400 uppercase">Password</label>

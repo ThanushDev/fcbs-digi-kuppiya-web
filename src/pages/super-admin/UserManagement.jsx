@@ -50,6 +50,7 @@ export default function UserManagement() {
   const [fullImage, setFullImage] = useState(null)
   const [editUser, setEditUser] = useState(null)
   const [editForm, setEditForm] = useState({ firstName: '', lastName: '', email: '', mobile: '', regNumber: '', department: '', batch: '', role: '' })
+  const [editPhoto, setEditPhoto] = useState(null)
   const [saving, setSaving] = useState(false)
 
   // 🎯 Infinite Loop වැළැක්වීමට useCallback භාවිතා කළා
@@ -89,8 +90,25 @@ export default function UserManagement() {
     load()
   }
 
+  // 📸 1. Admin ට User ගේ නොගැලපෙන Profile Pic එක විතරක් Delete කරන්න පුළුවන් බටන් එකක ක්‍රියාකාරීත්වය
+  const handleDeleteImage = async (uid) => {
+    if (!confirm('Are you sure you want to delete this user\'s profile image? User will be forced to upload a new human face image upon login.')) return
+    try {
+      await updateDoc(doc(db, 'users', uid), {
+        photoURL: '',
+        profilePic: '',
+        profile_pic: '',
+        hasValidFace: false // User ලොග් වෙද්දී බ්ලොක් කරන්න ෆ්ලෑග් එකක් දානවා
+      })
+      load()
+    } catch (err) {
+      alert("Failed to delete image: " + err.message)
+    }
+  }
+
   const openEdit = (u) => {
     setEditUser(u)
+    setEditPhoto(null)
     setEditForm({
       firstName: u.firstName || '',
       lastName: u.lastName || '',
@@ -107,7 +125,15 @@ export default function UserManagement() {
     e.preventDefault()
     setSaving(true)
     try {
-      await updateDoc(doc(db, 'users', editUser.id), { ...editForm })
+      let updatedData = { ...editForm }
+
+      // 📸 Admin barriers removed - no forced human face checks or mandatory image uploads here
+      if (editPhoto) {
+        // මෙතනදී Cloudinary හෝ Firebase storage එකට upload කරලා URL එක ගන්න කෑල්ල (Project configuration එක අනුව)
+        // උදාහරණයක් ලෙස: updatedData.photoURL = uploadedUrl;
+      }
+
+      await updateDoc(doc(db, 'users', editUser.id), updatedData)
       setEditUser(null)
       load()
     } catch (err) {
@@ -214,6 +240,14 @@ export default function UserManagement() {
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
+                          {/* 📸 Manual Profile Pic Delete Button */}
+                          <button onClick={() => handleDeleteImage(u.id)} title="Delete Profile Image"
+                            className="p-2 bg-amber-50 rounded-lg hover:text-amber-600 transition text-amber-500 border border-amber-200">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M6 6l12 12" stroke="red" strokeWidth={3} />
+                            </svg>
+                          </button>
                           <button onClick={() => openEdit(u)}
                             className="p-2 bg-gray-100 rounded-lg hover:text-indigo-600 transition text-gray-500">
                             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -335,6 +369,13 @@ export default function UserManagement() {
                   <option value="admin">Admin</option>
                   <option value="super_admin">Super Admin</option>
                 </select>
+              </div>
+
+              {/* 📸 Human face barrier removed from label too */}
+              <div>
+                <label className="mb-1 block text-xs text-gray-400">Update Profile Photo</label>
+                <input type="file" accept="image/jpeg,image/png" onChange={(e) => setEditPhoto(e.target.files[0])}
+                  className="w-full text-xs text-gray-500 file:mr-2 file:rounded-lg file:border-0 file:bg-gray-100 file:px-3 file:py-2 file:text-xs file:font-semibold hover:file:bg-gray-200 cursor-pointer" />
               </div>
 
               <div className="flex justify-end gap-3 pt-2">

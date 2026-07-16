@@ -53,7 +53,11 @@ export default function ShortNoteManagement() {
           <select value={form.subjectId} onChange={(e) => setForm({ ...form, subjectId: e.target.value })}
             className="rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-gray-900 outline-none focus:border-indigo-500" required>
             <option value="">Select Subject</option>
-            {subjects.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+            {subjects.map((s) => {
+              const dept = s.department ? `[${s.department.toUpperCase()}]` : ''
+              const spec = s.specialization && s.specialization !== 'all' ? `[${s.specialization}]` : ''
+              return <option key={s.id} value={s.id}>{dept} {spec} {s.name}</option>
+            })}
           </select>
           <input type="url" placeholder="Google Drive Link" value={form.fileUrl} onChange={(e) => setForm({ ...form, fileUrl: e.target.value })}
             className="flex-1 min-w-[200px] rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-gray-900 outline-none focus:border-indigo-500" />
@@ -71,31 +75,46 @@ export default function ShortNoteManagement() {
         <div className="text-center py-12 text-gray-500">No short notes added yet.</div>
       ) : (
         <div className="space-y-3">
-          {items.map((item) => (
-            <div key={item.id} className="flex items-center justify-between rounded-xl border border-gray-200 bg-white p-4">
-              <div className="flex items-center gap-3 min-w-0">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-600/10">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                  </svg>
-                </span>
-                <div className="min-w-0">
-                  <p className="font-semibold text-gray-900 truncate">{item.title}</p>
-                  <p className="text-xs text-gray-500">{subjects.find((s) => s.id === item.subjectId)?.name || 'Unknown'}</p>
+          {items.map((item) => {
+            const subject = subjects.find((s) => s.id === item.subjectId)
+            return (
+              <div key={item.id} className="flex items-center justify-between rounded-xl border border-gray-200 bg-white p-4">
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-600/10">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                  </span>
+                  <div className="min-w-0">
+                    <p className="font-semibold text-gray-900 truncate">{item.title}</p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <p className="text-xs text-gray-500">{subject?.name || 'Unknown'}</p>
+                      {subject?.department && (
+                        <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold uppercase ${subject.department === 'bms' ? 'bg-indigo-100 text-indigo-800' : 'bg-emerald-100 text-emerald-800'}`}>
+                          {subject.department}
+                        </span>
+                      )}
+                      {subject?.specialization && subject.specialization !== 'all' && (
+                        <span className="text-[9px] px-1.5 py-0.5 rounded font-bold uppercase bg-amber-100 text-amber-800">
+                          {subject.specialization.replace('_', ' ')}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex gap-2 shrink-0">
+                  {item.fileUrl && (
+                    <a href={item.fileUrl} target="_blank" rel="noopener noreferrer"
+                      className="rounded-lg bg-blue-600/20 px-4 py-2 text-xs font-semibold text-blue-400 hover:bg-blue-600/30 transition">Open</a>
+                  )}
+                  <button onClick={() => handleEdit(item)}
+                    className="rounded-lg bg-gray-700 px-3 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-600 transition">Edit</button>
+                  <button onClick={() => handleDelete(item.id)}
+                    className="rounded-lg bg-red-600/20 px-3 py-2 text-xs font-semibold text-red-400 hover:bg-red-600/30 transition">Del</button>
                 </div>
               </div>
-              <div className="flex gap-2 shrink-0">
-                {item.fileUrl && (
-                  <a href={item.fileUrl} target="_blank" rel="noopener noreferrer"
-                    className="rounded-lg bg-blue-600/20 px-4 py-2 text-xs font-semibold text-blue-400 hover:bg-blue-600/30 transition">Open</a>
-                )}
-                <button onClick={() => handleEdit(item)}
-                  className="rounded-lg bg-gray-700 px-3 py-2 text-xs font-semibold text-gray-600 hover:bg-gray-600 transition">Edit</button>
-                <button onClick={() => handleDelete(item.id)}
-                  className="rounded-lg bg-red-600/20 px-3 py-2 text-xs font-semibold text-red-400 hover:bg-red-600/30 transition">Del</button>
-              </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
     </div>

@@ -7,9 +7,9 @@ export default function AdminDashboard() {
   const { userData } = useAuth()
   const [stats, setStats] = useState({ users: 0, bms: 0, lcs: 0, semesters: 0, subjects: 0 })
   
-  // Notification States
+  // Notification States (targetDepartment එකතු කළා)
   const [notifications, setNotifications] = useState([])
-  const [noticeForm, setNoticeForm] = useState({ title: '', message: '', targetBatch: 'all', type: 'notice', zoomLink: '' })
+  const [noticeForm, setNoticeForm] = useState({ title: '', message: '', targetBatch: 'all', targetDepartment: 'all', type: 'notice', zoomLink: '' })
   const [submitting, setSubmitting] = useState(false)
 
   // Dynamic Batches State
@@ -17,7 +17,7 @@ export default function AdminDashboard() {
 
   const loadData = async () => {
     try {
-      // 1. Active Batches ටික විතරක් ගන්නවා (Index errors bypass කරන්න client-side sort කරනවා)
+      // 1. Active Batches ටික විතරක් ගන්නවා 
       let batchList = [];
       try {
         const batchesRef = collection(db, 'batchPermissions')
@@ -29,7 +29,6 @@ export default function AdminDashboard() {
           ...doc.data()
         }));
 
-        // 🔥 createdAt timestamp එක අනුව අලුත්ම ඒවා උඩට එන්න JS වලින් sort කරනවා
         batchList.sort((a, b) => {
           const dateA = a.createdAt?.seconds ? a.createdAt.seconds : 0;
           const dateB = b.createdAt?.seconds ? b.createdAt.seconds : 0;
@@ -59,7 +58,6 @@ export default function AdminDashboard() {
         subjects: subSnap.size,
       })
 
-      // Notifications ටිකත් JS වලින් sort කරගන්නවා index error නොවදින්න
       const notifList = notifSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }))
       notifList.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
       setNotifications(notifList)
@@ -78,15 +76,17 @@ export default function AdminDashboard() {
     if (!noticeForm.title.trim() || !noticeForm.message.trim()) return
     setSubmitting(true)
     try {
+      // Payload එකට targetDepartment එක යවනවා
       await addDoc(collection(db, 'global_notifications'), {
         title: noticeForm.title,
         message: noticeForm.message,
         targetBatch: noticeForm.targetBatch,
+        targetDepartment: noticeForm.targetDepartment, // අලුතින් එකතු කළ කොටස
         type: noticeForm.type,
         zoomLink: noticeForm.type === 'zoom' ? noticeForm.zoomLink : '',
         createdAt: new Date().toISOString()
       })
-      setNoticeForm({ title: '', message: '', targetBatch: 'all', type: 'notice', zoomLink: '' })
+      setNoticeForm({ title: '', message: '', targetBatch: 'all', targetDepartment: 'all', type: 'notice', zoomLink: '' })
       alert('Notification broadcasted successfully!')
       loadData()
     } catch (err) {
@@ -141,9 +141,11 @@ export default function AdminDashboard() {
               <label className="block text-xs font-semibold text-gray-600 mb-1">Message / Description</label>
               <textarea rows="2" value={noticeForm.message} onChange={(e) => setNoticeForm({...noticeForm, message: e.target.value})} className="w-full text-sm p-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 resize-none" placeholder="Enter notice details..." required />
             </div>
+            
+            {/* Target Batch සහ Target Department පේළිය */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1">Target Audience</label>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">Target Batch</label>
                 <select value={noticeForm.targetBatch} onChange={(e) => setNoticeForm({...noticeForm, targetBatch: e.target.value})} className="w-full text-sm p-2 border border-gray-200 rounded-lg bg-white outline-none">
                   <option value="all">All Batches</option>
                   {dbBatches.map((batch) => (
@@ -154,14 +156,24 @@ export default function AdminDashboard() {
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-semibold text-gray-600 mb-1">Type</label>
-                <select value={noticeForm.type} onChange={(e) => setNoticeForm({...noticeForm, type: e.target.value})} className="w-full text-sm p-2 border border-gray-200 rounded-lg bg-white outline-none">
-                  <option value="notice">General Notice 📝</option>
-                  <option value="zoom">Zoom Meeting 📹</option>
-                  <option value="resource">New Resource Added 📁</option>
+                <label className="block text-xs font-semibold text-gray-600 mb-1">Target Department</label>
+                <select value={noticeForm.targetDepartment} onChange={(e) => setNoticeForm({...noticeForm, targetDepartment: e.target.value})} className="w-full text-sm p-2 border border-gray-200 rounded-lg bg-white outline-none">
+                  <option value="all">All Departments (Both)</option>
+                  <option value="bms">BMS</option>
+                  <option value="lcs">LCS</option>
                 </select>
               </div>
             </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">Type</label>
+              <select value={noticeForm.type} onChange={(e) => setNoticeForm({...noticeForm, type: e.target.value})} className="w-full text-sm p-2 border border-gray-200 rounded-lg bg-white outline-none">
+                <option value="notice">General Notice 📝</option>
+                <option value="zoom">Zoom Meeting 📹</option>
+                <option value="resource">New Resource Added 📁</option>
+              </select>
+            </div>
+            
             {noticeForm.type === 'zoom' && (
               <div className="animate-fade-in">
                 <label className="block text-xs font-semibold text-gray-600 mb-1">Zoom Invitation Link</label>
@@ -184,7 +196,7 @@ export default function AdminDashboard() {
                 <div key={n.id} className="p-3 bg-gray-50 rounded-xl border border-gray-100 flex justify-between items-start gap-2">
                   <div className="space-y-1">
                     <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-full ${n.type === 'zoom' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'}`}>
-                      {n.type} • {n.targetBatch}
+                      {n.type} • Batch: {n.targetBatch} • Dept: {n.targetDepartment || 'all'}
                     </span>
                     <h4 className="text-sm font-bold text-gray-800">{n.title}</h4>
                     <p className="text-xs text-gray-500 line-clamp-2">{n.message}</p>

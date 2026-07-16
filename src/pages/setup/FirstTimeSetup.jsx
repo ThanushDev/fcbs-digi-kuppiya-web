@@ -65,6 +65,18 @@ export default function FirstTimeSetup() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     
+    // 💡 අලුත් Validation එක (BMS/LCS ms/cs check)
+    const dept = formData.department.toLowerCase()
+    const reg = formData.regNumber.toLowerCase()
+    if (dept === 'bms' && !reg.includes('/ms/')) {
+      alert('Registration number for BMS must contain "ms" (e.g., 22/ms/00)')
+      return
+    }
+    if (dept === 'lcs' && !reg.includes('/cs/')) {
+      alert('Registration number for LCS must contain "cs" (e.g., 22/cs/00)')
+      return
+    }
+
     if (isImageMissing && !image) {
       alert("Please upload a clear photograph of your face for verification!")
       return
