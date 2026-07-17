@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom' 
 import { useAuth } from '../../contexts/AuthContext'
 import { getSemesters, getBatchPermission, addComment } from '../../services/firestore' 
-import { collection, getDocs, query, where, orderBy } from 'firebase/firestore'
+import { collection, getDocs, query, orderBy } from 'firebase/firestore'
 import { db } from '../../services/firebase'
 import logo from '../../assets/logo.png' 
 
@@ -33,6 +33,17 @@ const MENTORS = [
   { name: "Ms. Lihini Himasha", nickname: "ලාරා", batch: "21/22", role: "Accounting", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614071/lihini_s8ymh1.jpg", department: "bms" },
   { name: "Ms. Diwangani Kavindya", nickname: "විනී", batch: "21/22", role: "Accounting", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614068/diwangani_cyokye.jpg", department: "bms" },
 ]
+
+const normalizeSemName = (name) => {
+  let norm = String(name || '').toUpperCase();
+  norm = norm.replace(/YEAR\s*IV/g, 'Y4').replace(/YEAR\s*4/g, 'Y4')
+             .replace(/YEAR\s*III/g, 'Y3').replace(/YEAR\s*3/g, 'Y3')
+             .replace(/YEAR\s*II/g, 'Y2').replace(/YEAR\s*2/g, 'Y2')
+             .replace(/YEAR\s*I/g, 'Y1').replace(/YEAR\s*1/g, 'Y1')
+             .replace(/SEMESTER\s*II/g, 'S2').replace(/SEMESTER\s*2/g, 'S2').replace(/SEM\s*II/g, 'S2').replace(/SEM\s*2/g, 'S2')
+             .replace(/SEMESTER\s*I/g, 'S1').replace(/SEMESTER\s*1/g, 'S1').replace(/SEM\s*I/g, 'S1').replace(/SEM\s*1/g, 'S1');
+  return norm.replace(/\s+/g, '');
+}
 
 const formatSemesterName = (name) => {
   if (!name) return '';
@@ -106,31 +117,81 @@ export default function Dashboard() {
 
         const allSemesters = await getSemesters()
         
-        let deptFiltered = allSemesters.filter((s) => s.department === dept || s.department === 'both');
-        let finalFiltered = deptFiltered;
+        // 🎯 1. මුලින්ම Department එකට අදාළව ෆිල්ටර් කරනවා (LCS අයට BMS ඒවා පේන්නේ නැති වෙන්න)
+        let deptFiltered = allSemesters.filter((s) => {
+          const sDept = (s.department || '').toLowerCase();
+          return sDept === dept || sDept === 'both';
+        });
+
+        let finalFiltered = [];
 
         if (userBatch) {
           const perm = await getBatchPermission(userBatch)
-          const idToNameMap = { '11': 'Y1S1', '12': 'Y1S2', '21': 'Y2S1', '22': 'Y2S2', '31': 'Y3S1', '32': 'Y3S2', '41': 'Y4S1', '42': 'Y4S2' };
-          let allowedIds = [];
-          if (perm && perm.semesterIds) allowedIds = perm.semesterIds;
-          const allowedNames = allowedIds.map(id => idToNameMap[String(id)]).filter(Boolean);
+          
+          if (perm && perm.semesterIds && perm.semesterIds.length > 0) {
+            const allowedIds = perm.semesterIds.map(String);
+            
+            // 🎯 2. ඊට පස්සේ Admin දීපු Permissions වලට අදාළව ෆිල්ටර් කරනවා. 
+            // දැන් මෙතන 'deptFiltered' එක පාවිච්චි කරලා තියෙන්නේ. ඒ නිසා අදාළ නැති Department ඒවා අයින් වෙලා යයි.
+            let adminFiltered = deptFiltered.filter((s) => {
+              const normalized = normalizeSemName(s.name);
+              let docSemId = null;
+              
+              if (normalized.includes('Y1') && normalized.includes('S1')) docSemId = '11';
+              else if (normalized.includes('Y1') && normalized.includes('S2')) docSemId = '12';
+              else if (normalized.includes('Y2') && normalized.includes('S1')) docSemId = '21';
+              else if (normalized.includes('Y2') && normalized.includes('S2')) docSemId = '22';
+              else if (normalized.includes('Y3') && normalized.includes('S1')) docSemId = '31';
+              else if (normalized.includes('Y3') && normalized.includes('S2')) docSemId = '32';
+              else if (normalized.includes('Y4') && normalized.includes('S1')) docSemId = '41';
+              else if (normalized.includes('Y4') && normalized.includes('S2')) docSemId = '42';
+              
+              return docSemId ? allowedIds.includes(docSemId) : allowedIds.includes(String(s.id));
+            });
 
-          if (allowedNames.length > 0) {
-            finalFiltered = deptFiltered.filter((s) => s.name && allowedNames.includes(String(s.name).trim()));
+            // එකම semester එක duplicate පෙන්වීම වැලැක්වීමට
+            const uniqueSemesters = [];
+            const seen = new Set();
+            for (const s of adminFiltered) {
+              const normName = normalizeSemName(s.name);
+              const identifier = normName || String(s.id);
+              if (!seen.has(identifier)) {
+                seen.add(identifier);
+                uniqueSemesters.push(s);
+              }
+            }
+            finalFiltered = uniqueSemesters;
+
+          } else {
+            finalFiltered = [];
           }
         }
 
-        finalFiltered.sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+        // Sorting
+        finalFiltered.sort((a, b) => {
+          const getWeight = (name) => {
+            const normalized = normalizeSemName(name);
+            if (normalized.includes('Y1') && normalized.includes('S1')) return 11;
+            if (normalized.includes('Y1') && normalized.includes('S2')) return 12;
+            if (normalized.includes('Y2') && normalized.includes('S1')) return 21;
+            if (normalized.includes('Y2') && normalized.includes('S2')) return 22;
+            if (normalized.includes('Y3') && normalized.includes('S1')) return 31;
+            if (normalized.includes('Y3') && normalized.includes('S2')) return 32;
+            if (normalized.includes('Y4') && normalized.includes('S1')) return 41;
+            if (normalized.includes('Y4') && normalized.includes('S2')) return 42;
+            return 999; 
+          };
+          return getWeight(a.name) - getWeight(b.name);
+        })
+        
         setSemesters(finalFiltered)
 
+        // Notifications
         const notifSnap = await getDocs(query(collection(db, 'global_notifications'), orderBy('createdAt', 'desc')))
         const notifList = notifSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }))
         
-        // 🎯 Notifications Filter (Batch + Department දෙකම බලනවා)
         const userNotifs = notifList.filter(n => {
           const matchBatch = n.targetBatch === 'all' || n.targetBatch === userBatch;
-          // Purano notifications (targetDepartment field eka nathi ewa) harayanna epa, ewa all kiyala hithamu
           const matchDept = !n.targetDepartment || n.targetDepartment === 'all' || n.targetDepartment === dept;
           return matchBatch && matchDept;
         })
@@ -148,16 +209,16 @@ export default function Dashboard() {
       }
     }
     load()
-  }, [userData?.department, userData?.batch])
+  }, [userData?.department, userData?.batch]) // ⚠️ userData?.department ආයෙත් dependencies වලට එකතු කරලා තියෙනවා.
 
   const handleSemesterClick = (s, e) => {
     const dept = (userData?.department || '').toLowerCase()
     const isBMS = dept === 'bms'
     const isLCS = dept === 'lcs'
     
-    const sName = s.name || ''
-    const isYear3or4 = sName.includes('Y3') || sName.includes('Y4') || sName.includes('Year III') || sName.includes('Year IV')
-    const isYear2orAbove = isYear3or4 || sName.includes('Y2') || sName.includes('Year II')
+    const normalized = normalizeSemName(s.name)
+    const isYear3or4 = normalized.includes('Y3') || normalized.includes('Y4')
+    const isYear2orAbove = isYear3or4 || normalized.includes('Y2')
 
     if (isBMS && isYear3or4) {
       e.preventDefault() 
@@ -192,12 +253,11 @@ export default function Dashboard() {
         role: userData?.role || 'student',
         userPhotoURL: userData?.photoURL || ''
       })
-      setCommentText('') // මේකෙන් comment box එක clear වෙනවා
-      // alert එක අයින් කළා
+      setCommentText('') 
     } catch (err) {
       alert("Error Post Comment.")
     } finally {
-      setSubmittingComment(false) // මේකෙන් button එක ආයේ clickable වෙනවා
+      setSubmittingComment(false) 
     }
   }
 
@@ -265,7 +325,6 @@ export default function Dashboard() {
   ]
 
   const lcsModalOptions = [
-    { type: 'all', label: 'Common / General Subjects', color: 'hover:border-slate-400 bg-slate-900/50' },
     { type: 'communication', label: 'Communication Studies', color: 'hover:border-blue-400 bg-blue-950/20' },
     { type: 'languages', label: 'Languages', color: 'hover:border-emerald-400 bg-emerald-950/20' }
   ]
@@ -412,7 +471,7 @@ export default function Dashboard() {
                         </h3>
                       </div>
                       <p className="mt-3 text-[10px] text-gray-600 capitalize font-bold bg-white/80 backdrop-blur-sm px-2.5 py-1 rounded-md w-fit border border-gray-200/50">
-                        {s.department}
+                        {s.department || 'Both'}
                       </p>
                     </Link>
                   );
