@@ -84,7 +84,8 @@ export default function SubjectDetail() {
       {tab === 'videos' && <VideoGridPlayer items={videos} />}
 
       <div className="mt-12 pt-8 border-t border-gray-200">
-        <CommentSection subjectId={subjectId} subjectTitle={subject.name} />
+        {/* 🎯 Fix: මෙතැනදී chapterId විදිහටම subjectId එක යවනවා (එතකොට Component එක අනිවාර්යයෙන්ම වැඩ කරනවා) */}
+        <CommentSection chapterId={subjectId} chapterTitle={subject.name} />
       </div>
     </div>
   )
@@ -176,19 +177,12 @@ function VideoGridPlayer({ items }) {
     )
   }
 
-  // 🎯 Fix කරපු තැන: ID එකක් විතරක් දුන්නත්, Full Link එකක් දුන්නත් දෙකම වැඩ කරන විදිහට හැදුවා
   const getYoutubeId = (url) => {
     if (!url) return null;
-    
-    // Trim කරලා space අයින් කරනවා
     const cleanedUrl = url.trim();
-    
-    // ප්‍රවේශමෙන් බලන්න: අකුරු 11ක ID එකක් විතරක් නම් කෙළින්ම ඒක රිටර්න් කරනවා
     if (cleanedUrl.length === 11 && !cleanedUrl.includes('/') && !cleanedUrl.includes('?')) {
       return cleanedUrl;
     }
-    
-    // Full URL එකක් ආවොත් විතරක් Regex එකෙන් කඩනවා
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|shorts\/)([^#\&\?]*).*/;
     const match = cleanedUrl.match(regExp);
     return (match && match[2].length === 11) ? match[2] : null;

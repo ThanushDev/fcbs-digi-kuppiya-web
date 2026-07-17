@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
-import { addComment, getComments } from '../../services/firestore' // 🎯 getChapterComments වෙනුවට හරියටම getComments import කළා
+import { addComment, getComments } from '../../services/firestore'
 
-export default function CommentSection({ chapterId, chapterTitle }) {
+export default function CommentSection({ chapterId, chapterTitle, subjectId, subjectTitle }) {
+  // 🎯 chapterId හෝ subjectId දෙකෙන් කොයික ආවත් එකම විදිහට ගන්නවා
+  const targetId = chapterId || subjectId;
+  
   const { user, userData } = useAuth()
   const [comments, setComments] = useState([])
   const [content, setContent] = useState('')
@@ -10,31 +13,35 @@ export default function CommentSection({ chapterId, chapterTitle }) {
   const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
-    if (!chapterId) return
+    if (!targetId) return
     const load = async () => {
-      // 🎯 getChapterComments වෙනුවට firestore.js එකේ තියෙන getComments ක්‍රියාත්මක කළා
-      const data = await getComments(chapterId)
+      const data = await getComments(targetId)
       setComments(data.filter((c) => c.status === 'approved'))
       setLoading(false)
     }
     load()
-  }, [chapterId])
+  }, [targetId])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!content.trim()) return
+
+    if (!targetId) {
+      alert("Error: Comment ID is missing!");
+      return;
+    }
+
     setSubmitting(true)
     try {
       await addComment({
-        chapterId,
+        chapterId: targetId, // 🎯 Firestore එකට යවද්දී chapterId විදිහටම යවනවා පරණ data එක්ක ගැළපෙන්න
         userId: user.uid,
-        userDisplayName: `${userData?.firstName} ${userData?.lastName}`,
+        userDisplayName: `${userData?.firstName || ''} ${userData?.lastName || ''}`.trim() || 'Student',
         userPhotoURL: userData?.photoURL || '',
         content: content.trim(),
       })
       setContent('')
-      // 🎯 කමෙන්ට් එක දැම්මට පස්සේ ආයේ ලිස්ට් එක අප්ඩේට් කරගන්නත් getComments ම පාවිච්චි කළා
-      const data = await getComments(chapterId)
+      const data = await getComments(targetId)
       setComments(data.filter((c) => c.status === 'approved'))
     } catch (err) {
       console.error(err)
@@ -48,11 +55,11 @@ export default function CommentSection({ chapterId, chapterTitle }) {
 
       <form onSubmit={handleSubmit} className="mb-6">
         <textarea value={content} onChange={(e) => setContent(e.target.value)}
-          placeholder="Share your thoughts about this chapter..."
+          placeholder="Share your thoughts about this..."
           rows={3}
-          className="input-field resize-none mb-2" />
+          className="input-field resize-none mb-2 w-full p-3 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" />
         <button type="submit" disabled={submitting || !content.trim()}
-          className="btn-primary text-sm">
+          className="btn-primary text-sm bg-indigo-600 text-white px-4 py-2 rounded-xl hover:bg-indigo-700 disabled:opacity-50 transition">
           {submitting ? 'Posting...' : 'Post Comment'}
         </button>
       </form>
@@ -66,7 +73,7 @@ export default function CommentSection({ chapterId, chapterTitle }) {
       ) : (
         <div className="space-y-3">
           {comments.map((c) => (
-            <div key={c.id} className="card p-4">
+            <div key={c.id} className="card p-4 border rounded-xl bg-white shadow-sm">
               <div className="flex items-start gap-3">
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-600">
                   {c.userPhotoURL ? (
