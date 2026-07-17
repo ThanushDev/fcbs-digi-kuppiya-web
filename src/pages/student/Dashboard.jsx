@@ -189,14 +189,15 @@ export default function Dashboard() {
         studentEmail: userData?.email || 'unknown@gmail.com',
         batch: userData?.batch || 'N/A',
         department: userData?.department || 'both',
-        role: userData?.role || 'student'
+        role: userData?.role || 'student',
+        userPhotoURL: userData?.photoURL || ''
       })
-      setCommentText('') 
-      alert("Comment Posted Successfully! ")
+      setCommentText('') // මේකෙන් comment box එක clear වෙනවා
+      // alert එක අයින් කළා
     } catch (err) {
       alert("Error Post Comment.")
     } finally {
-      setSubmittingComment(false)
+      setSubmittingComment(false) // මේකෙන් button එක ආයේ clickable වෙනවා
     }
   }
 
