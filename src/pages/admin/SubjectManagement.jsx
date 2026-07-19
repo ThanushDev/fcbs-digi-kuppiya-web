@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { getSubjects, getAllSubjects, addSubject, updateSubject, deleteSubject, getSemesters } from '../../services/firestore'
+import { Target } from 'lucide-react'
 
 const BMS_SPECIALIZATIONS = [
   { value: 'all', label: 'General Degree / Common' },
@@ -10,7 +11,7 @@ const BMS_SPECIALIZATIONS = [
   { value: 'info_management', label: 'Information Management Special' }
 ]
 
-// LCS සඳහා අලුත් Specialization List එක
+// New Specialization List for LCS
 const LCS_SPECIALIZATIONS = [
   { value: 'all', label: 'General / Common' },
   { value: 'communication', label: 'Communication Studies' },
@@ -56,7 +57,7 @@ export default function SubjectManagement() {
       name: form.name, 
       code: form.code, 
       semesterId: form.semesterId, 
-      department: selectedSemester.department || 'both', // Department එකත් සේව් කරනවා Resource වලදී ලේසි වෙන්න
+      department: selectedSemester.department || 'both', // Save department for easier resource management
       description: form.description,
       specialization: showDropdown ? form.specialization : 'all'
     }
@@ -95,39 +96,39 @@ export default function SubjectManagement() {
       <form onSubmit={handleSubmit} className="mb-8 rounded-xl border border-gray-200 bg-white p-5 space-y-4">
         <div className="flex flex-wrap gap-3">
           <input type="text" placeholder="Subject Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
-            className="flex-1 min-w-[200px] rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-gray-900 outline-none focus:border-indigo-500" required />
+            className="flex-1 min-w-[200px] rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-gray-900 outline-none focus:border-indigo-500 input-field" required />
           
           <input type="text" placeholder="Subject Code" value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })}
-            className="w-32 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-gray-900 outline-none focus:border-indigo-500" />
+            className="w-32 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-gray-900 outline-none focus:border-indigo-500 input-field" />
           
           <select value={form.semesterId} onChange={(e) => setForm({ ...form, semesterId: e.target.value, specialization: 'all' })}
-            className="rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-gray-900 outline-none focus:border-indigo-500" required>
+            className="rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-gray-900 outline-none focus:border-indigo-500 select-field" required>
             <option value="">Select Semester</option>
             {semesters.map((s) => <option key={s.id} value={s.id}>{s.name} ({s.department})</option>)}
           </select>
 
           {showDropdown && (
             <select value={form.specialization} onChange={(e) => setForm({ ...form, specialization: e.target.value })}
-              className="rounded-lg border border-amber-300 bg-amber-50/50 px-4 py-2.5 text-gray-900 outline-none focus:border-amber-500 font-semibold animate-fade-in">
+              className="rounded-lg border border-amber-300 bg-amber-50/50 px-4 py-2.5 text-gray-900 outline-none focus:border-amber-500 font-semibold animate-fade-in select-field">
               {currentSpecializations.map((spec) => (
                 <option key={spec.value} value={spec.value}>{spec.label}</option>
               ))}
             </select>
           )}
 
-          <button type="submit" className="rounded-lg bg-indigo-600 px-6 py-2.5 font-semibold text-gray-900 hover:bg-indigo-700 transition">
+          <button type="submit" className="rounded-lg bg-indigo-600 px-6 py-2.5 font-semibold text-gray-900 hover:bg-indigo-700 transition btn-primary">
             {editing ? 'Update' : 'Add Subject'}
           </button>
           {editing && <button type="button" onClick={() => { setEditing(null); setForm({ name: '', code: '', semesterId: '', description: '', specialization: 'all' }) }}
             className="rounded-lg bg-gray-700 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-600 transition">Cancel</button>}
         </div>
         <textarea placeholder="Description (optional)" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })}
-          className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-gray-900 outline-none focus:border-indigo-500" rows={2} />
+          className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-gray-900 outline-none focus:border-indigo-500 input-field" rows={2} />
       </form>
 
       <div className="mb-4">
         <select value={filterSem} onChange={(e) => setFilterSem(e.target.value)}
-          className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-gray-900 outline-none focus:border-indigo-500">
+          className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-gray-900 outline-none focus:border-indigo-500 select-field">
           <option value="">All Semesters</option>
           {semesters.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
         </select>
@@ -145,7 +146,7 @@ export default function SubjectManagement() {
             const specLabel = allSpecs.find(sp => sp.value === s.specialization)?.label
             
             return (
-              <div key={s.id} className="rounded-xl border border-gray-200 bg-white p-5 flex flex-col justify-between">
+              <div key={s.id} className="rounded-xl border border-gray-200 bg-white p-5 flex flex-col justify-between card">
                 <div>
                   <div className="mb-2 flex items-center justify-between">
                     <div className="flex gap-2">
@@ -166,7 +167,7 @@ export default function SubjectManagement() {
                 
                 {s.specialization && s.specialization !== 'all' && (
                   <span className="mt-3 block w-fit text-[10px] font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded-md uppercase border border-amber-200">
-                    🎯 {specLabel}
+                    <Target className="w-3 h-3 inline" /> {specLabel}
                   </span>
                 )}
               </div>

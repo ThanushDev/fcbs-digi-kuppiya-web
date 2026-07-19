@@ -1,8 +1,9 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+﻿import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { db } from '../../services/firebase'
 import { collection, query, where, orderBy, onSnapshot, addDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore'
+import { ArrowLeft, ChevronLeft, ChevronRight, Plus, X, Trash2 } from 'lucide-react'
 
 const EXPENSE_CATEGORIES = ['Rent', 'Tuition/Books', 'Groceries', 'Dining Out', 'Transport', 'Utilities', 'Social/Fun', 'Health', 'Other']
 const INCOME_CATEGORIES = ['Job/Salary', 'Scholarship', 'Loan', 'Parents/Gift', 'Other Income']
@@ -192,11 +193,11 @@ export default function FinanceTracker() {
       <div className="flex items-center justify-between mb-4">
         <button onClick={() => navigate('/dashboard')}
           className="text-sm text-gray-500 hover:text-indigo-600 transition flex items-center gap-1">
-          <span>&larr;</span> Back to Dashboard
+          <ArrowLeft className="w-4 h-4" /> Back to Dashboard
         </button>
         <button onClick={() => openAddModal('')}
           className="btn-primary text-sm">
-          + Add Transaction
+          <Plus className="w-3.5 h-3.5" /> Add Transaction
         </button>
       </div>
 
@@ -204,11 +205,15 @@ export default function FinanceTracker() {
 
       {/* Month Navigation */}
       <div className="card p-4 mb-6 flex items-center justify-between">
-        <button onClick={goPrevMonth} className="text-gray-500 hover:text-indigo-600 text-xl px-2">&larr;</button>
+        <button onClick={goPrevMonth} className="text-gray-500 hover:text-indigo-600 p-2">
+          <ChevronLeft className="w-5 h-5" />
+        </button>
         <h2 className="text-lg font-bold text-gray-900">
           {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
         </h2>
-        <button onClick={goNextMonth} className="text-gray-500 hover:text-indigo-600 text-xl px-2">&rarr;</button>
+        <button onClick={goNextMonth} className="text-gray-500 hover:text-indigo-600 p-2">
+          <ChevronRight className="w-5 h-5" />
+        </button>
       </div>
 
       {loading ? (
@@ -291,7 +296,7 @@ export default function FinanceTracker() {
                         <span className={`w-2 h-2 rounded-full shrink-0 ${t.type === 'income' ? 'bg-emerald-400' : 'bg-red-400'}`} />
                         <div className="min-w-0">
                           <p className="text-sm font-medium text-gray-900 truncate">{t.title || t.category}</p>
-                          <p className="text-[10px] text-gray-400">{t.date} {t.category && `· ${t.category}`}</p>
+                          <p className="text-[10px] text-gray-400">{t.date} {t.category && `\u00b7 ${t.category}`}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
@@ -299,7 +304,9 @@ export default function FinanceTracker() {
                           {t.type === 'income' ? '+' : '-'}{formatCurrency(t.amount)}
                         </span>
                         <button onClick={() => handleDeleteTransaction(t.id)}
-                          className="text-gray-300 hover:text-red-500 transition text-sm">&times;</button>
+                          className="text-gray-300 hover:text-red-500 transition">
+                          <X className="w-5 h-5" />
+                        </button>
                       </div>
                     </div>
                   ))}
@@ -370,7 +377,9 @@ export default function FinanceTracker() {
               <h3 className="text-sm font-bold text-white">
                 Add New {formType === 'expense' ? 'Expense' : 'Income'}
               </h3>
-              <button onClick={() => setShowModal(false)} className="text-white/80 hover:text-white text-xl leading-none">&times;</button>
+              <button onClick={() => setShowModal(false)} className="text-white/80 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
             </div>
             <form onSubmit={handleSubmit} className="p-5 space-y-4">
               {/* Type switcher */}

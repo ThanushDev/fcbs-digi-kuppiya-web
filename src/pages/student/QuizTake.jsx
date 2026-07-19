@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
+import { ArrowLeft } from 'lucide-react'
 import { getQuiz, getQuestions, submitAttempt } from '../../services/firestore'
 import { useAuth } from '../../contexts/AuthContext'
 import { useToast } from '../../contexts/ToastContext'
@@ -76,21 +77,21 @@ export default function QuizTake() {
   const formatTime = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
 
   if (loading) return (
-    <div className="max-w-3xl mx-auto">
+    <div className="max-w-3xl mx-auto animate-fade-in">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <div className="h-4 w-20 bg-gray-800/60 rounded animate-pulse mb-2" />
-          <div className="h-7 w-48 bg-gray-800/60 rounded animate-pulse" />
+          <div className="skeleton-premium h-4 w-20 mb-2" />
+          <div className="skeleton-premium h-7 w-48" />
         </div>
-        <div className="h-16 w-24 bg-gray-800/60 rounded-xl animate-pulse" />
+        <div className="skeleton-premium h-16 w-24 rounded-xl" />
       </div>
-      <div className="h-2 w-full bg-gray-800/60 rounded-full mb-6 animate-pulse" />
-      <div className="rounded-2xl border border-gray-200 bg-white p-6 mb-6">
-        <div className="h-5 w-32 bg-gray-800/60 rounded animate-pulse mb-4" />
-        <div className="h-6 w-3/4 bg-gray-800/60 rounded animate-pulse mb-6" />
+      <div className="skeleton-premium h-2 w-full rounded-full mb-6" />
+      <div className="card p-6 mb-6">
+        <div className="skeleton-premium h-5 w-32 mb-4" />
+        <div className="skeleton-premium h-6 w-3/4 mb-6" />
         <div className="space-y-3">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-14 w-full bg-gray-800/60 rounded-xl animate-pulse" />
+            <div key={i} className="skeleton-premium h-14 w-full rounded-xl" />
           ))}
         </div>
       </div>
@@ -100,10 +101,12 @@ export default function QuizTake() {
   const q = questions[current]
 
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="max-w-3xl mx-auto animate-fade-in">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <Link to="/dashboard/quizzes" className="text-sm text-rose-400 hover:text-rose-300 transition">&larr; Back</Link>
+          <Link to="/dashboard/quizzes" className="text-sm text-rose-400 hover:text-rose-300 transition">
+            <ArrowLeft className="w-4 h-4 inline mr-1" /> Back
+          </Link>
           <h1 className="mt-1 text-xl font-bold text-gray-900">{quiz.title}</h1>
         </div>
         <div className={`rounded-xl px-4 py-2 text-center ${timeLeft < 60 ? 'bg-red-600/20 text-red-400' : 'bg-gray-800 text-gray-900'}`}>
@@ -119,7 +122,7 @@ export default function QuizTake() {
         ))}
       </div>
 
-      <div className="rounded-2xl border border-gray-200 bg-white p-6 mb-6">
+      <div className="card p-6 mb-6">
         <div className="mb-2 flex items-center justify-between">
           <span className="text-xs text-gray-500">Question {current + 1} of {questions.length}</span>
           {q.allowMultiple && <span className="text-[10px] text-amber-400 font-semibold">Select all that apply</span>}
@@ -151,7 +154,7 @@ export default function QuizTake() {
         </button>
         {current < questions.length - 1 ? (
           <button onClick={() => setCurrent(current + 1)}
-            className="rounded-lg bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-gray-900 hover:bg-indigo-700 transition">
+            className="btn-primary">
             Next
           </button>
         ) : (

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { getCommentsLive, deleteComment } from '../../services/firestore' 
 import { exportToCSV } from '../../utils/export'
+import { Download } from 'lucide-react'
 
 export default function CommentManagement() {
   const [comments, setComments] = useState([])
@@ -21,11 +22,11 @@ export default function CommentManagement() {
     try {
       await deleteComment(id)
     } catch (error) {
-      alert("Comment එක ඩිලීට් කරන්න බැරි වුණා මචං!")
+      alert("Failed to delete comment!")
     }
   }
 
-  // 🔍 සර්ච් ෆිල්ටර් එක (දැන් වර්ග දෙකේම fields වලට වැඩ කරනවා)
+  // Search filter (works on both types of fields)
   const filteredComments = comments.filter((c) => {
     const search = searchTerm.toLowerCase()
     const name = (c.studentName || c.userDisplayName || '').toLowerCase()
@@ -63,9 +64,9 @@ export default function CommentManagement() {
             { label: 'Comment Text', accessor: (c) => c.text || c.content || '' },
             { label: 'Date Posted', accessor: (c) => c.createdAt?.toDate?.().toLocaleString() || '' },
           ])}
-          className="px-4 py-2 rounded-xl text-xs font-semibold bg-green-600 text-white hover:bg-green-700 shadow-sm transition-all duration-200 flex items-center gap-1.5"
+          className="px-4 py-2 rounded-xl text-xs font-semibold bg-green-600 text-white hover:bg-green-700 shadow-sm transition-all duration-200 flex items-center gap-1.5 btn-primary"
         >
-          📥 Export CSV
+          <Download className="w-4 h-4 inline" /> Export CSV
         </button>
       </div>
 
@@ -75,8 +76,8 @@ export default function CommentManagement() {
           type="text"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="🔍 Search by student name, email, or batch..."
-          className="w-full text-sm p-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition outline-none placeholder-gray-400"
+          placeholder="Search by student name, email, or batch..."
+          className="w-full text-sm p-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition outline-none placeholder-gray-400 input-field"
         />
       </div>
 
@@ -88,14 +89,14 @@ export default function CommentManagement() {
       ) : (
         <div className="space-y-3">
           {filteredComments.map((c) => {
-            // 🎯 අදාළ දත්ත තියෙන විදිහට variables හදාගන්නවා
+            // Extract relevant data into variables
             const displayName = c.studentName || c.userDisplayName || 'Unknown Student'
             const commentText = c.text || c.content || ''
             const initial = displayName[0] || 'S'
-            const isResourceComment = !!c.chapterId // 📌 මේක resource එකක කමෙන්ට් එකක්ද කියලා බලනවා
+            const isResourceComment = !!c.chapterId // Check if this is a resource comment
 
             return (
-              <div key={c.id} className="bg-white border border-gray-200/80 rounded-2xl p-4 shadow-sm hover:shadow-md transition duration-200">
+              <div key={c.id} className="bg-white border border-gray-200/80 rounded-2xl p-4 shadow-sm hover:shadow-md transition duration-200 card">
                 <div className="flex items-start justify-between gap-4">
                   
                   {/* Left Side: Avatar Indicator & Student Meta Details */}
@@ -111,7 +112,7 @@ export default function CommentManagement() {
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-sm font-bold text-gray-900">{displayName}</span>
                         
-                        {/* 📌 බැච් එකක් තියෙනවා නම් පෙන්වනවා, නැත්නම් Resource Comment එකක් කියලා පෙන්වනවා */}
+                        {/* Show batch if available, otherwise show Resource Comment label */}
                         {c.batch ? (
                           <span className="text-[10px] bg-indigo-50 text-indigo-700 font-semibold px-2 py-0.5 rounded-md">
                             Batch: {c.batch}

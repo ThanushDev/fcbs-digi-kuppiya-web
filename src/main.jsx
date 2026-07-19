@@ -4,7 +4,6 @@ import { BrowserRouter } from 'react-router-dom'
 import './index.css'
 import App from './App.jsx'
 
-// 🛡️ ප්‍රොජෙක්ට් එක ලයිව් (Production) තියෙද්දී විතරක් ඔක්කොම console.logs ඔටෝමැටිකලි හංගන්න
 if (import.meta.env.PROD) {
   console.log = () => {};
   console.error = () => {};

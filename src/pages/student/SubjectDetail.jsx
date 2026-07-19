@@ -3,12 +3,13 @@ import { Link, useParams } from 'react-router-dom'
 import { getChapters, getSubjects, getResourcesBySubjectAndType } from '../../services/firestore'
 import CommentSection from '../../components/comments/CommentSection'
 import Skeleton, { DetailSkeleton } from '../../components/ui/Skeleton'
+import { ArrowLeft, BookOpen, FileText, FileEdit, Video, Play, ExternalLink, File } from 'lucide-react'
 
 const TABS = [
-  { key: 'chapters', label: 'Chapters', icon: '▤' },
-  { key: 'past_papers', label: 'Past Papers', icon: '📄' },
-  { key: 'short_notes', label: 'Short Notes', icon: '✍️' },
-  { key: 'videos', label: 'Videos', icon: '▶' },
+  { key: 'chapters', label: 'Chapters', icon: BookOpen },
+  { key: 'past_papers', label: 'Past Papers', icon: FileText },
+  { key: 'short_notes', label: 'Short Notes', icon: FileEdit },
+  { key: 'videos', label: 'Videos', icon: Video },
 ]
 
 export default function SubjectDetail() {
@@ -48,7 +49,7 @@ export default function SubjectDetail() {
   } , [subjectId])
 
   if (loading) return (
-    <div>
+    <div className="animate-fade-in">
       <Skeleton className="mb-2 h-4 w-32" />
       <Skeleton className="mb-6 h-8 w-60" />
       <DetailSkeleton />
@@ -59,23 +60,24 @@ export default function SubjectDetail() {
   return (
     <div className="animate-fade-in">
       <div className="mb-6">
-        <Link to={`/dashboard/subjects/${subject.semesterId}`} className="text-sm text-indigo-600 hover:text-indigo-700 font-medium">&larr; Back to Subjects</Link>
+        <Link to={`/dashboard/subjects/${subject.semesterId}`} className="text-sm text-indigo-600 hover:text-indigo-700 font-medium inline-flex items-center gap-1.5 group">
+          <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" /> Back to Subjects
+        </Link>
         <h1 className="mt-2 text-2xl font-bold text-gray-900">{subject.name}</h1>
-        <p className="text-sm text-gray-500 mt-1">{subject.code || ''} {subject.description ? `— ${subject.description}` : ''}</p>
+        <p className="text-sm text-gray-500 mt-1">{subject.code || ''} {subject.description ? `\u2014 ${subject.description}` : ''}</p>
       </div>
 
-      <div className="mb-6 flex gap-1 border-b border-gray-200">
-        {TABS.map((t) => (
-          <button key={t.key} onClick={() => setTab(t.key)}
-            className={`flex items-center gap-2 px-5 py-3 text-sm font-semibold border-b-2 transition-all duration-200 ${
-              tab === t.key
-                ? 'border-indigo-600 text-indigo-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
-            }`}>
-            <span>{t.icon}</span>
-            {t.label}
-          </button>
-        ))}
+      <div className="tab-capsule mb-6">
+        {TABS.map((t) => {
+          const Icon = t.icon
+          return (
+            <button key={t.key} onClick={() => setTab(t.key)}
+              className={`tab-capsule-btn ${tab === t.key ? 'active' : ''}`}>
+              <Icon className="w-3.5 h-3.5 inline mr-1.5" />
+              {t.label}
+            </button>
+          )
+        })}
       </div>
 
       {tab === 'chapters' && <ChapterGridCard chapters={chapters} />}
@@ -84,7 +86,6 @@ export default function SubjectDetail() {
       {tab === 'videos' && <VideoGridPlayer items={videos} />}
 
       <div className="mt-12 pt-8 border-t border-gray-200">
-        {/* 🎯 Fix: මෙතැනදී chapterId විදිහටම subjectId එක යවනවා (එතකොට Component එක අනිවාර්යයෙන්ම වැඩ කරනවා) */}
         <CommentSection chapterId={subjectId} chapterTitle={subject.name} />
       </div>
     </div>
@@ -106,7 +107,7 @@ function ChapterGridCard({ chapters }) {
         <div key={ch.id} className="card card-hover group p-5 flex flex-col justify-between h-36">
           <div className="flex items-start gap-3">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 font-bold text-sm">
-              {ch.order || '—'}
+              {ch.order || '\u2014'}
             </span>
             <div className="min-w-0">
               <h4 className="text-sm font-semibold text-gray-900 line-clamp-2 group-hover:text-indigo-600 transition">
@@ -117,8 +118,8 @@ function ChapterGridCard({ chapters }) {
           </div>
           {ch.driveLink && (
             <a href={ch.driveLink} target="_blank" rel="noopener noreferrer"
-              className="mt-3 w-full text-center rounded-lg bg-gray-100 hover:bg-indigo-600 text-gray-600 hover:text-white py-2 text-xs font-semibold transition-all duration-150">
-              View Document ↗
+              className="mt-3 w-full text-center rounded-lg bg-gray-100 hover:bg-indigo-600 text-gray-600 hover:text-white py-2 text-xs font-semibold transition-all duration-150 inline-flex items-center justify-center gap-1">
+              <ExternalLink className="w-3 h-3" /> View Document
             </a>
           )}
         </div>
@@ -146,7 +147,7 @@ function ResourceGridCard({ items, type }) {
               <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border ${
                 type === 'past_paper' ? 'bg-amber-50 border-amber-200 text-amber-600' : 'bg-emerald-50 border-emerald-200 text-emerald-600'
               }`}>
-                {type === 'past_paper' ? '📄' : '📝'}
+                {type === 'past_paper' ? <FileText className="w-5 h-5" /> : <FileEdit className="w-5 h-5" />}
               </span>
               <div className="min-w-0">
                 <h4 className="text-sm font-semibold text-gray-900 line-clamp-2 group-hover:text-indigo-600 transition">{item.title}</h4>
@@ -155,8 +156,8 @@ function ResourceGridCard({ items, type }) {
             </div>
             {documentLink && (
               <a href={documentLink} target="_blank" rel="noopener noreferrer"
-                className="mt-3 w-full text-center rounded-lg bg-gray-100 hover:bg-indigo-600 text-gray-600 hover:text-white py-2 text-xs font-semibold transition-all duration-150">
-                View Document ↗
+                className="mt-3 w-full text-center rounded-lg bg-gray-100 hover:bg-indigo-600 text-gray-600 hover:text-white py-2 text-xs font-semibold transition-all duration-150 inline-flex items-center justify-center gap-1">
+                <ExternalLink className="w-3 h-3" /> View Document
               </a>
             )}
           </div>
@@ -220,7 +221,9 @@ function VideoGridPlayer({ items }) {
                 
                 {ytId && (
                   <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-80 group-hover:opacity-100 transition">
-                    <div className="h-12 w-12 rounded-full bg-red-600 text-white flex items-center justify-center pl-1 text-lg shadow-lg transform group-hover:scale-110 transition duration-200">▶</div>
+                    <div className="h-12 w-12 rounded-full bg-red-600 text-white flex items-center justify-center shadow-lg transform group-hover:scale-110 transition duration-200">
+                      <Play className="w-5 h-5 ml-0.5" />
+                    </div>
                   </div>
                 )}
               </div>

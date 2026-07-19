@@ -1,12 +1,20 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom' 
 import { useAuth } from '../../contexts/AuthContext'
+import { useAds } from '../../contexts/AdsContext'
 import { getSemesters, getBatchPermission, addComment } from '../../services/firestore' 
 import { collection, getDocs, query, orderBy } from 'firebase/firestore'
 import { db } from '../../services/firebase'
+import {
+  BookOpen, BookMarked, GraduationCap, ClipboardList, BarChart3, Calendar,
+  QrCode, Bot, FileText, FileDown, Bell, X, ExternalLink, Send, ChevronRight,
+  DollarSign, Target, Users, MessageSquare, Sparkles, Lightbulb, Quote,
+  Upload, Download, ZoomIn, CheckCircle, AlertCircle, Info, HelpCircle,
+  ArrowUpRight, Volume2, VolumeX, Video
+} from 'lucide-react'
 import logo from '../../assets/logo.png' 
 
-const semesterIcons = ['📘', '📗', '📕', '📙', '📔', '📓', '📔', '📓']
+const semesterIcons = [BookOpen, BookMarked, GraduationCap, ClipboardList, BarChart3, Calendar, BookOpen, BookMarked]
 const SEMESTER_THEMES = [
   { bg: 'bg-gradient-to-br from-blue-50 to-indigo-100/40', border: 'border-blue-200/80 hover:border-blue-400', text: 'text-blue-900', iconBg: 'bg-blue-500/10 text-blue-600' },
   { bg: 'bg-gradient-to-br from-emerald-50 to-teal-100/40', border: 'border-emerald-200/80 hover:border-emerald-400', text: 'text-emerald-900', iconBg: 'bg-emerald-500/10 text-emerald-600' },
@@ -25,8 +33,8 @@ const MENTORS = [
   { name: "Ms. Kavindi Nawodhya", batch: "22/23", role: "Mathematics", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614076/nawodhya_ylxmlr.jpg", department: "bms" },
   { name: "Ms. Jayathri Indrachapa", nickname: "මෙඩුසා", batch: "22/23", role: "Mathematics", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614067/chapa_drbwzz.jpg", department: "bms" },
   { name: "Ms. Kavithma Damindi", batch: "22/23", role: "Management", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614072/kavithma_mmfkmr.jpg", department: "bms" },
-  { name: "Ms.Naduni Rathnayaka", batch: "22/23", role: "MIS", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614073/naduni_u9czqe.jpg", department: "bms" },
-  { name: "Ms.Liyoni Kaushalya", nickname: "ආල්‍යා", batch: "21/22", role: "MIS", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614069/liyoni_c4yb0l.jpg", department: "bms" },
+  { name: "Ms. Naduni Rathnayaka", batch: "22/23", role: "MIS", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614073/naduni_u9czqe.jpg", department: "bms" },
+  { name: "Ms. Liyoni Kaushalya", nickname: "ආල්‍යා", batch: "21/22", role: "MIS", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614069/liyoni_c4yb0l.jpg", department: "bms" },
   { name: "Ms. Thakshila Wijesekara", nickname: "රපුන්සල්", batch: "21/22", role: "MIS", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614084/rapunsall_rbr0y0.jpg", department: "bms" },
   { name: "Ms. Dakshila Dilshani", batch: "22/23", role: "Accounting", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614072/dakshi_vvtivc.jpg", department: "bms" },
   { name: "Ms. Shashini Herath", nickname: "ශ්‍රිනී", batch: "21/22", role: "Accounting", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614078/shashini_rhwepa.jpg", department: "bms" },
@@ -56,20 +64,26 @@ const formatSemesterName = (name) => {
     .replace(/S2/g, 'Semester II');
 }
 
+const toolIconMap = {
+  'quiz': ClipboardList, 'attendance': BarChart3, 'gpa': Target, 'ca': BookOpen,
+  'finance': DollarSign, 'qr': QrCode, 'ai': Bot, 'cv': FileText, 'pdf': FileDown
+}
+
 const academicTools = [
-  { name: 'Quiz System', path: '../qindex.php', icon: '📝', isExternal: true, isQuiz: true, theme: 'from-blue-50 to-cyan-100/50 text-blue-700 border-blue-200' },
-  { name: 'Attendance Calc', path: '/dashboard/attendance', icon: '📊', isInternalTool: true, theme: 'from-emerald-50 to-teal-100/50 text-emerald-700 border-emerald-200' },
-  { name: 'GPA Calculator', path: '/dashboard/gpa', icon: '🎯', isInternalTool: true, theme: 'from-purple-50 to-indigo-100/50 text-purple-700 border-purple-200' },
-  { name: 'CA Calculator', path: '/dashboard/ca', icon: '📐', isInternalTool: true, theme: 'from-amber-50 to-orange-100/50 text-amber-700 border-amber-200' },
-  { name: 'Finance Tracker', path: '/dashboard/finance', icon: '💰', isInternalTool: true, theme: 'from-rose-50 to-pink-100/50 text-rose-700 border-rose-200' },
-  { name: 'QR Generator', path: '/dashboard/tools/qr', icon: '🔳', isInternalTool: true, theme: 'from-slate-50 to-gray-200/50 text-slate-700 border-slate-300' },
-  { name: 'AI Humanizer', path: '/dashboard/tools/ai-humanizer', icon: '🤖', isInternalTool: true, theme: 'from-violet-50 to-fuchsia-100/50 text-violet-700 border-violet-200' },
-  { name: 'CV Maker', path: '/dashboard/tools/cv-maker', icon: '📄', isInternalTool: true, theme: 'from-blue-50 to-indigo-100/50 text-indigo-700 border-indigo-200' },
-  { name: 'PDF Generator', path: '/dashboard/tools/pdf-tool', icon: '📁', isInternalTool: true, theme: 'from-teal-50 to-emerald-100/50 text-teal-700 border-teal-200' },
+  { name: 'Quiz System', path: '../qindex.php', iconKey: 'quiz', isExternal: true, isQuiz: true, theme: 'from-blue-50 to-cyan-100/50 text-blue-700 border-blue-200' },
+  { name: 'Attendance Calc', path: '/dashboard/attendance', iconKey: 'attendance', isInternalTool: true, theme: 'from-emerald-50 to-teal-100/50 text-emerald-700 border-emerald-200' },
+  { name: 'GPA Calculator', path: '/dashboard/gpa', iconKey: 'gpa', isInternalTool: true, theme: 'from-purple-50 to-indigo-100/50 text-purple-700 border-purple-200' },
+  { name: 'CA Calculator', path: '/dashboard/ca', iconKey: 'ca', isInternalTool: true, theme: 'from-amber-50 to-orange-100/50 text-amber-700 border-amber-200' },
+  { name: 'Finance Tracker', path: '/dashboard/finance', iconKey: 'finance', isInternalTool: true, theme: 'from-rose-50 to-pink-100/50 text-rose-700 border-rose-200' },
+  { name: 'QR Generator', path: '/dashboard/tools/qr', iconKey: 'qr', isInternalTool: true, theme: 'from-slate-50 to-gray-200/50 text-slate-700 border-slate-300' },
+  { name: 'AI Humanizer', path: '/dashboard/tools/ai-humanizer', iconKey: 'ai', isInternalTool: true, theme: 'from-violet-50 to-fuchsia-100/50 text-violet-700 border-violet-200' },
+  { name: 'CV Maker', path: '/dashboard/tools/cv-maker', iconKey: 'cv', isInternalTool: true, theme: 'from-blue-50 to-indigo-100/50 text-indigo-700 border-indigo-200' },
+  { name: 'PDF Generator', path: '/dashboard/tools/pdf-tool', iconKey: 'pdf', isInternalTool: true, theme: 'from-teal-50 to-emerald-100/50 text-teal-700 border-teal-200' },
 ]
 
 export default function Dashboard() {
   const { userData } = useAuth()
+  const { currentAd, showAdPopup, tryShowAd, dismissAd, handleAdClick, loading: adsLoading } = useAds()
   const navigate = useNavigate()
   const [semesters, setSemesters] = useState([])
   const [loading, setLoading] = useState(true)
@@ -91,9 +105,54 @@ export default function Dashboard() {
   const [chatInput, setChatInput] = useState('')
   const [isChatLoading, setIsChatLoading] = useState(false)
   const chatEndRef = useRef(null)
+  const adTriggeredRef = useRef(false)
+
+  // Ad Overlay Timer States
+  const [isAdLoaded, setIsAdLoaded] = useState(false)
+  const [countdown, setCountdown] = useState(7)
+  const [isMuted, setIsMuted] = useState(true)
+  const videoRef = useRef(null)
 
   const userDept = (userData?.department || '').toLowerCase()
   const displayMentors = MENTORS.filter(m => m.department === 'both' || m.department === userDept)
+
+  // 1. Initialize countdown whenever a new ad is shown
+  useEffect(() => {
+    if (showAdPopup && currentAd) {
+      setCountdown(currentAd.countdownDuration || 7)
+      setIsAdLoaded(false)
+    }
+  }, [showAdPopup, currentAd])
+
+  // 2. Safety fallback timer to prevent endless spinner if the media asset fails to fire load events
+  useEffect(() => {
+    let safetyTimer;
+    if (showAdPopup && currentAd && currentAd.mediaUrl) {
+      safetyTimer = setTimeout(() => {
+        setIsAdLoaded(true);
+      }, 1500); // 1.5 seconds auto-bypass
+    }
+    return () => {
+      if (safetyTimer) clearTimeout(safetyTimer);
+    };
+  }, [showAdPopup, currentAd]);
+
+  // 3. Gated Countdown Timer Tick Logic
+  useEffect(() => {
+    if (!showAdPopup || !isAdLoaded || countdown <= 0) return
+
+    const timerInterval = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timerInterval)
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+
+    return () => clearInterval(timerInterval)
+  }, [showAdPopup, isAdLoaded, countdown])
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -117,7 +176,6 @@ export default function Dashboard() {
 
         const allSemesters = await getSemesters()
         
-        // 🎯 1. මුලින්ම Department එකට අදාළව ෆිල්ටර් කරනවා (LCS අයට BMS ඒවා පේන්නේ නැති වෙන්න)
         let deptFiltered = allSemesters.filter((s) => {
           const sDept = (s.department || '').toLowerCase();
           return sDept === dept || sDept === 'both';
@@ -131,8 +189,6 @@ export default function Dashboard() {
           if (perm && perm.semesterIds && perm.semesterIds.length > 0) {
             const allowedIds = perm.semesterIds.map(String);
             
-            // 🎯 2. ඊට පස්සේ Admin දීපු Permissions වලට අදාළව ෆිල්ටර් කරනවා. 
-            // දැන් මෙතන 'deptFiltered' එක පාවිච්චි කරලා තියෙන්නේ. ඒ නිසා අදාළ නැති Department ඒවා අයින් වෙලා යයි.
             let adminFiltered = deptFiltered.filter((s) => {
               const normalized = normalizeSemName(s.name);
               let docSemId = null;
@@ -149,7 +205,6 @@ export default function Dashboard() {
               return docSemId ? allowedIds.includes(docSemId) : allowedIds.includes(String(s.id));
             });
 
-            // එකම semester එක duplicate පෙන්වීම වැලැක්වීමට
             const uniqueSemesters = [];
             const seen = new Set();
             for (const s of adminFiltered) {
@@ -167,7 +222,6 @@ export default function Dashboard() {
           }
         }
 
-        // Sorting
         finalFiltered.sort((a, b) => {
           const getWeight = (name) => {
             const normalized = normalizeSemName(name);
@@ -186,7 +240,6 @@ export default function Dashboard() {
         
         setSemesters(finalFiltered)
 
-        // Notifications
         const notifSnap = await getDocs(query(collection(db, 'global_notifications'), orderBy('createdAt', 'desc')))
         const notifList = notifSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }))
         
@@ -209,7 +262,16 @@ export default function Dashboard() {
       }
     }
     load()
-  }, [userData?.department, userData?.batch]) // ⚠️ userData?.department ආයෙත් dependencies වලට එකතු කරලා තියෙනවා.
+  }, [userData?.department, userData?.batch])
+
+  // Trigger forced ad popup once per Dashboard mount
+  useEffect(() => {
+    if (!loading && !adsLoading && !adTriggeredRef.current) {
+      adTriggeredRef.current = true
+      const timer = setTimeout(() => tryShowAd(), 800)
+      return () => clearTimeout(timer)
+    }
+  }, [loading, adsLoading, tryShowAd])
 
   const handleSemesterClick = (s, e) => {
     const dept = (userData?.department || '').toLowerCase()
@@ -333,21 +395,118 @@ export default function Dashboard() {
 
   return (
     <>
+      {/* IMMERSIVE AD POPUP OVERLAY */}
+      {showAdPopup && currentAd && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black animate-fade-in select-none">
+          <div className="relative w-full h-full max-w-4xl max-h-[85vh] flex items-center justify-center bg-black md:rounded-2xl md:overflow-hidden p-1">
+            
+            {/* Ad Content Canvas */}
+            <div className="w-full h-full flex items-center justify-center cursor-pointer" onClick={() => handleAdClick(currentAd)}>
+              {currentAd.adType === 'video' ? (
+                <video
+                  ref={videoRef}
+                  src={currentAd.mediaUrl}
+                  autoPlay
+                  playsInline
+                  muted={isMuted}
+                  onCanPlay={() => setIsAdLoaded(true)}
+                  onError={() => setIsAdLoaded(true)}
+                  className="w-full h-full object-contain"
+                />
+              ) : (
+                <img
+                  src={currentAd.mediaUrl}
+                  alt="Sponsored Content"
+                  onLoad={() => setIsAdLoaded(true)}
+                  onError={() => setIsAdLoaded(true)}
+                  className="w-full h-full object-contain"
+                />
+              )}
+            </div>
+
+            {/* Asset Loading State Indicator */}
+            {!isAdLoaded && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black space-y-3 z-10">
+                <div className="w-9 h-9 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin" />
+                <p className="text-xs font-semibold text-slate-400 tracking-wide">Loading sponsored content...</p>
+              </div>
+            )}
+
+            {/* FLOATING INTERACTION OVERLAYS */}
+            {isAdLoaded && (
+              <>
+                {/* Floating Top-Right Controls */}
+                <div className="absolute top-4 right-4 flex items-center gap-2 z-20">
+                  {countdown > 0 ? (
+                    // Circular Countdown Badge
+                    <div className="flex items-center justify-center w-10 h-10 rounded-full bg-black/60 border border-white/10 backdrop-blur-md">
+                      <span className="text-xs font-black text-white">{countdown}s</span>
+                    </div>
+                  ) : (
+                    // Finished Overlay Buttons
+                    <div className="flex items-center gap-2 animate-scale-in">
+                      <button
+                        onClick={() => handleAdClick(currentAd)}
+                        className="flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-lg transition"
+                      >
+                        Continue <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={dismissAd}
+                        className="p-2 text-slate-300 hover:text-white bg-white/10 hover:bg-white/20 border border-white/10 backdrop-blur-md rounded-xl transition"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Bottom-Left Visit Advertiser Link */}
+                <div 
+                  onClick={() => handleAdClick(currentAd)}
+                  className="absolute bottom-4 left-4 flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold text-slate-300 bg-black/40 border border-white/10 hover:border-white/20 backdrop-blur-md rounded-xl cursor-pointer transition hover:text-white"
+                >
+                  <ExternalLink className="w-3 h-3" /> Visit Sponsor
+                </div>
+
+                {/* Bottom-Right Media Mute Control (Videos Only) */}
+                {currentAd.adType === 'video' && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setIsMuted(!isMuted)
+                    }}
+                    className="absolute bottom-4 right-4 p-2 text-slate-300 hover:text-white bg-black/40 border border-white/10 backdrop-blur-md rounded-xl transition z-20"
+                  >
+                    {isMuted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+                  </button>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* CORE DASHBOARD CONTENT VIEW PORT */}
       <div className="animate-fade-in space-y-8 flex flex-col min-h-screen p-2 sm:p-4 relative">
         
         {activePopup && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in">
             <div className="relative w-full max-w-md p-6 bg-white/90 border border-indigo-100 rounded-2xl shadow-2xl backdrop-blur-xl animate-scale-in">
-              <button onClick={() => setActivePopup(null)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 font-bold transition text-lg">✕</button>
+              <button onClick={() => setActivePopup(null)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition p-1">
+                <X className="w-4 h-4" />
+              </button>
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-2xl">{activePopup.type === 'zoom' ? '📹' : activePopup.type === 'resource' ? '📁' : '📢'}</span>
+                <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center">
+                  {activePopup.type === 'zoom' ? <Video className="w-4 h-4 text-indigo-600" /> : activePopup.type === 'resource' ? <FileDown className="w-4 h-4 text-indigo-600" /> : <Bell className="w-4 h-4 text-indigo-600" />}
+                </div>
                 <span className="text-[10px] font-extrabold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full uppercase tracking-wider">{activePopup.type}</span>
               </div>
               <h3 className="text-lg font-black text-slate-900 leading-tight mb-2">{activePopup.title}</h3>
               <p className="text-sm text-slate-600 leading-relaxed mb-5 whitespace-pre-wrap">{activePopup.message}</p>
               {activePopup.type === 'zoom' && activePopup.zoomLink && (
-                <a href={activePopup.zoomLink} target="_blank" rel="noopener noreferrer" className="block w-full py-2.5 text-center bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold text-xs rounded-xl shadow-md hover:opacity-90 transition">
-                  Join Zoom Meeting Now 🚀
+                <a href={activePopup.zoomLink} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 w-full py-2.5 text-center bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold text-xs rounded-xl shadow-md hover:opacity-90 transition">
+                  <ExternalLink className="w-3.5 h-3.5" /> Join Zoom Meeting
                 </a>
               )}
               <p className="text-[10px] text-gray-400 mt-4 text-right">Published: {new Date(activePopup.createdAt).toLocaleString()}</p>
@@ -358,8 +517,10 @@ export default function Dashboard() {
         {specModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
             <div className="relative w-full max-w-md p-6 bg-[#0b1528] border border-white/10 rounded-3xl shadow-[0_0_50px_rgba(168,85,247,0.2)] animate-scale-in text-center">
-              <button onClick={() => setSpecModalOpen(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white transition">✕</button>
-              <h3 className="text-xl font-black text-white tracking-wide mb-1"> Select Academic Path</h3>
+              <button onClick={() => setSpecModalOpen(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white transition">
+                <X className="w-4 h-4" />
+              </button>
+              <h3 className="text-xl font-black text-white tracking-wide mb-1">Select Academic Path</h3>
               <p className="text-xs text-slate-400 mb-6">Choose your degree stream to map relevant subjects.</p>
               
               <div className="grid grid-cols-1 gap-2.5">
@@ -380,8 +541,12 @@ export default function Dashboard() {
         {showHistory && (
           <div className="fixed inset-y-0 right-0 z-50 w-full max-w-sm bg-white shadow-2xl border-l border-gray-100 p-6 flex flex-col animate-slide-in">
             <div className="flex justify-between items-center border-b pb-4 mb-4">
-              <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">🔔 Notifications History</h3>
-              <button onClick={() => setShowHistory(false)} className="text-gray-400 hover:text-gray-600 font-bold text-lg">✕</button>
+              <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
+                <Bell className="w-4 h-4 text-gray-500" /> Notifications History
+              </h3>
+              <button onClick={() => setShowHistory(false)} className="text-gray-400 hover:text-gray-600 transition">
+                <X className="w-4 h-4" />
+              </button>
             </div>
             <div className="space-y-4 flex-grow overflow-y-auto pr-1">
               {allNotifications.length === 0 ? (
@@ -396,8 +561,8 @@ export default function Dashboard() {
                     <h4 className="text-sm font-bold text-slate-900">{n.title}</h4>
                     <p className="text-xs text-slate-600 leading-relaxed">{n.message}</p>
                     {n.type === 'zoom' && n.zoomLink && (
-                      <a href={n.zoomLink} target="_blank" rel="noopener noreferrer" className="inline-block mt-1 text-[11px] font-bold text-blue-600 hover:underline">
-                        🔗 Click here to join
+                      <a href={n.zoomLink} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 mt-1 text-[11px] font-bold text-blue-600 hover:underline">
+                        <ExternalLink className="w-3 h-3" /> Click here to join
                       </a>
                     )}
                   </div>
@@ -414,9 +579,9 @@ export default function Dashboard() {
               <p className="mt-1 text-sm text-gray-500">Select a semester to view your subjects and learning materials.</p>
             </div>
             <button onClick={() => setShowHistory(true)} className="relative p-2.5 bg-slate-100 hover:bg-slate-200/80 rounded-xl transition group shrink-0">
-              <span className="text-xl">🔔</span>
+              <Bell className="w-5 h-5 text-slate-500" />
               {allNotifications.length > 0 && (
-                <span className="absolute top-1 right-1 flex h-2 w-2 rounded-full bg-red-500 animate-ping" />
+                <span className="absolute top-1.5 right-1.5 flex h-2 w-2 rounded-full bg-red-500 animate-ping" />
               )}
             </button>
           </div>
@@ -424,17 +589,20 @@ export default function Dashboard() {
           <div className="flex flex-wrap gap-2.5">
             {academicTools.map((tool) => {
               if (tool.isQuiz && !userData?.quizEnabled) return null
-              const sharedClass = `px-3 py-1.5 rounded-xl text-xs font-bold transition bg-gradient-to-br ${tool.theme} border shadow-sm hover:shadow-md hover:-translate-y-0.5 duration-200 transform`
+              const IconComp = toolIconMap[tool.iconKey]
+              const sharedClass = `inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition bg-gradient-to-br ${tool.theme} border shadow-sm hover:shadow-md hover:-translate-y-0.5 duration-200 transform`
               if (tool.isInternalTool) {
                 return (
                   <Link key={tool.name} to={tool.path} className={sharedClass}>
-                    {tool.icon} <span className="ml-0.5">{tool.name}</span>
+                    {IconComp && <IconComp className="w-3.5 h-3.5" />}
+                    <span>{tool.name}</span>
                   </Link>
                 )
               }
               return (
                 <a key={tool.name} href={tool.path} target="_blank" rel="noopener noreferrer" className={sharedClass}>
-                  {tool.icon} <span className="ml-0.5">{tool.name}</span>
+                  {IconComp && <IconComp className="w-3.5 h-3.5" />}
+                  <span>{tool.name}</span>
                 </a>
               )
             })}
@@ -455,6 +623,7 @@ export default function Dashboard() {
               <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
                 {semesters.map((s, i) => {
                   const theme = SEMESTER_THEMES[i % SEMESTER_THEMES.length];
+                  const SemIcon = semesterIcons[i % semesterIcons.length];
                   return (
                     <Link 
                       key={s.id} 
@@ -463,8 +632,8 @@ export default function Dashboard() {
                       className={`group p-5 flex flex-col justify-between min-h-[140px] rounded-2xl border shadow-sm transition-all duration-300 transform hover:-translate-y-1 hover:shadow-md ${theme.bg} ${theme.border}`}
                     >
                       <div>
-                        <div className={`mb-3 flex h-10 w-10 items-center justify-center rounded-xl text-xl group-hover:scale-110 transition duration-300 ${theme.iconBg}`}>
-                          {semesterIcons[i % semesterIcons.length]}
+                        <div className={`mb-3 flex h-10 w-10 items-center justify-center rounded-xl group-hover:scale-110 transition duration-300 ${theme.iconBg}`}>
+                          <SemIcon className="w-5 h-5" />
                         </div>
                         <h3 className={`text-base font-bold transition duration-200 ${theme.text}`}>
                           {formatSemesterName(s.name)}
@@ -483,7 +652,9 @@ export default function Dashboard() {
           <div className="mt-12 bg-gradient-to-br from-slate-50 to-blue-50/30 rounded-2xl shadow-sm border border-slate-200/80 p-6 md:p-8 overflow-hidden">
             <div className="mb-6 border-b border-slate-100 pb-4 flex justify-between items-center">
               <div>
-                <h3 className="text-sm font-bold text-slate-900 tracking-wide uppercase">Our Mentors</h3>
+                <h3 className="text-sm font-bold text-slate-900 tracking-wide uppercase flex items-center gap-2">
+                  <Users className="w-4 h-4 text-indigo-500" /> Our Mentors
+                </h3>
                 <p className="text-xs text-slate-500 mt-0.5">Learn from the experienced undergraduates</p>
               </div>
               <div className="flex space-x-1.5">
@@ -505,11 +676,15 @@ export default function Dashboard() {
                     <div className="text-center sm:text-left flex-1">
                       <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2.5 justify-center sm:justify-start">
                         <h4 className="text-xl font-bold text-slate-900">{mentor.name}</h4>
-                        {mentor.nickname && <span className="text-[10px] font-semibold px-2 py-0.5 bg-white/80 text-slate-600 rounded-full w-max mx-auto sm:mx-0 border border-slate-200/50">"{mentor.nickname}"</span>}
+                        {mentor.nickname && <span className="text-[10px] font-semibold px-2 py-0.5 bg-white/80 text-slate-600 rounded-full w-max mx-auto sm:mx-0 border border-slate-200/50 flex items-center gap-1">
+                          <Quote className="w-2.5 h-2.5" />{mentor.nickname}
+                        </span>}
                       </div>
                       <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wider mt-0.5">{mentor.role}</p>
                       <div className="mt-3 flex items-center justify-center sm:justify-start gap-2 text-xs font-medium text-slate-500">
-                        <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded-md border border-indigo-100/40 font-bold">Batch: {mentor.batch}</span>
+                        <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded-md border border-indigo-100/40 font-bold flex items-center gap-1">
+                          <Users className="w-3 h-3" /> Batch: {mentor.batch}
+                        </span>
                         <span className="w-1 bg-slate-300 h-1 rounded-full"></span>
                         <span className="text-[11px] capitalize">Department: {mentor.department}</span>
                       </div>
@@ -522,14 +697,16 @@ export default function Dashboard() {
 
           <div className="mt-12 bg-gradient-to-br from-indigo-50/40 to-purple-50/40 rounded-2xl shadow-sm border border-indigo-100/80 p-6 md:p-8 space-y-4">
             <div>
-              <h3 className="text-sm font-bold text-indigo-950 uppercase tracking-wide">Dashboard Feedback</h3>
+              <h3 className="text-sm font-bold text-indigo-950 uppercase tracking-wide flex items-center gap-2">
+                <MessageSquare className="w-4 h-4 text-indigo-500" /> Dashboard Feedback
+              </h3>
               <p className="text-xs text-indigo-700/70 mt-0.5">Have suggestions or issues regarding LMS? Submit directly to admin.</p>
             </div>
             <form onSubmit={handleCommentSubmit} className="space-y-3">
-              <textarea rows="3" value={commentText} onChange={(e) => setCommentText(e.target.value)} placeholder="Write your suggestions or feedback here mchn..." className="w-full text-sm p-3 bg-white/80 border border-indigo-100 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:bg-white transition outline-none resize-none placeholder-gray-400 shadow-inner" maxLength={500} />
+              <textarea rows="3" value={commentText} onChange={(e) => setCommentText(e.target.value)} placeholder="Write your suggestions or feedback here..." className="w-full text-sm p-3 bg-white/80 border border-indigo-100 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:bg-white transition outline-none resize-none placeholder-gray-400 shadow-inner" maxLength={500} />
               <div className="flex justify-end">
-                <button type="submit" disabled={submittingComment || !commentText.trim()} className="px-5 py-2.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50">
-                  {submittingComment ? 'Submitting...' : 'Submit Feedback '}
+                <button type="submit" disabled={submittingComment || !commentText.trim()} className="inline-flex items-center gap-1.5 px-5 py-2.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50">
+                  {submittingComment ? 'Submitting...' : 'Submit Feedback'} <Send className="w-3 h-3" />
                 </button>
               </div>
             </form>
@@ -555,13 +732,15 @@ export default function Dashboard() {
           <div className="mb-4 w-80 sm:w-96 h-[400px] bg-white rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.3)] border border-gray-200 flex flex-col overflow-hidden animate-scale-in origin-bottom-right pointer-events-auto">
             <div className="bg-gradient-to-r from-orange-600 to-amber-600 p-4 flex justify-between items-center text-white">
               <div className="flex items-center gap-2">
-                <span className="text-xl">🤖</span>
+                <Bot className="w-5 h-5" />
                 <div>
                   <h3 className="font-bold text-sm">DIGI KUPPIYA AI Assistant</h3>
                   <p className="text-[10px] text-orange-100">Developed by Mr.Thanush</p>
                 </div>
               </div>
-              <button onClick={() => setIsChatOpen(false)} className="text-orange-100 hover:text-white transition text-lg">✕</button>
+              <button onClick={() => setIsChatOpen(false)} className="text-orange-100 hover:text-white transition">
+                <X className="w-4 h-4" />
+              </button>
             </div>
 
             <div className="flex-1 p-4 overflow-y-auto bg-gray-50 space-y-3">
@@ -596,9 +775,7 @@ export default function Dashboard() {
                 disabled={!chatInput.trim() || isChatLoading}
                 className="bg-orange-600 text-white p-2.5 rounded-xl hover:bg-orange-700 disabled:opacity-50 transition shadow-sm"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
-                  <path d="M3.478 2.404a.75.75 0 0 0-.926.941l2.432 7.905H13.5a.75.75 0 0 1 0 1.5H4.984l-2.432 7.905a.75.75 0 0 0 .926.94 60.519 60.519 0 0 0 18.445-8.986.75.75 0 0 0 0-1.218A60.517 60.517 0 0 0 3.478 2.404Z" />
-                </svg>
+                <Send className="w-4 h-4" />
               </button>
             </form>
           </div>
@@ -609,13 +786,9 @@ export default function Dashboard() {
           className="h-14 w-14 bg-gradient-to-r from-orange-600 to-amber-600 text-white rounded-full shadow-xl flex items-center justify-center hover:scale-105 hover:shadow-2xl transition-all duration-300 border-2 border-white/20 pointer-events-auto"
         >
           {isChatOpen ? (
-            <svg xmlns="http://www.w3.org/2000/xl" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-6 h-6">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-            </svg>
+            <X className="w-6 h-6" />
           ) : (
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-7 h-7">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.84 2.1-1.98 2.193-.34.027-.68.052-1.02.072v3.091l-3-3c-1.354 0-2.694-.055-4.02-.163a2.115 2.115 0 0 1-.825-.242m9.345-8.334a2.126 2.126 0 0 0-.476-.095 48.64 48.64 0 0 0-8.048 0c-1.131.094-1.976 1.057-1.976 2.192v4.286c0 .837.46 1.58 1.155 1.951m9.345-8.334V6.637c0-1.621-1.152-3.026-2.76-3.235A48.455 48.455 0 0 0 11.25 3c-2.115 0-4.198.137-6.24.402-1.608.209-2.76 1.614-2.76 3.235v6.226c0 1.621 1.152 3.026 2.76 3.235.577.075 1.157.14 1.74.194V21l4.155-4.155" />
-            </svg>
+            <Bot className="w-7 h-7" />
           )}
         </button>
       </div>

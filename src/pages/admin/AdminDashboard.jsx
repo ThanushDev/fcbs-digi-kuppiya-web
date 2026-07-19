@@ -1,13 +1,18 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { collection, getDocs, query, where, addDoc, deleteDoc, doc } from 'firebase/firestore'
 import { db } from '../../services/firebase'
 import { useAuth } from '../../contexts/AuthContext'
+import { useAds } from '../../contexts/AdsContext'
+import { Bell, ClipboardList, Trash2, Rocket } from 'lucide-react'
 
 export default function AdminDashboard() {
   const { userData } = useAuth()
+  const { tryShowAd, loading: adsLoading } = useAds()
+  const adTriggeredRef = useRef(false)
   const [stats, setStats] = useState({ users: 0, bms: 0, lcs: 0, semesters: 0, subjects: 0 })
+  useEffect(() => { if (!adsLoading && !adTriggeredRef.current) { adTriggeredRef.current = true; const t = setTimeout(() => tryShowAd(), 600); return () => clearTimeout(t) } }, [adsLoading, tryShowAd])
   
-  // Notification States (targetDepartment එකතු කළා)
+  // Notification States (added targetDepartment)
   const [notifications, setNotifications] = useState([])
   const [noticeForm, setNoticeForm] = useState({ title: '', message: '', targetBatch: 'all', targetDepartment: 'all', type: 'notice', zoomLink: '' })
   const [submitting, setSubmitting] = useState(false)
@@ -17,7 +22,7 @@ export default function AdminDashboard() {
 
   const loadData = async () => {
     try {
-      // 1. Active Batches ටික විතරක් ගන්නවා 
+      // Load only active batches
       let batchList = [];
       try {
         const batchesRef = collection(db, 'batchPermissions')
@@ -37,10 +42,10 @@ export default function AdminDashboard() {
 
         setDbBatches(batchList)
       } catch (batchErr) {
-        console.error("❌ Batches Fetch Error:", batchErr)
+        console.error("Batches Fetch Error:", batchErr)
       }
 
-      // 2. ඉතිරි ස්ටැට්ස් සහ නොටිෆිකේෂන් ටික parallel ලෝඩ් කරනවා
+      // Load remaining stats and notifications in parallel
       const [usersSnap, bmsSnap, lcsSnap, semSnap, subSnap, notifSnap] = await Promise.all([
         getDocs(collection(db, 'users')),
         getDocs(query(collection(db, 'users'), where('department', '==', 'bms'))),
@@ -76,12 +81,12 @@ export default function AdminDashboard() {
     if (!noticeForm.title.trim() || !noticeForm.message.trim()) return
     setSubmitting(true)
     try {
-      // Payload එකට targetDepartment එක යවනවා
+      // Send targetDepartment in payload
       await addDoc(collection(db, 'global_notifications'), {
         title: noticeForm.title,
         message: noticeForm.message,
         targetBatch: noticeForm.targetBatch,
-        targetDepartment: noticeForm.targetDepartment, // අලුතින් එකතු කළ කොටස
+        targetDepartment: noticeForm.targetDepartment,
         type: noticeForm.type,
         zoomLink: noticeForm.type === 'zoom' ? noticeForm.zoomLink : '',
         createdAt: new Date().toISOString()
@@ -131,22 +136,22 @@ export default function AdminDashboard() {
 
       <div className="grid gap-6 md:grid-cols-2 mt-8">
         <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-          <h2 className="text-lg font-bold text-gray-900 mb-4">📢 Broadcast New Notification / Zoom</h2>
+          <h2 className="text-lg font-bold text-gray-900 mb-4"><Bell className="w-4 h-4 inline" /> Broadcast New Notification / Zoom</h2>
           <form onSubmit={handleNotificationSubmit} className="space-y-4">
             <div>
               <label className="block text-xs font-semibold text-gray-600 mb-1">Notification Title</label>
-              <input type="text" value={noticeForm.title} onChange={(e) => setNoticeForm({...noticeForm, title: e.target.value})} className="w-full text-sm p-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500" placeholder="e.g., New Zoom Meeting Tonight" required />
+              <input type="text" value={noticeForm.title} onChange={(e) => setNoticeForm({...noticeForm, title: e.target.value})} className="w-full text-sm p-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 input-field" placeholder="e.g., New Zoom Meeting Tonight" required />
             </div>
             <div>
               <label className="block text-xs font-semibold text-gray-600 mb-1">Message / Description</label>
-              <textarea rows="2" value={noticeForm.message} onChange={(e) => setNoticeForm({...noticeForm, message: e.target.value})} className="w-full text-sm p-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 resize-none" placeholder="Enter notice details..." required />
+              <textarea rows="2" value={noticeForm.message} onChange={(e) => setNoticeForm({...noticeForm, message: e.target.value})} className="w-full text-sm p-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 resize-none input-field" placeholder="Enter notice details..." required />
             </div>
             
-            {/* Target Batch සහ Target Department පේළිය */}
+            {/* Target Batch and Target Department row */}
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1">Target Batch</label>
-                <select value={noticeForm.targetBatch} onChange={(e) => setNoticeForm({...noticeForm, targetBatch: e.target.value})} className="w-full text-sm p-2 border border-gray-200 rounded-lg bg-white outline-none">
+                <select value={noticeForm.targetBatch} onChange={(e) => setNoticeForm({...noticeForm, targetBatch: e.target.value})} className="w-full text-sm p-2 border border-gray-200 rounded-lg bg-white outline-none select-field">
                   <option value="all">All Batches</option>
                   {dbBatches.map((batch) => (
                     <option key={batch.id} value={batch.batchName}>
@@ -157,7 +162,7 @@ export default function AdminDashboard() {
               </div>
               <div>
                 <label className="block text-xs font-semibold text-gray-600 mb-1">Target Department</label>
-                <select value={noticeForm.targetDepartment} onChange={(e) => setNoticeForm({...noticeForm, targetDepartment: e.target.value})} className="w-full text-sm p-2 border border-gray-200 rounded-lg bg-white outline-none">
+                <select value={noticeForm.targetDepartment} onChange={(e) => setNoticeForm({...noticeForm, targetDepartment: e.target.value})} className="w-full text-sm p-2 border border-gray-200 rounded-lg bg-white outline-none select-field">
                   <option value="all">All Departments (Both)</option>
                   <option value="bms">BMS</option>
                   <option value="lcs">LCS</option>
@@ -167,27 +172,27 @@ export default function AdminDashboard() {
 
             <div>
               <label className="block text-xs font-semibold text-gray-600 mb-1">Type</label>
-              <select value={noticeForm.type} onChange={(e) => setNoticeForm({...noticeForm, type: e.target.value})} className="w-full text-sm p-2 border border-gray-200 rounded-lg bg-white outline-none">
-                <option value="notice">General Notice 📝</option>
-                <option value="zoom">Zoom Meeting 📹</option>
-                <option value="resource">New Resource Added 📁</option>
+              <select value={noticeForm.type} onChange={(e) => setNoticeForm({...noticeForm, type: e.target.value})} className="w-full text-sm p-2 border border-gray-200 rounded-lg bg-white outline-none select-field">
+                <option value="notice">General Notice</option>
+                <option value="zoom">Zoom Meeting</option>
+                <option value="resource">New Resource Added</option>
               </select>
             </div>
             
             {noticeForm.type === 'zoom' && (
               <div className="animate-fade-in">
                 <label className="block text-xs font-semibold text-gray-600 mb-1">Zoom Invitation Link</label>
-                <input type="url" value={noticeForm.zoomLink} onChange={(e) => setNoticeForm({...noticeForm, zoomLink: e.target.value})} className="w-full text-sm p-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500" placeholder="https://zoom.us/j/..." required />
+                <input type="url" value={noticeForm.zoomLink} onChange={(e) => setNoticeForm({...noticeForm, zoomLink: e.target.value})} className="w-full text-sm p-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 input-field" placeholder="https://zoom.us/j/..." required />
               </div>
             )}
-            <button type="submit" disabled={submitting} className="w-full py-2 bg-indigo-600 text-white font-bold text-xs rounded-lg hover:bg-indigo-700 transition disabled:opacity-50">
-              {submitting ? 'Broadcasting...' : 'Broadcast Announcement 🚀'}
+            <button type="submit" disabled={submitting} className="w-full py-2 bg-indigo-600 text-white font-bold text-xs rounded-lg hover:bg-indigo-700 transition disabled:opacity-50 btn-primary flex items-center justify-center gap-2">
+              {submitting ? 'Broadcasting...' : <><Rocket className="w-3.5 h-3.5" /> Broadcast Announcement</>}
             </button>
           </form>
         </div>
 
         <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm flex flex-col">
-          <h2 className="text-lg font-bold text-gray-900 mb-4">📋 Active Broadcasts ({notifications.length})</h2>
+          <h2 className="text-lg font-bold text-gray-900 mb-4"><ClipboardList className="w-4 h-4 inline" /> Active Broadcasts ({notifications.length})</h2>
           <div className="space-y-3 flex-grow overflow-y-auto max-h-[340px] pr-1">
             {notifications.length === 0 ? (
               <p className="text-xs text-gray-400 text-center py-8">No active notifications found.</p>
@@ -202,8 +207,8 @@ export default function AdminDashboard() {
                     <p className="text-xs text-gray-500 line-clamp-2">{n.message}</p>
                     <p className="text-[10px] text-gray-400">{new Date(n.createdAt).toLocaleDateString()}</p>
                   </div>
-                  <button onClick={() => handleDeleteNotification(n.id)} className="p-1 text-red-500 hover:bg-red-50 rounded transition text-xs font-bold">
-                    🗑️
+                  <button onClick={() => handleDeleteNotification(n.id)} className="p-1 text-red-500 hover:bg-red-50 rounded transition">
+                    <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
               ))

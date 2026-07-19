@@ -7,7 +7,6 @@ import { useToast } from '../../contexts/ToastContext'
 import { db, auth } from '../../services/firebase'
 import { validateMobile, validateRegNumber } from '../../utils/validators'
 
-// 🎯 Vercel / Vite එකෙන් Variables කියවගන්නේ මෙහෙමයි
 const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME
 const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET
 

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { getSubjects, getChapters, getResources } from '../../services/firestore'
 import Skeleton from '../../components/ui/Skeleton'
+import { BookOpen, BookText, FileText, ExternalLink } from 'lucide-react'
 
 export default function SearchResults() {
   const [searchParams] = useSearchParams()
@@ -46,7 +47,7 @@ export default function SearchResults() {
   )
 
   return (
-    <div>
+    <div className="animate-fade-in">
       <h1 className="mb-2 text-2xl font-bold text-gray-900">Search Results</h1>
       <p className="mb-6 text-sm text-gray-400">Showing results for "{q}"</p>
 
@@ -56,11 +57,13 @@ export default function SearchResults() {
         </div>
       ) : (
         <div className="space-y-8">
-          <Section title="Subjects" count={results.subjects.length} empty="No subjects found." icon="⊡">
+          <Section title="Subjects" count={results.subjects.length} empty="No subjects found." icon={BookOpen} bgColor="bg-indigo-600/10" textColor="text-indigo-600">
             {results.subjects.map((s) => (
               <Link key={s.id} to={`/dashboard/subjects/${s.semesterId}/subject/${s.id}`}
-                className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-4 hover:border-indigo-500/50 transition">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-600/10 text-lg">⊡</div>
+                className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-4 hover:border-indigo-500/50 transition shadow-sm hover:shadow-md">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-600/10">
+                  <BookOpen className="w-5 h-5 text-indigo-600" />
+                </div>
                 <div>
                   <p className="font-semibold text-gray-900">{s.name} <span className="text-xs text-gray-500">{s.code}</span></p>
                   <p className="text-xs text-gray-500">{s.description}</p>
@@ -69,11 +72,13 @@ export default function SearchResults() {
             ))}
           </Section>
 
-          <Section title="Chapters" count={results.chapters.length} empty="No chapters found." icon="▤">
+          <Section title="Chapters" count={results.chapters.length} empty="No chapters found." icon={BookText} bgColor="bg-emerald-600/10" textColor="text-emerald-600">
             {results.chapters.map((ch) => (
               <Link key={ch.id} to={`/dashboard/subjects/${ch.semesterId}/subject/${ch.subjectId}`}
-                className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-4 hover:border-indigo-500/50 transition">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-600/10 text-lg">▤</div>
+                className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-4 hover:border-indigo-500/50 transition shadow-sm hover:shadow-md">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-600/10">
+                  <BookText className="w-5 h-5 text-emerald-600" />
+                </div>
                 <div>
                   <p className="font-semibold text-gray-900">{ch.title}</p>
                   <p className="text-xs text-gray-500">in {ch.subjectName}</p>
@@ -82,20 +87,24 @@ export default function SearchResults() {
             ))}
           </Section>
 
-          <Section title="Resources" count={results.resources.length} empty="No resources found." icon="▦">
+          <Section title="Resources" count={results.resources.length} empty="No resources found." icon={FileText} bgColor="bg-rose-600/10" textColor="text-rose-600">
             {results.resources.map((r) => (
-              <div key={`${r.chapterId}-${r.id}`} className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-rose-600/10 text-lg">▦</div>
+              <div key={`${r.chapterId}-${r.id}`} className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-rose-600/10">
+                  <FileText className="w-5 h-5 text-rose-600" />
+                </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-gray-900 truncate">{r.name}</p>
                   <p className="text-xs text-gray-500">{r.subjectName} / {r.chapterTitle}</p>
                 </div>
                 {r.fileURL ? (
                   <a href={r.fileURL} target="_blank" rel="noopener noreferrer"
-                    className="rounded-lg bg-blue-600/20 px-4 py-2 text-xs font-semibold text-blue-400 hover:bg-blue-600/30 transition">Open</a>
+                    className="rounded-lg bg-indigo-600/10 px-4 py-2 text-xs font-semibold text-indigo-600 hover:bg-indigo-600/20 transition inline-flex items-center gap-1">
+                    <ExternalLink className="w-3 h-3" /> Open
+                  </a>
                 ) : r.youtubeId ? (
                   <Link to={`/dashboard/subjects/${r.semesterId}/subject/${r.subjectId}`}
-                    className="rounded-lg bg-red-600/20 px-4 py-2 text-xs font-semibold text-red-400 hover:bg-red-600/30 transition">View</Link>
+                    className="rounded-lg bg-red-600/10 px-4 py-2 text-xs font-semibold text-red-600 hover:bg-red-600/20 transition">View</Link>
                 ) : null}
               </div>
             ))}
@@ -106,12 +115,12 @@ export default function SearchResults() {
   )
 }
 
-function Section({ title, count, empty, icon, children }) {
+function Section({ title, count, empty, icon: Icon, bgColor, textColor, children }) {
   if (count === 0) return null
   return (
     <div>
       <div className="mb-3 flex items-center gap-2">
-        <span className="text-sm">{icon}</span>
+        <Icon className={`w-4 h-4 ${textColor}`} />
         <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wide">{title}</h2>
         <span className="text-xs text-gray-600">({count})</span>
       </div>

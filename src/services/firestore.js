@@ -231,7 +231,7 @@ export async function submitAttempt({ quizId, userId, userName, userEmail, answe
   })
 }
 
-/* ─── 💬 Comments / Feedbacks (Real-time + Backward Compatibility) ─── */
+/* ─── Comments / Feedbacks (Real-time + Backward Compatibility) ─── */
 const commentsCol = collection(db, 'comments')
 
 // 1. අලුත් කමෙන්ට් එකක් Firebase එකට එකතු කිරීම
@@ -263,7 +263,7 @@ export async function deleteComment(id) {
   return deleteDoc(doc(db, 'comments', id))
 }
 
-/* ⚠️ VITE SYNTAX ERRORS මඟහරවා ගැනීමට පාවිච්චි කල පරණ FUNCTIONS ⚠️ */
+/* VITE SYNTAX ERRORS මඟහරවා ගැනීමට පාවිච්චි කල පරණ FUNCTIONS */
 
 // SubjectDetail හෝ CommentSection.jsx බ්‍රේක් නොවී වැඩ කරන්න
 export async function getComments(chapterId) {

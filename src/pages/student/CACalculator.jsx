@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { ArrowLeft, Trophy, AlertTriangle, Target } from 'lucide-react'
 
 const GRADE_PERCENTAGES = {
   'A+': 75,
@@ -39,7 +40,9 @@ export default function CACalculator() {
     if (neededPaperContribution < 0) {
       setResultHTML(
         <div className="space-y-1">
-          <p className="text-lg font-bold text-emerald-600">🎉 Congratulations! 🎉</p>
+          <p className="text-lg font-bold text-emerald-600 flex items-center gap-2">
+            <Trophy className="w-5 h-5 inline text-emerald-600" /> Congratulations! <Trophy className="w-5 h-5 inline text-emerald-600" />
+          </p>
           <p className="text-gray-700">
             Your current <strong>CA Marks ({ca})</strong> are already high enough to guarantee an{' '}
             <strong>{grade}</strong> or better, even if you score 0 on the paper.
@@ -54,7 +57,9 @@ export default function CACalculator() {
     if (neededPaperMarkOutOf100 > 100) {
       setResultHTML(
         <div className="space-y-1">
-          <p className="text-lg font-bold text-red-600">⚠️ Grade IMPOSSIBLE! ⚠️</p>
+          <p className="text-lg font-bold text-red-600 flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5 inline text-red-600" /> Grade IMPOSSIBLE! <AlertTriangle className="w-5 h-5 inline text-red-600" />
+          </p>
           <p className="text-gray-700">
             To get an <strong>{grade}</strong> (min {requiredPercentage}%), you need{' '}
             {neededPaperContribution.toFixed(2)} marks out of 65 from the paper. This would require you to score{' '}
@@ -65,7 +70,9 @@ export default function CACalculator() {
     } else {
       setResultHTML(
         <div className="space-y-1">
-          <p className="text-lg font-bold text-indigo-600">🎯 To achieve an {grade}: 🎯</p>
+          <p className="text-lg font-bold text-indigo-600 flex items-center gap-2">
+            <Target className="w-5 h-5 inline text-indigo-600" /> To achieve an {grade}: <Target className="w-5 h-5 inline text-indigo-600" />
+          </p>
           <p className="text-gray-700">
             You need a minimum of <strong>{neededPaperMarkOutOf100.toFixed(2)} out of 100</strong> on the final paper.
           </p>
@@ -76,12 +83,11 @@ export default function CACalculator() {
 
   return (
     <div className="animate-fade-in max-w-xl mx-auto">
-      {/* Back to Dashboard */}
       <button
         onClick={() => navigate('/dashboard')}
         className="mb-4 text-sm text-gray-500 hover:text-indigo-600 transition flex items-center gap-1"
       >
-        <span>&larr;</span> Back to Dashboard
+        <ArrowLeft className="w-4 h-4" /> Back to Dashboard
       </button>
 
       <h1 className="text-2xl font-bold text-gray-900 mb-2">CA Grade Target Calculator</h1>
@@ -89,10 +95,8 @@ export default function CACalculator() {
         CA Marks are out of 35. Final Paper Marks are out of 65 (calculated from 100).
       </p>
 
-      {/* Calculator Card */}
       <div className="card p-6 mb-6">
         <div className="space-y-5">
-          {/* CA Marks */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Current CA Marks (out of 35):
@@ -108,7 +112,6 @@ export default function CACalculator() {
             />
           </div>
 
-          {/* Desired Grade */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Desired Final Grade:
@@ -136,7 +139,6 @@ export default function CACalculator() {
           </button>
         </div>
 
-        {/* Result */}
         {resultHTML && (
           <div className="mt-6 pt-6 border-t border-gray-100">
             <div className="bg-gray-50 border border-gray-200 rounded-xl px-5 py-4">

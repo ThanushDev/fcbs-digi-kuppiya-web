@@ -22,7 +22,7 @@ export default function CompleteProfile() {
       return showToast(`Invalid registration number${batchMsg}`, 'error')
     }
 
-    // 💡 අලුත් Validation එක (BMS/LCS ms/cs check)
+    // Additional validation for BMS/LCS department
     const userDept = userData?.department?.toLowerCase() || ''
     if (userDept === 'bms' && !regNumber.toLowerCase().includes('/ms/')) {
       return showToast('Registration number for BMS must contain "ms" (e.g., 22/ms/001)', 'error')

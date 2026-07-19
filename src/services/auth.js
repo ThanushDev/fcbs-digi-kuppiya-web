@@ -71,7 +71,6 @@ export const loginUser = async (emailOrReg, password) => {
 };
 
 export const registerUser = async (userData) => {
-  // 💡 SAFE EXECUTION: userData එක null/undefined ද කියලා check කරනවා crash නොවෙන්න
   if (!userData) throw new Error("No user data provided");
   const { email, password, photoFile, ...extraData } = userData;
 

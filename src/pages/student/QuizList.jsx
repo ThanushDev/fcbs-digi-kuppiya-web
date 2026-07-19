@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { ArrowLeft, Lock } from 'lucide-react'
 import { getQuizzes, getUserAttempts } from '../../services/firestore'
 import { useAuth } from '../../contexts/AuthContext'
 
@@ -44,9 +45,11 @@ export default function QuizList() {
   if (loading) return <div className="text-center py-16 text-gray-400">Loading...</div>
 
   return (
-    <div>
+    <div className="animate-fade-in">
       <div className="mb-6">
-        <Link to="/dashboard" className="text-sm text-indigo-400 hover:text-indigo-300 transition">&larr; Back to Dashboard</Link>
+        <Link to="/dashboard" className="text-sm text-indigo-400 hover:text-indigo-300 transition">
+          <ArrowLeft className="w-4 h-4 inline mr-1" /> Back to Dashboard
+        </Link>
         <h1 className="mt-2 text-2xl font-bold text-gray-900">Quizzes</h1>
         <p className="text-sm text-gray-400">Test your knowledge with available quizzes.</p>
       </div>
@@ -60,10 +63,14 @@ export default function QuizList() {
           {quizzes.map((q) => {
             const attempt = getAttempt(q.id)
             return (
-              <div key={q.id} className="rounded-xl border border-gray-200 bg-white p-5">
+              <div key={q.id} className="card p-5">
                 <div className="mb-3 flex items-center justify-between">
                   <span className="rounded-lg bg-rose-600/20 px-3 py-1 text-xs font-semibold text-rose-400">{q.timeLimit} min</span>
-                  {q.password && <span className="text-[10px] text-gray-500">🔒 Locked</span>}
+                  {q.password && (
+                    <span className="text-[10px] text-gray-500">
+                      <Lock className="w-3 h-3 inline mr-0.5" /> Locked
+                    </span>
+                  )}
                 </div>
                 <h3 className="text-lg font-bold text-gray-900 mb-2">{q.title}</h3>
                 {attempt ? (
@@ -79,7 +86,7 @@ export default function QuizList() {
                   </div>
                 ) : (
                   <button onClick={() => handleQuizClick(q)}
-                    className="w-full rounded-lg bg-gradient-to-r from-rose-600 to-rose-700 py-2 text-sm font-semibold text-gray-900 hover:from-rose-500 hover:to-pink-500 transition">
+                    className="btn-primary w-full text-center">
                     Start Quiz
                   </button>
                 )}
@@ -90,16 +97,16 @@ export default function QuizList() {
       )}
 
       {passwordModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={() => setPasswordModal(null)}>
-          <div className="w-full max-w-sm rounded-2xl border border-gray-200 bg-white p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm" onClick={() => setPasswordModal(null)}>
+          <div className="w-full max-w-sm glass-panel p-6" onClick={(e) => e.stopPropagation()}>
             <h2 className="text-lg font-bold text-gray-900 mb-2">Password Required</h2>
             <p className="text-sm text-gray-400 mb-4">Enter the password to access "{passwordModal.title}"</p>
             {passwordError && <p className="text-sm text-red-400 mb-3">{passwordError}</p>}
             <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoFocus
-              className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-gray-900 outline-none focus:border-rose-500 mb-4" />
+              className="input-field mb-4" />
             <div className="flex gap-3">
-              <button onClick={() => setPasswordModal(null)} className="flex-1 rounded-lg bg-gray-700 py-2 text-sm text-gray-600 hover:bg-gray-600">Cancel</button>
-              <button onClick={handlePasswordSubmit} className="flex-1 rounded-lg bg-rose-600 py-2 text-sm font-semibold text-gray-900 hover:bg-rose-700">Submit</button>
+              <button onClick={() => setPasswordModal(null)} className="flex-1 rounded-lg bg-gray-700 py-2 text-sm text-gray-300 hover:bg-gray-600 transition">Cancel</button>
+              <button onClick={handlePasswordSubmit} className="btn-primary flex-1 text-center">Submit</button>
             </div>
           </div>
         </div>

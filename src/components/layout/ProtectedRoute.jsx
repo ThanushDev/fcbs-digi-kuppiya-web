@@ -2,15 +2,17 @@ import { Navigate, Outlet } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { signOut } from 'firebase/auth'
 import { auth } from '../../services/firebase'
-import CompleteProfile from '../../pages/setup/CompleteProfile'
 
 export function ProtectedRoute({ allowedRoles }) {
-  const { user, userData, loading, needsProfileSetup } = useAuth()
+  const { user, userData, loading, needsProfileSetup, needsFaceVerification } = useAuth()
 
   if (loading) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center bg-white">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent" />
+      <div className="flex h-screen w-screen items-center justify-center bg-gradient-to-br from-slate-50 via-white to-indigo-50/40">
+        <div className="flex flex-col items-center gap-4">
+          <div className="loader-glow" />
+          <p className="text-sm font-medium text-slate-400 animate-pulse">Loading...</p>
+        </div>
       </div>
     )
   }
@@ -22,8 +24,8 @@ export function ProtectedRoute({ allowedRoles }) {
     return <Navigate to="/login" replace />
   }
 
-  if (needsProfileSetup) {
-    return <CompleteProfile />
+  if (needsProfileSetup || needsFaceVerification) {
+    return <Navigate to="/setup" replace />
   }
 
   if (allowedRoles && !allowedRoles.includes(userData?.role)) {
@@ -41,8 +43,11 @@ export function PublicOnlyRoute() {
 
   if (loading) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center bg-white">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent" />
+      <div className="flex h-screen w-screen items-center justify-center bg-gradient-to-br from-slate-50 via-white to-indigo-50/40">
+        <div className="flex flex-col items-center gap-4">
+          <div className="loader-glow" />
+          <p className="text-sm font-medium text-slate-400 animate-pulse">Loading...</p>
+        </div>
       </div>
     )
   }

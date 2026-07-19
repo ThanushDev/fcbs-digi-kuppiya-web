@@ -4,7 +4,6 @@ import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 // Environment variables වලින් keys ටික කියවීම (Vite වලදී)
-// 🎯 AdminManagement එකට ලබාගැනීම සඳහා export කරන ලදී
 export const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,

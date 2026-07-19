@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react'
 
-// 🧑‍🏫 මෙන්ටර්ස්ලාගේ ඩේටා ටික (ඔයාට කැමති විදිහට මේවා වෙනස් කරගන්න පුළුවන් මචං)
+// Mentor data (modify as needed)
 const MENTORS = [
   {
     name: "Mr.Thanush Nethsika",
-    nickname: "සයිබර්",
+    nickname: "Cyber",
     batch: "22/23",
     role: "Author of FCBS DIGI KUPPIYA ",
-    image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614075/cyber_jz6wx6.jpg", // මෙතනට ඔයාගේ ඉමේජ් පාත් එක දෙන්න
+    image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614075/cyber_jz6wx6.jpg",
   },
   {
     name: "Ms. Imalsha Sathsarani",
@@ -29,7 +29,7 @@ const MENTORS = [
   },
   {
     name: "Ms. Jayathri Indrachapa",
-    nickname: "මෙඩුසා",
+    nickname: "Medusa",
     batch: "22/23",
     role: "Mathematics",
     image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614067/chapa_drbwzz.jpg",
@@ -48,14 +48,14 @@ const MENTORS = [
   },
   {
     name: "Ms.Liyoni Kaushalya",
-    nickname: "ආල්‍යා",
+    nickname: "Alya",
     batch: "21/22",
     role: "MIS",
     image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614069/liyoni_c4yb0l.jpg",
   },
   {
     name: "Ms. Thakshila Wijesekara",
-    nickname: "රපුන්සල්",
+    nickname: "Rapunsel",
     batch: "21/22",
     role: "MIS",
     image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614084/rapunsall_rbr0y0.jpg",
@@ -68,21 +68,21 @@ const MENTORS = [
   },
   {
     name: "Ms. Shashini Herath",
-    nickname: "ශ්‍රිනී",
+    nickname: "Shrinee",
     batch: "21/22",
     role: "Accounting",
     image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614078/shashini_rhwepa.jpg",
   },
   {
     name: "Ms. Lihini Himasha",
-    nickname: "ලාරා",
+    nickname: "Lara",
     batch: "21/22",
     role: "Accounting",
     image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614071/lihini_s8ymh1.jpg",
   },
   {
     name: "Ms. Diwangani Kavindya",
-    nickname: "විනී",
+    nickname: "Vini",
     batch: "21/22",
     role: "Accounting",
     image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614068/diwangani_cyokye.jpg",
@@ -92,7 +92,7 @@ const MENTORS = [
 export default function MentorsSection() {
   const [activeIndex, setActiveIndex] = useState(0)
 
-  // ⏱️ තත්පර 4න් හතරට මෙන්ටර්ස්ලා auto transition වෙන්න හැදුවා
+  // Auto-transition mentors every 4 seconds
   useEffect(() => {
     const interval = setInterval(() => {
       setActiveIndex((prevIndex) => (prevIndex + 1) % MENTORS.length)
@@ -101,7 +101,7 @@ export default function MentorsSection() {
   }, [])
 
   return (
-    <div className="mt-12 bg-white rounded-2xl shadow-md border border-gray-100 p-6 md:p-8 max-w-4xl mx-auto overflow-hidden">
+    <div className="card glass-panel mt-12 max-w-4xl mx-auto overflow-hidden">
       {/* Section Title */}
       <div className="mb-6 border-b border-gray-100 pb-3 flex justify-between items-center">
         <div>

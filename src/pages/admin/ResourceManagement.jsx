@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { getResources, addDocumentResource, addVideoResource, deleteResource, getChapters, getAllSubjects } from '../../services/firestore'
+import { Video, FileText } from 'lucide-react'
 
 export default function ResourceManagement() {
   const [subjects, setSubjects] = useState([])
@@ -113,7 +114,7 @@ export default function ResourceManagement() {
                 <div key={r.id} className="flex items-center justify-between rounded-xl border border-gray-200 bg-white p-4">
                   <div className="flex items-center gap-4">
                     <span className={`flex h-8 w-8 items-center justify-center rounded-lg text-xs font-bold ${r.type === 'video' ? 'bg-red-600/20 text-red-400' : 'bg-blue-600/20 text-blue-400'}`}>
-                      {r.type === 'video' ? '▶' : '📄'}
+                      {r.type === 'video' ? <Video className="w-4 h-4" /> : <FileText className="w-4 h-4" />}
                     </span>
                     <div>
                       <h3 className="font-semibold text-gray-900">{r.name}</h3>

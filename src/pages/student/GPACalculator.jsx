@@ -4,6 +4,7 @@ import { useToast } from '../../contexts/ToastContext'
 import { db, auth } from '../../services/firebase' 
 import { doc, getDoc, setDoc } from 'firebase/firestore'
 import { getBatchPermissions } from '../../services/firestore' 
+import { ArrowLeft, Cloud } from 'lucide-react'
 
 const GRADE_POINTS = { 'A+': 4.0, 'A': 4.0, 'A-': 3.7, 'B+': 3.3, 'B': 3.0, 'B-': 2.7, 'C+': 2.3, 'C': 2.0, 'C-': 1.7, 'D+': 1.3, 'D': 1.0, 'E': 0.0 }
 
@@ -275,7 +276,7 @@ function calcGPA(grades, courses) {
   return totalCredits > 0 ? (totalPoints / totalCredits) : 0
 }
 
-// සියලුම සෙමෙස්ටර් වල එකතුවෙන් Cumulative GPA එක සෙවීම
+// Calculate cumulative GPA from all semesters
 function calcGPAFromAll(semesterGrades, semesterCourses) {
   let totalPoints = 0, totalCredits = 0
   for (const semId of Object.keys(semesterGrades)) {
@@ -310,7 +311,7 @@ export default function GPACalculator() {
 
   const user = auth.currentUser
 
-  // 🔄 මුලින්ම Firestore එකෙන් දත්ත ලබාගැනීම
+  // Fetch data from Firestore on mount
   useEffect(() => {
     async function fetchUserData() {
       try {
@@ -344,20 +345,20 @@ export default function GPACalculator() {
     fetchUserData()
   }, [user])
 
-  // activeSem එක මුලින්ම සෙට් කිරීම
+  // Set initial active semester
   useEffect(() => {
     if (!loading && SEMESTERS.length > 0) {
       setActiveSem(SEMESTERS[0].id)
     }
   }, [loading])
 
-  // 🛑 සෙමෙස්ටර් බටන් ක්ලික් එක පාලනය කිරීම
+  // Handle semester click with permission check
   const handleSemesterClick = (sem) => {
     const currentBatchPerm = batchPermissions.find((p) => p.batchName === userBatch)
     const isAllowedByAdmin = currentBatchPerm?.semesterIds?.includes(sem.id) || false
 
     if (!isAllowedByAdmin) {
-      showToast(`ඔබගේ ${userBatch} බැච් එක සඳහා මෙම සෙමෙස්ටර් එක තවමත් විවෘත කර නොමැත! 🛑`, 'error')
+      showToast(`This semester is not yet opened for your batch (${userBatch}).`, 'error')
       return 
     }
 
@@ -372,7 +373,7 @@ export default function GPACalculator() {
     setActiveSem(sem.id)
   }
 
-  // Specialization එකක් තෝරාගත් පසු Firestore සේව් කිරීම
+  // Save specialization selection to Firestore
   const handleSelectSpecialization = async (key) => {
     setSpecialization(key)
     setShowSpecializationModal(false)
@@ -392,7 +393,7 @@ export default function GPACalculator() {
     }
   }
 
-  // ලකුණු වෙනස් කරද්දී auto-save වීම
+  // Auto-save grades on change
   const handleGradeChange = async (semId, courseCode, grade) => {
     const updatedGrades = {
       ...grades,
@@ -410,7 +411,7 @@ export default function GPACalculator() {
     }
   }
 
-  // Specialization එක පමණක් වෙනස් කිරීම
+  // Reset only specialization
   const resetSpecialization = async () => {
     if (confirm('Are you sure you want to change your specialization path? This will reload upper semester courses.')) {
       setSpecialization('')
@@ -423,7 +424,7 @@ export default function GPACalculator() {
     }
   }
 
-  // සියලුම ලකුණු සහ Specialization ඩේටාබේස් එකෙන්ම මැකීම
+  // Reset all grades from database
   const resetAllGrades = async () => {
     if (confirm('Reset all entered grades and selected specialization path from database?')) {
       setGrades({})
@@ -445,7 +446,7 @@ export default function GPACalculator() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+        <div className="loader-gow"></div>
         <span className="ml-3 text-sm text-gray-500">Syncing with database...</span>
       </div>
     )
@@ -471,21 +472,19 @@ export default function GPACalculator() {
 
   return (
     <div className="animate-fade-in max-w-5xl">
-      {/* 🔙 BACK TO DASHBOARD BUTTON */}
+      {/* Back to Dashboard Button */}
       <button 
         onClick={() => navigate('/dashboard')} 
         className="mb-4 flex items-center gap-2 text-xs font-semibold text-gray-500 hover:text-indigo-600 transition group"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 transform group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-        </svg>
+        <ArrowLeft className="w-4 h-4 transform group-hover:-translate-x-1 transition-transform" />
         Back to Dashboard
       </button>
 
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">BMS GPA Calculator</h1>
-          <p className="text-sm text-gray-500 mt-1">Real-time cloud database storage activated ☁️ (Batch: <b>{userBatch}</b>)</p>
+          <p className="text-sm text-gray-500 mt-1">Real-time cloud database storage activated <Cloud className="w-4 h-4 inline text-gray-400" /> (Batch: <b>{userBatch}</b>)</p>
         </div>
         {(specialization || Object.keys(grades).length > 0) && (
           <div className="flex gap-2">
@@ -617,10 +616,10 @@ export default function GPACalculator() {
                       <td className="py-2.5 text-center">
                         <select value={selectedGrade}
                           onChange={(e) => handleGradeChange(prefix, course.code, e.target.value)}
-                          className={`text-xs rounded-lg border px-2 py-1.5 outline-none transition w-full ${
+                          className={`select-field text-xs w-full ${
                             selectedGrade
                               ? 'border-indigo-200 bg-indigo-50 text-indigo-700 font-semibold'
-                              : 'border-gray-200 bg-white text-gray-500'
+                              : ''
                           }`}>
                           <option value="">—</option>
                           {GRADE_OPTIONS.map((g) => (
@@ -639,7 +638,7 @@ export default function GPACalculator() {
 
       {showSpecializationModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4" onClick={() => setShowSpecializationModal(false)}>
-          <div className="w-full max-w-lg bg-white rounded-2xl shadow-xl border border-gray-200 p-6 animate-slide-up" onClick={(e) => e.stopPropagation()}>
+          <div className="w-full max-w-lg card p-6 animate-slide-up" onClick={(e) => e.stopPropagation()}>
             <div className="mb-4 text-center">
               <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-50">
                 <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-violet-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

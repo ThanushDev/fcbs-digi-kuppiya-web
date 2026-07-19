@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
+import { ArrowLeft, Check, X } from 'lucide-react'
 import { doc, getDoc } from 'firebase/firestore'
 import { db } from '../../services/firebase'
 import { getQuiz, getQuestions } from '../../services/firestore'
-import Skeleton from '../../components/ui/Skeleton'
 
 export default function QuizResult() {
   const { quizId, attemptId } = useParams()
@@ -24,15 +24,15 @@ export default function QuizResult() {
   }, [quizId, attemptId])
 
   if (loading) return (
-    <div className="max-w-3xl mx-auto">
-      <Skeleton className="mb-6 h-4 w-28" />
-      <div className="mb-8 rounded-2xl border border-gray-200 bg-white p-8 text-center">
-        <Skeleton className="mx-auto h-24 w-24 rounded-full mb-4" />
-        <Skeleton className="mx-auto h-10 w-32 mb-2" />
-        <Skeleton className="mx-auto h-6 w-20" />
+    <div className="max-w-3xl mx-auto animate-fade-in">
+      <div className="skeleton-premium mb-6 h-4 w-28" />
+      <div className="card p-8 text-center mb-8">
+        <div className="skeleton-premium mx-auto h-24 w-24 rounded-full mb-4" />
+        <div className="skeleton-premium mx-auto h-10 w-32 mb-2" />
+        <div className="skeleton-premium mx-auto h-6 w-20" />
       </div>
       {[1, 2, 3].map((i) => (
-        <Skeleton key={i} className="mb-4 h-24 w-full" />
+        <div key={i} className="skeleton-premium mb-4 h-24 w-full" />
       ))}
     </div>
   )
@@ -43,12 +43,14 @@ export default function QuizResult() {
   const grade = percentage >= 80 ? 'A' : percentage >= 60 ? 'B' : percentage >= 40 ? 'C' : 'F'
 
   return (
-    <div className="max-w-3xl mx-auto">
+    <div className="max-w-3xl mx-auto animate-fade-in">
       <div className="mb-6">
-        <Link to="/dashboard/quizzes" className="text-sm text-indigo-400 hover:text-indigo-300 transition">&larr; Back to Quizzes</Link>
+        <Link to="/dashboard/quizzes" className="text-sm text-indigo-400 hover:text-indigo-300 transition">
+          <ArrowLeft className="w-4 h-4 inline mr-1" /> Back to Quizzes
+        </Link>
       </div>
 
-      <div className="mb-8 rounded-2xl border border-gray-200 bg-white p-8 text-center">
+      <div className="card p-8 text-center mb-8">
         <h1 className="text-2xl font-bold text-gray-900 mb-2">{quiz.title} — Results</h1>
         <div className={`inline-flex items-center justify-center rounded-full w-24 h-24 text-4xl font-bold mb-4 ${
           percentage >= 60 ? 'bg-emerald-600/20 text-emerald-400' : 'bg-red-600/20 text-red-400'
@@ -61,10 +63,10 @@ export default function QuizResult() {
         {questions.map((q, i) => {
           const ans = attempt.answers?.[i]
           return (
-            <div key={q.id} className={`rounded-xl border p-5 ${ans?.isCorrect ? 'border-emerald-800 bg-emerald-600/5' : 'border-red-800 bg-red-600/5'}`}>
+            <div key={q.id} className={`card p-5 ${ans?.isCorrect ? 'border-emerald-800 bg-emerald-600/5' : 'border-red-800 bg-red-600/5'}`}>
               <div className="flex items-center gap-3 mb-3">
                 <span className={`flex h-7 w-7 items-center justify-center rounded-lg text-xs font-bold ${ans?.isCorrect ? 'bg-emerald-600 text-white' : 'bg-red-600 text-white'}`}>
-                  {ans?.isCorrect ? '✓' : '✕'}
+                  {ans?.isCorrect ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />}
                 </span>
                 <h3 className="font-semibold text-gray-900">{q.text}</h3>
               </div>
@@ -81,7 +83,7 @@ export default function QuizResult() {
                         opt.isCorrect ? 'bg-emerald-600 text-white' :
                         selected ? 'bg-red-600 text-white' : 'bg-gray-700'
                       }`}>
-                        {opt.isCorrect ? '✓' : selected ? '✕' : ''}
+                        {opt.isCorrect ? <Check className="w-3 h-3" /> : selected ? <X className="w-3 h-3" /> : ''}
                       </span>
                       {opt.text}
                     </div>

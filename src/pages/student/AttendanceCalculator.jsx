@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
+import { ArrowLeft, X, ChevronLeft, ChevronRight } from 'lucide-react'
 
 const BMS_IMAGES = [
   '/img/1234.png',
@@ -139,20 +140,16 @@ export default function AttendanceCalculator() {
 
   return (
     <div className="animate-fade-in max-w-2xl mx-auto">
-      {/* 🔙 BACK TO DASHBOARD BUTTON */}
       <button 
         onClick={() => navigate('/dashboard')} 
         className="mb-4 flex items-center gap-2 text-xs font-semibold text-gray-500 hover:text-indigo-600 transition group"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 transform group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-        </svg>
+        <ArrowLeft className="w-4 h-4 transform group-hover:-translate-x-1 transition-transform" />
         Back to Dashboard
       </button>
 
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Attendance Calculator</h1>
 
-      {/* Department Info Badge */}
       <div className="card p-4 mb-6 flex items-center justify-between">
         <div>
           <span className="text-xs text-gray-500 font-medium">Department</span>
@@ -166,7 +163,6 @@ export default function AttendanceCalculator() {
         </span>
       </div>
 
-      {/* Calculator Card */}
       <div className="card p-6 mb-6">
         <div className="space-y-4">
           <div>
@@ -200,7 +196,6 @@ export default function AttendanceCalculator() {
           </button>
         </div>
 
-        {/* Results */}
         <div ref={resultRef} className="mt-6 pt-6 border-t border-gray-100 space-y-3">
           <p className="text-center text-lg font-semibold text-gray-700">
             Current Percentage:{' '}
@@ -217,12 +212,10 @@ export default function AttendanceCalculator() {
         </div>
       </div>
 
-      {/* Subjects Hours Title */}
       <h2 className="text-center text-lg font-bold text-gray-800 underline bg-blue-50 py-2 px-4 rounded-lg shadow-sm mb-4">
         Subjects Hours
       </h2>
 
-      {/* Images */}
       <div className="space-y-3">
         {imageSet.map((src, i) => (
           <img
@@ -235,7 +228,6 @@ export default function AttendanceCalculator() {
         ))}
       </div>
 
-      {/* Image Viewer Overlay */}
       {viewerOpen && (
         <div
           className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center"
@@ -249,18 +241,18 @@ export default function AttendanceCalculator() {
         >
           <button
             onClick={e => { e.stopPropagation(); closeViewer() }}
-            className="absolute top-5 right-7 text-4xl text-white cursor-pointer z-10 hover:text-gray-300 leading-none"
+            className="absolute top-5 right-7 text-white cursor-pointer z-10 hover:text-gray-300"
             aria-label="Close viewer"
           >
-            &times;
+            <X className="w-8 h-8" />
           </button>
 
           <button
             onClick={e => { e.stopPropagation(); prevImage() }}
-            className="absolute left-5 top-1/2 -translate-y-1/2 text-4xl text-white cursor-pointer z-10 hover:text-gray-300 select-none leading-none"
+            className="absolute left-5 top-1/2 -translate-y-1/2 text-white cursor-pointer z-10 hover:text-gray-300 select-none"
             aria-label="Previous image"
           >
-            &#10094;
+            <ChevronLeft className="w-8 h-8" />
           </button>
 
           <img
@@ -273,10 +265,10 @@ export default function AttendanceCalculator() {
 
           <button
             onClick={e => { e.stopPropagation(); nextImage() }}
-            className="absolute right-5 top-1/2 -translate-y-1/2 text-4xl text-white cursor-pointer z-10 hover:text-gray-300 select-none leading-none"
+            className="absolute right-5 top-1/2 -translate-y-1/2 text-white cursor-pointer z-10 hover:text-gray-300 select-none"
             aria-label="Next image"
           >
-            &#10095;
+            <ChevronRight className="w-8 h-8" />
           </button>
         </div>
       )}

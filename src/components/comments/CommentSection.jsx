@@ -3,7 +3,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import { addComment, getComments } from '../../services/firestore'
 
 export default function CommentSection({ chapterId, chapterTitle, subjectId, subjectTitle }) {
-  // 🎯 chapterId හෝ subjectId දෙකෙන් කොයික ආවත් එකම විදිහට ගන්නවා
+  // Use whichever ID is provided (chapter or subject)
   const targetId = chapterId || subjectId;
   
   const { user, userData } = useAuth()
@@ -34,7 +34,7 @@ export default function CommentSection({ chapterId, chapterTitle, subjectId, sub
     setSubmitting(true)
     try {
       await addComment({
-        chapterId: targetId, // 🎯 Firestore එකට යවද්දී chapterId විදිහටම යවනවා පරණ data එක්ක ගැළපෙන්න
+        chapterId: targetId, // Send as chapterId for compatibility with existing data
         userId: user.uid,
         userDisplayName: `${userData?.firstName || ''} ${userData?.lastName || ''}`.trim() || 'Student',
         userPhotoURL: userData?.photoURL || '',
@@ -57,9 +57,9 @@ export default function CommentSection({ chapterId, chapterTitle, subjectId, sub
         <textarea value={content} onChange={(e) => setContent(e.target.value)}
           placeholder="Share your thoughts about this..."
           rows={3}
-          className="input-field resize-none mb-2 w-full p-3 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" />
+          className="input-field resize-none mb-2 w-full" />
         <button type="submit" disabled={submitting || !content.trim()}
-          className="btn-primary text-sm bg-indigo-600 text-white px-4 py-2 rounded-xl hover:bg-indigo-700 disabled:opacity-50 transition">
+          className="btn-primary text-sm">
           {submitting ? 'Posting...' : 'Post Comment'}
         </button>
       </form>
@@ -73,7 +73,7 @@ export default function CommentSection({ chapterId, chapterTitle, subjectId, sub
       ) : (
         <div className="space-y-3">
           {comments.map((c) => (
-            <div key={c.id} className="card p-4 border rounded-xl bg-white shadow-sm">
+            <div key={c.id} className="card p-4">
               <div className="flex items-start gap-3">
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-600">
                   {c.userPhotoURL ? (

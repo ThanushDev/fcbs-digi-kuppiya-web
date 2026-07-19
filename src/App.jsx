@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { ToastProvider } from './contexts/ToastContext'
+import { AdsProvider } from './contexts/AdsContext'
 import { ProtectedRoute, PublicOnlyRoute } from './components/layout/ProtectedRoute'
 import AdminLayout from './components/layout/AdminLayout'
 import StudentLayout from './components/layout/StudentLayout'
@@ -22,6 +23,7 @@ import AttendanceCalculator from './pages/student/AttendanceCalculator'
 import CACalculator from './pages/student/CACalculator'
 import FinanceTracker from './pages/student/FinanceTracker'
 import AdminDashboard from './pages/admin/AdminDashboard'
+import AdminAdManagement from './pages/admin/AdManagement'
 import SemesterManagement from './pages/admin/SemesterManagement'
 import SubjectManagement from './pages/admin/SubjectManagement'
 import ChapterManagement from './pages/admin/ChapterManagement'
@@ -37,11 +39,10 @@ import AdminManagement from './pages/super-admin/AdminManagement'
 import UserManagement from './pages/super-admin/UserManagement'
 
 function NavigationGuard({ children }) {
-  const { user, needsProfileSetup } = useAuth()
+  const { user, needsProfileSetup, needsFaceVerification } = useAuth()
   const location = useLocation()
 
-  // ⚡ යූසර් ඇත්තටම ලොග් වෙලා ඉන්නවනම් සහ එයාගේ ප්‍රොෆයිල් එක මදි නම් විතරක් /setup එකට Force කරනවා
-  if (user && needsProfileSetup && location.pathname !== '/setup') {
+  if (user && (needsProfileSetup || needsFaceVerification) && location.pathname !== '/setup') {
     return <Navigate to="/setup" replace />
   }
 
@@ -52,6 +53,7 @@ export default function App() {
   return (
     <AuthProvider>
       <ToastProvider>
+        <AdsProvider>
         <Routes>
           {/* Public Routes */}
           <Route element={<PublicOnlyRoute />}>
@@ -98,6 +100,7 @@ export default function App() {
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/admin/semesters" element={<SemesterManagement />} />
               <Route path="/admin/subjects" element={<SubjectManagement />} />
+              <Route path="/admin/ads" element={<AdminAdManagement />} />
               <Route path="/admin/chapters" element={<ChapterManagement />} />
               <Route path="/admin/past-papers" element={<PastPaperManagement />} />
               <Route path="/admin/short-notes" element={<ShortNoteManagement />} />
@@ -114,6 +117,7 @@ export default function App() {
 
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
+        </AdsProvider>
       </ToastProvider>
     </AuthProvider>
   )

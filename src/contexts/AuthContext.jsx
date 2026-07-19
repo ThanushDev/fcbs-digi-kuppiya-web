@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { onAuthStateChanged } from 'firebase/auth'
-import { doc, getDoc } from 'firebase/firestore' // 👈 මෙන්න මේ නිවැරදි එක විතරයි ඕනේ මචං!
+import { doc, getDoc } from 'firebase/firestore'
 import { auth, db } from '../services/firebase'
 
 const AuthContext = createContext(null)
@@ -10,7 +10,6 @@ export function AuthProvider({ children }) {
   const [userData, setUserData] = useState(null)
   const [loading, setLoading] = useState(true)
 
-  // 🔄 refreshUserData Logic
   const refreshUserData = useCallback(async (uid) => {
     const currentUid = uid || auth.currentUser?.uid
     if (!currentUid) return
@@ -51,14 +50,15 @@ export function AuthProvider({ children }) {
     return unsubscribe
   }, [])
 
-  // 👥 Roles සහ Profile Setup Logic
   const role = userData?.role || 'guest'
   const isAdmin = role === 'admin' || role === 'super_admin'
   const isSuperAdmin = role === 'super_admin'
   
-  // 🛡️ Profile Check Logic
   const userPhoto = userData?.photoURL || userData?.profilePic || userData?.profile_pic
   const isPhotoBrokenOrMissing = !userPhoto || String(userPhoto).includes('profile_')
+
+  const hasValidProfilePhoto = !!user && !isPhotoBrokenOrMissing
+  const needsFaceVerification = !!user && role === 'student' && isPhotoBrokenOrMissing
 
   const needsProfileSetup = !!user && role === 'student' && (
     isPhotoBrokenOrMissing || 
@@ -70,7 +70,7 @@ export function AuthProvider({ children }) {
 
   return (
     <div className="w-full">
-      <AuthContext.Provider value={{ user, userData, loading, role, isAdmin, isSuperAdmin, needsProfileSetup, refreshUserData }}>
+      <AuthContext.Provider value={{ user, userData, loading, role, isAdmin, isSuperAdmin, needsProfileSetup, needsFaceVerification, hasValidProfilePhoto, refreshUserData }}>
         {!loading && children}
       </AuthContext.Provider>
     </div>

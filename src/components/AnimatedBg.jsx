@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 export default function AnimatedBg() {
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {/* 🧬 Floating DNA-like particles */}
+      {/* Floating DNA-like particles */}
       {[...Array(5)].map((_, i) => (
         <motion.div
           key={i}
@@ -19,7 +19,7 @@ export default function AnimatedBg() {
           style={{ width: 100 + Math.random() * 200, height: 100 + Math.random() * 200 }}
         />
       ))}
-      {/* 🌊 Background Gradient Shift */}
+      {/* Background Gradient Shift */}
       <motion.div 
         className="absolute inset-0 bg-gradient-to-br from-indigo-900 via-slate-900 to-purple-900"
         animate={{ opacity: [0.8, 1, 0.8] }}

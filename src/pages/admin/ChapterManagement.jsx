@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { getChapters, addChapter, updateChapter, deleteChapter, getAllSubjects, getSemesters } from '../../services/firestore'
+import { ExternalLink } from 'lucide-react'
 
 export default function ChapterManagement() {
   const [chapters, setChapters] = useState([])
@@ -75,7 +76,7 @@ export default function ChapterManagement() {
 
       <div className="mb-6">
         <select value={filterSubject} onChange={(e) => { setFilterSubject(e.target.value); setForm({ ...form, subjectId: e.target.value, driveLink: '' }) }}
-          className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-gray-900 outline-none focus:border-indigo-500 min-w-[300px]">
+          className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-gray-900 outline-none focus:border-indigo-500 min-w-[300px] select-field">
           <option value="">Select a Subject first</option>
           {subjects.map((s) => {
             const dept = s.department ? `[${s.department.toUpperCase()}]` : ''
@@ -88,15 +89,15 @@ export default function ChapterManagement() {
       {filterSubject && (
         <form onSubmit={handleSubmit} className="mb-8 flex flex-wrap gap-3 rounded-xl border border-gray-200 bg-white p-5">
           <input type="text" placeholder="Chapter Title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })}
-            className="flex-1 min-w-[200px] rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-gray-900 outline-none focus:border-indigo-500" required />
+            className="flex-1 min-w-[200px] rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-gray-900 outline-none focus:border-indigo-500 input-field" required />
           
           <input type="url" placeholder="Google Drive Link (Optional)" value={form.driveLink} onChange={(e) => setForm({ ...form, driveLink: e.target.value })}
-            className="flex-1 min-w-[250px] rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-gray-900 outline-none focus:border-indigo-500" />
+            className="flex-1 min-w-[250px] rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-gray-900 outline-none focus:border-indigo-500 input-field" />
 
           <input type="number" placeholder="Order" value={form.order} onChange={(e) => setForm({ ...form, order: e.target.value })}
-            className="w-20 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-gray-900 outline-none focus:border-indigo-500" />
+            className="w-20 rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-gray-900 outline-none focus:border-indigo-500 input-field" />
           
-          <button type="submit" className="rounded-lg bg-indigo-600 px-6 py-2.5 font-semibold text-gray-900 hover:bg-indigo-700 transition">
+          <button type="submit" className="rounded-lg bg-indigo-600 px-6 py-2.5 font-semibold text-gray-900 hover:bg-indigo-700 transition btn-primary">
             {editing ? 'Update' : 'Add Chapter'}
           </button>
           {editing && <button type="button" onClick={() => { setEditing(null); setForm({ title: '', subjectId: filterSubject, order: '', driveLink: '' }) }}
@@ -105,7 +106,13 @@ export default function ChapterManagement() {
       )}
 
       {loading ? (
-        <div className="text-center py-12 text-gray-400">Loading...</div>
+        <div className="text-center py-12">
+          <div className="animate-pulse space-y-3">
+            <div className="h-4 bg-gray-200 rounded w-3/4 mx-auto"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/2 mx-auto"></div>
+          </div>
+          <p className="text-gray-400 mt-2">Loading...</p>
+        </div>
       ) : chapters.length === 0 ? (
         <div className="text-center py-12 text-gray-500">{filterSubject ? 'No chapters yet for this subject.' : 'Select a subject above.'}</div>
       ) : (
@@ -113,7 +120,7 @@ export default function ChapterManagement() {
           {chapters.map((c) => {
             const subject = getSubjectDetails(c.subjectId)
             return (
-              <div key={c.id} className="flex items-center justify-between rounded-xl border border-gray-200 bg-white p-4">
+              <div key={c.id} className="flex items-center justify-between rounded-xl border border-gray-200 bg-white p-4 card">
                 <div className="flex items-center gap-4 w-full justify-between">
                   <div className="flex items-center gap-4">
                     <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-800 text-xs font-bold text-gray-400">{c.order || '—'}</span>
@@ -136,8 +143,8 @@ export default function ChapterManagement() {
                   </div>
 
                   {c.driveLink && (
-                    <a href={c.driveLink} target="_blank" rel="noreferrer" className="text-xs text-indigo-400 hover:underline bg-indigo-950/40 border border-indigo-900/50 px-2.5 py-1 rounded-md">
-                      🔗 Drive Link
+                    <a href={c.driveLink} target="_blank" rel="noreferrer" className="text-xs text-indigo-400 hover:underline bg-indigo-950/40 border border-indigo-900/50 px-2.5 py-1 rounded-md flex items-center gap-1">
+                      <ExternalLink className="w-3 h-3 inline" /> Drive Link
                     </a>
                   )}
                 </div>

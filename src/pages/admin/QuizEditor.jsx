@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { getQuiz, getQuestions, addQuestion, updateQuestion, deleteQuestion } from '../../services/firestore'
+import { Check, X } from 'lucide-react'
 
 export default function QuizEditor() {
   const { quizId } = useParams()
@@ -84,7 +85,7 @@ export default function QuizEditor() {
             <div key={i} className="flex gap-2 items-center">
               <input type="text" placeholder={`Option ${i + 1}`} value={opt} onChange={(e) => handleOptionChange(i, e.target.value)}
                 className="flex-1 rounded-lg border border-gray-200 bg-white px-4 py-2 text-gray-900 outline-none focus:border-rose-500 text-sm" required />
-              {form.options.length > 2 && <button type="button" onClick={() => handleRemoveOption(i)} className="text-gray-500 hover:text-red-400 text-sm">✕</button>}
+              {form.options.length > 2 && <button type="button" onClick={() => handleRemoveOption(i)} className="text-gray-500 hover:text-red-400 text-sm"><X className="w-3 h-3" /></button>}
             </div>
           ))}
         </div>
@@ -120,7 +121,7 @@ export default function QuizEditor() {
                   <button key={idx} onClick={() => toggleCorrect(q.id, idx)}
                     className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition ${opt.isCorrect ? 'border-emerald-500 bg-emerald-600/20 text-emerald-400' : 'border-gray-200 text-gray-400 hover:border-gray-600'}`}>
                     <span className={`flex h-4 w-4 items-center justify-center rounded text-[10px] ${opt.isCorrect ? 'bg-emerald-500 text-gray-900' : 'bg-gray-700 text-gray-500'}`}>
-                      {opt.isCorrect ? '✓' : ''}
+                      {opt.isCorrect ? <Check className="w-3 h-3" /> : ''}
                     </span>
                     {opt.text}
                   </button>
