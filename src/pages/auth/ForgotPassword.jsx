@@ -11,6 +11,22 @@ export default function ForgotPassword() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
+  // Dynamic Background Colors Setup
+  const [colorIdx, setColorIdx] = useState(0)
+  const bgColors = [
+    ['bg-violet-500/40', 'bg-sky-500/30'],
+    ['bg-emerald-500/40', 'bg-cyan-500/30'],
+    ['bg-rose-500/40', 'bg-amber-500/30'],
+    ['bg-fuchsia-500/40', 'bg-blue-500/30']
+  ]
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setColorIdx((prev) => (prev + 1) % bgColors.length)
+    }, 4000)
+    return () => clearInterval(interval)
+  }, [])
+
   useEffect(() => {
     if (location.state && location.state.email) {
       setEmail(location.state.email)
@@ -38,10 +54,10 @@ export default function ForgotPassword() {
   }
 
   return (
-    <div className="relative flex h-screen w-screen items-center justify-center bg-gradient-to-br from-slate-50 via-white to-indigo-50/40 p-4 md:p-6 overflow-hidden select-none">
+    <div className="relative flex h-screen w-screen items-center justify-center bg-gradient-to-br from-black via-slate-150 to-black p-4 md:p-6 overflow-hidden select-none">
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] right-[-8%] w-[500px] h-[500px] rounded-full bg-violet-200/30 blur-[120px]" />
-        <div className="absolute bottom-[-15%] left-[-10%] w-[500px] h-[500px] rounded-full bg-sky-200/25 blur-[120px]" />
+        <div className={`absolute top-[-10%] right-[-8%] w-[500px] h-[500px] rounded-full blur-[120px] transition-colors duration-[3000ms] ease-in-out ${bgColors[colorIdx][0]}`} />
+        <div className={`absolute bottom-[-15%] left-[-10%] w-[500px] h-[500px] rounded-full blur-[120px] transition-colors duration-[3000ms] ease-in-out ${bgColors[colorIdx][1]}`} />
       </div>
 
       <div className="relative w-full max-w-md z-10 my-auto">

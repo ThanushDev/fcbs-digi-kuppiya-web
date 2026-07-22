@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { loginUser, resetPassword } from '../../services/auth'
 import { useToast } from '../../contexts/ToastContext'
@@ -13,6 +13,22 @@ export default function Login() {
   const [isOldUser, setIsOldUser] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showContactMenu, setShowContactMenu] = useState(false)
+
+  // Dynamic Background Colors Setup
+  const [colorIdx, setColorIdx] = useState(0)
+  const bgColors = [
+    ['bg-indigo-500/40', 'bg-sky-500/30', 'bg-violet-500/30'],
+    ['bg-emerald-500/40', 'bg-teal-500/30', 'bg-cyan-500/30'],
+    ['bg-rose-500/40', 'bg-orange-500/30', 'bg-amber-500/30'],
+    ['bg-fuchsia-500/40', 'bg-purple-500/30', 'bg-pink-500/30']
+  ]
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setColorIdx((prev) => (prev + 1) % bgColors.length)
+    }, 4000)
+    return () => clearInterval(interval)
+  }, [])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -55,15 +71,14 @@ export default function Login() {
   }
 
   return (
-    <div className="relative flex h-screen w-screen items-center justify-center bg-gradient-to-br from-slate-50 via-white to-indigo-50/40 p-4 md:p-6 overflow-hidden select-none">
+    <div className="relative flex h-screen w-screen items-center justify-center bg-gradient-to-br from-black via-slate-150 to-black p-4 md:p-6 overflow-hidden select-none">
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-[-15%] left-[-8%] w-[500px] h-[500px] rounded-full bg-indigo-200/30 blur-[120px]" />
-        <div className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full bg-sky-200/25 blur-[140px]" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-violet-100/20 blur-[160px]" />
+        <div className={`absolute top-[-15%] left-[-8%] w-[500px] h-[500px] rounded-full blur-[120px] transition-colors duration-[3000ms] ease-in-out ${bgColors[colorIdx][0]}`} />
+        <div className={`absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full blur-[140px] transition-colors duration-[3000ms] ease-in-out ${bgColors[colorIdx][1]}`} />
+        <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full blur-[160px] transition-colors duration-[3000ms] ease-in-out ${bgColors[colorIdx][2]}`} />
       </div>
 
       <div className="relative w-full max-w-md z-10 my-auto">
-        {/* Added visible shadow-2xl and adjusted border */}
         <div className="bg-white/80 backdrop-blur-2xl rounded-3xl shadow-2xl shadow-slate-300/60 border border-slate-300/70 p-7 md:p-9 relative overflow-hidden">
           <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-indigo-300 to-transparent" />
 
@@ -83,7 +98,6 @@ export default function Login() {
                 <label className="text-xs font-semibold text-slate-600">Email / Registration No</label>
                 <div className="relative">
                   <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  {/* Applied !pl-10 to fix the typing overlap */}
                   <input type="text" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })}
                     className="input-field !pl-10" placeholder="you@example.com or 22/ms/00" required />
                 </div>
@@ -140,7 +154,6 @@ export default function Login() {
         </div>
       </div>
 
-      {/* Floating Contact Button */}
       <div className="absolute bottom-6 right-6 z-50 flex flex-col items-center gap-3">
         {showContactMenu && (
           <div className="flex flex-col gap-2 animate-fade-in">
@@ -148,7 +161,7 @@ export default function Login() {
               className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-500 text-white shadow-lg transition hover:scale-110 hover:bg-emerald-600 duration-200 shadow-emerald-200">
               <MessageCircle className="w-5 h-5" />
             </a>
-            <a href="fcbsdigikuppiya@gmail.com" target="_blank"
+            <a href="mailto:fcbsdigikuppiya@gmail.com" target="_blank"
               className="flex h-11 w-11 items-center justify-center rounded-full bg-sky-500 text-white shadow-lg transition hover:scale-110 hover:bg-sky-600 duration-200 shadow-sky-200">
               <MailIcon className="w-5 h-5" />
             </a>

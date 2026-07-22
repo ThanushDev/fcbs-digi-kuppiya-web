@@ -22,6 +22,22 @@ export default function Register() {
   const [showPassword, setShowPassword] = useState(false)
   const [dbBatches, setDbBatches] = useState([])
 
+  // Dynamic Background Colors Setup
+  const [colorIdx, setColorIdx] = useState(0)
+  const bgColors = [
+    ['bg-indigo-500/40', 'bg-sky-500/30', 'bg-violet-500/30'],
+    ['bg-emerald-500/40', 'bg-teal-500/30', 'bg-cyan-500/30'],
+    ['bg-rose-500/40', 'bg-orange-500/30', 'bg-amber-500/30'],
+    ['bg-fuchsia-500/40', 'bg-purple-500/30', 'bg-pink-500/30']
+  ]
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setColorIdx((prev) => (prev + 1) % bgColors.length)
+    }, 4000)
+    return () => clearInterval(interval)
+  }, [])
+
   useEffect(() => {
     const fetchBatches = async () => {
       try {
@@ -86,19 +102,18 @@ export default function Register() {
   }
 
   return (
-    <div className="relative flex h-screen w-screen items-center justify-center bg-gradient-to-br from-slate-50 via-white to-indigo-50/40 p-4 md:p-6 overflow-hidden select-none">
+    <div className="relative flex h-screen w-screen items-center justify-center bg-gradient-to-br from-black via-slate-150 to-black p-4 md:p-6 overflow-hidden select-none">
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] right-[-8%] w-[500px] h-[500px] rounded-full bg-violet-200/30 blur-[120px]" />
-        <div className="absolute bottom-[-15%] left-[-10%] w-[500px] h-[500px] rounded-full bg-sky-200/25 blur-[120px]" />
-        <div className="absolute top-1/3 left-1/3 w-[600px] h-[600px] rounded-full bg-indigo-100/20 blur-[140px]" />
+        <div className={`absolute top-[-10%] right-[-8%] w-[500px] h-[500px] rounded-full blur-[120px] transition-colors duration-[3000ms] ease-in-out ${bgColors[colorIdx][0]}`} />
+        <div className={`absolute bottom-[-15%] left-[-10%] w-[500px] h-[500px] rounded-full blur-[120px] transition-colors duration-[3000ms] ease-in-out ${bgColors[colorIdx][1]}`} />
+        <div className={`absolute top-1/3 left-1/3 w-[600px] h-[600px] rounded-full blur-[140px] transition-colors duration-[3000ms] ease-in-out ${bgColors[colorIdx][2]}`} />
       </div>
 
+      {/* Meke thamai max-lg eka max-w-lg widiyata hadala thiyenne Layout eka hedenna */}
       <div className="relative w-full max-w-lg z-10 my-auto max-h-[98vh] overflow-y-auto no-scrollbar">
-        {/* Adjusted padding, background opacity, and shadow for better visibility and fit */}
         <div className="bg-white/80 backdrop-blur-2xl rounded-3xl shadow-2xl shadow-slate-300/60 border border-slate-300/70 p-5 md:p-7 relative overflow-hidden">
           <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-indigo-300 to-transparent" />
 
-          {/* Reduced margin and logo size to save vertical space */}
           <div className="mb-4 text-center">
             <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center">
               <img src={logo} alt="Logo" className="h-full w-full object-contain" />
@@ -107,7 +122,6 @@ export default function Register() {
             <p className="mt-0.5 text-[11px] font-medium text-slate-400 uppercase tracking-wider">Create Your Student Account</p>
           </div>
 
-          {/* Reduced form spacing (space-y-3) */}
           <form onSubmit={handleSubmit} className="space-y-3">
             <div className="grid grid-cols-2 gap-3.5">
               <div className="space-y-1">
