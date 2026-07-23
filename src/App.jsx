@@ -22,7 +22,9 @@ import GPACalculator from './pages/student/GPACalculator'
 import AttendanceCalculator from './pages/student/AttendanceCalculator'
 import CACalculator from './pages/student/CACalculator'
 import FinanceTracker from './pages/student/FinanceTracker'
+import StudentImportantDocuments from './pages/student/ImportantDocuments'
 import AdminDashboard from './pages/admin/AdminDashboard'
+import AdminImportantDocuments from './pages/admin/ImportantDocuments'
 import AdminAdManagement from './pages/admin/AdManagement'
 import SemesterManagement from './pages/admin/SemesterManagement'
 import SubjectManagement from './pages/admin/SubjectManagement'
@@ -87,6 +89,7 @@ export default function App() {
               <Route path="/dashboard/attendance" element={<AttendanceCalculator />} />
               <Route path="/dashboard/ca" element={<CACalculator />} />
               <Route path="/dashboard/finance" element={<FinanceTracker />} />
+              <Route path="/dashboard/documents" element={<StudentImportantDocuments />} />
             </Route>
           </Route>
 
@@ -100,6 +103,7 @@ export default function App() {
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/admin/semesters" element={<SemesterManagement />} />
               <Route path="/admin/subjects" element={<SubjectManagement />} />
+              <Route path="/admin/documents" element={<AdminImportantDocuments />} />
               <Route path="/admin/ads" element={<AdminAdManagement />} />
               <Route path="/admin/chapters" element={<ChapterManagement />} />
               <Route path="/admin/past-papers" element={<PastPaperManagement />} />

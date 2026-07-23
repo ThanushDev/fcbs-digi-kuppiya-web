@@ -46,6 +46,7 @@ export default function AdminLayout() {
     { to: '/admin/short-notes', label: 'Short Notes', show: true, icon: FileEdit },
     { to: '/admin/videos', label: 'Videos', show: true, icon: Video },
     { to: '/admin/quizzes', label: 'Quizzes', show: true, icon: ClipboardList },
+    { to: '/admin/documents', label: 'Documents', show: true, icon: FileText },
     { to: '/admin/ads', label: 'Ad Management', show: true, icon: BarChart3 },
     { to: '/admin/comments', label: 'Comments', show: isSuperAdmin, icon: MessageSquare },
     { to: '/admin/batches', label: 'Batches', show: isSuperAdmin, icon: Users },

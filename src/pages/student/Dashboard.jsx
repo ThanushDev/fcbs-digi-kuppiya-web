@@ -66,7 +66,8 @@ const formatSemesterName = (name) => {
 
 const toolIconMap = {
   'quiz': ClipboardList, 'attendance': BarChart3, 'gpa': Target, 'ca': BookOpen,
-  'finance': DollarSign, 'qr': QrCode, 'ai': Bot, 'cv': FileText, 'pdf': FileDown
+  'finance': DollarSign, 'qr': QrCode, 'ai': Bot, 'cv': FileText, 'pdf': FileDown,
+  'documents': FileText
 }
 
 const academicTools = [
@@ -79,6 +80,7 @@ const academicTools = [
   { name: 'AI Humanizer', path: '/dashboard/tools/ai-humanizer', iconKey: 'ai', isInternalTool: true, theme: 'from-violet-50 to-fuchsia-100/50 text-violet-700 border-violet-200' },
   { name: 'CV Maker', path: '/dashboard/tools/cv-maker', iconKey: 'cv', isInternalTool: true, theme: 'from-blue-50 to-indigo-100/50 text-indigo-700 border-indigo-200' },
   { name: 'PDF Generator', path: '/dashboard/tools/pdf-tool', iconKey: 'pdf', isInternalTool: true, theme: 'from-teal-50 to-emerald-100/50 text-teal-700 border-teal-200' },
+  { name: 'Important Documents', path: '/dashboard/documents', iconKey: 'documents', isInternalTool: true, theme: 'from-indigo-50 to-violet-100/50 text-indigo-700 border-indigo-200' },
 ]
 
 export default function Dashboard() {
