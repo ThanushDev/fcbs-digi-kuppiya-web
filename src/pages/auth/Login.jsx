@@ -3,7 +3,47 @@ import { Link, useNavigate } from 'react-router-dom'
 import { loginUser, resetPassword } from '../../services/auth'
 import { useToast } from '../../contexts/ToastContext'
 import { Eye, EyeOff, Mail, Lock, MessageCircle, Mail as MailIcon, X, HelpCircle } from 'lucide-react'
+
+// Images Import - දැන් ඔක්කොම තියෙන්නේ .png විදිහට
 import logo from '../../assets/logo.png'
+import happyImg from '../../assets/happy.png'
+import hideImg from '../../assets/hide.png'
+import sadImg from '../../assets/sad.png'
+
+// --- Animated Image Avatar Component ---
+const AnimatedAvatar = ({ state }) => {
+  return (
+    <div className="mx-auto mt-2 mb-4 h-32 w-32 md:h-44 md:w-44 relative">
+      {/* Happy State (Idle / Email Type කරද්දී) */}
+      <img 
+        src={happyImg} 
+        alt="Happy" 
+        className={`absolute inset-0 w-full h-full object-contain transition-opacity duration-100 ease-linear ${
+          state === 'idle' || state === 'email' ? 'opacity-100 z-10' : 'opacity-0 z-0'
+        }`} 
+      />
+      
+      {/* Hide State (Password Type කරද්දී) */}
+      <img 
+        src={hideImg} 
+        alt="Hide" 
+        className={`absolute inset-0 w-full h-full object-contain transition-opacity duration-100 ease-linear ${
+          state === 'password' ? 'opacity-100 z-10' : 'opacity-0 z-0'
+        }`} 
+      />
+      
+      {/* Sad State (Error/වැරදි Password ගැහුවම) */}
+      <img 
+        src={sadImg} 
+        alt="Sad" 
+        className={`absolute inset-0 w-full h-full object-contain transition-opacity duration-100 ease-linear ${
+          state === 'error' ? 'opacity-100 z-10' : 'opacity-0 z-0'
+        }`} 
+      />
+    </div>
+  )
+}
+// ------------------------------------------
 
 export default function Login() {
   const navigate = useNavigate()
@@ -13,6 +53,9 @@ export default function Login() {
   const [isOldUser, setIsOldUser] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showContactMenu, setShowContactMenu] = useState(false)
+  
+  // Avatar State 
+  const [avatarState, setAvatarState] = useState('idle')
 
   // Dynamic Background Colors Setup
   const [colorIdx, setColorIdx] = useState(0)
@@ -33,11 +76,15 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
+    setAvatarState('idle')
+    
     try {
       await loginUser(form.email, form.password)
       showToast('Signed in successfully', 'success')
       navigate('/dashboard')
     } catch (err) {
+      setAvatarState('error') 
+      
       if (err.message === 'OLD_USER_DETECTED') {
         setIsOldUser(true)
         showToast('Account detected. Please reset your password to activate.', 'info')
@@ -63,7 +110,9 @@ export default function Login() {
       await resetPassword(form.email)
       showToast('Activation & Reset link sent! Please check your inbox or spam.', 'success')
       setIsOldUser(false)
+      setAvatarState('idle')
     } catch (err) {
+      setAvatarState('error')
       showToast(err.message || 'Failed to send reset link.', 'error')
     } finally {
       setLoading(false)
@@ -82,45 +131,68 @@ export default function Login() {
         <div className="bg-white/80 backdrop-blur-2xl rounded-3xl shadow-2xl shadow-slate-300/60 border border-slate-300/70 p-7 md:p-9 relative overflow-hidden">
           <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-indigo-300 to-transparent" />
 
-          <div className="mb-7 text-center">
-            <div className="mx-auto mb-3 flex h-18 w-18 items-center justify-center">
-              <img src={logo} alt="Logo" className="h-full w-full object-contain" />
-            </div>
-            <h2 className="text-2xl font-bold text-slate-900 tracking-tight">FCBS DIGI KUPPIYA</h2>
-            <p className="mt-1 text-xs font-medium text-slate-400 uppercase tracking-wider">
+          <div className="mb-4 text-center">
+            <AnimatedAvatar state={avatarState} />
+            
+            <h2 className="text-xl font-bold text-slate-900 tracking-tight mt-2">FCBS DIGI KUPPIYA</h2>
+            <p className="mt-1 text-[11px] font-medium text-slate-400 uppercase tracking-wider">
               {isOldUser ? 'Account Activation' : 'Student Portal Access'}
             </p>
           </div>
 
           {!isOldUser ? (
-            <form onSubmit={handleSubmit} className="space-y-4">
+            // පරතරය අඩු කරන්න space-y-2 පාවිච්චි කරලා තියෙන්නේ
+            <form onSubmit={handleSubmit} className="space-y-2">
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-slate-600">Email / Registration No</label>
                 <div className="relative">
                   <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <input type="text" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })}
-                    className="input-field !pl-10" placeholder="you@example.com or 22/ms/00" required />
+                  <input 
+                    type="text" 
+                    value={form.email} 
+                    onChange={(e) => setForm({ ...form, email: e.target.value })}
+                    onFocus={() => setAvatarState('email')}
+                    onBlur={() => setAvatarState(prev => prev === 'email' ? 'idle' : prev)}
+                    className="input-field !pl-10" 
+                    placeholder="you@example.com or 22/ms/00" 
+                    required 
+                  />
                 </div>
               </div>
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-slate-600">Password</label>
                 <div className="relative">
                   <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <input type={showPassword ? 'text' : 'password'} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })}
-                    className="input-field !pl-10 !pr-10" placeholder="Enter your password" required />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-500 transition p-0.5">
+                  <input 
+                    type={showPassword ? 'text' : 'password'} 
+                    value={form.password} 
+                    onChange={(e) => setForm({ ...form, password: e.target.value })}
+                    onFocus={() => setAvatarState(showPassword ? 'email' : 'password')}
+                    onBlur={() => setAvatarState(prev => prev === 'password' ? 'idle' : prev)}
+                    className="input-field !pl-10 !pr-10" 
+                    placeholder="Enter your password" 
+                    required 
+                  />
+                  <button 
+                    type="button" 
+                    onClick={() => {
+                      setShowPassword(!showPassword)
+                      setAvatarState(!showPassword ? 'email' : 'password') 
+                    }}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-500 transition p-0.5"
+                  >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
               </div>
+              {/* Button එකට mt-5 දීලා තියෙන්නේ gap එක ලස්සනට තියාගන්න */}
               <button type="submit" disabled={loading}
-                className="w-full py-2.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-700 hover:to-indigo-600 transition duration-200 active:scale-[0.99] shadow-md shadow-indigo-200">
+                className="w-full mt-5 py-2.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-700 hover:to-indigo-600 transition duration-200 active:scale-[0.99] shadow-md shadow-indigo-200">
                 {loading ? 'Signing in...' : 'Sign In'}
               </button>
             </form>
           ) : (
-            <form onSubmit={handleForceReset} className="space-y-4">
+            <form onSubmit={handleForceReset} className="space-y-3">
               <div className="rounded-xl bg-amber-50 p-3.5 text-xs text-amber-700 border border-amber-200 leading-relaxed flex items-start gap-2.5">
                 <HelpCircle className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
                 <span>You are logging in for the first time. For security reasons, you must reset your password to proceed.</span>
@@ -131,10 +203,13 @@ export default function Login() {
                   className="input-field !pl-4 bg-slate-50 text-slate-400 cursor-not-allowed" />
               </div>
               <button type="submit" disabled={loading}
-                className="w-full py-2.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 transition duration-200 active:scale-[0.99] shadow-md shadow-amber-200">
+                className="w-full mt-2 py-2.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 transition duration-200 active:scale-[0.99] shadow-md shadow-amber-200">
                 {loading ? 'Sending Link...' : 'Send Activation & Reset Link'}
               </button>
-              <button type="button" onClick={() => setIsOldUser(false)}
+              <button type="button" onClick={() => {
+                  setIsOldUser(false)
+                  setAvatarState('idle')
+                }}
                 className="text-xs font-semibold text-slate-400 w-full text-center hover:text-indigo-500 transition mt-1">
                 Back to Sign In
               </button>
@@ -142,12 +217,18 @@ export default function Login() {
           )}
 
           {!isOldUser && (
-            <div className="mt-6 flex items-center justify-between text-xs border-t border-slate-100 pt-5 font-medium">
-              <Link to="/forgot-password" className="text-slate-400 hover:text-indigo-500 transition inline-flex items-center gap-1.5">
-                <HelpCircle className="w-3.5 h-3.5" /> Forgot Password?
+            <div className="mt-7 flex items-center justify-between text-xs border-t border-slate-200 pt-6 font-medium relative">
+              <Link to="/forgot-password" className="text-slate-400 hover:text-indigo-500 transition inline-flex items-center gap-1.5 z-10 bg-white/40 px-1 rounded">
+                <HelpCircle className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Forgot Password?</span><span className="sm:hidden">Forgot?</span>
               </Link>
-              <Link to="/register" className="text-indigo-600 hover:text-indigo-700 font-bold uppercase tracking-wider text-xs">
-                Create Account
+
+              {/* ලොකු කරපු Logo එක (h-14 w-14) - Center වෙන්න position හදලා තියෙන්නේ */}
+              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex h-14 w-14 items-center justify-center bg-white rounded-full p-1.5 shadow-md border border-slate-100 z-20">
+                <img src={logo} alt="Logo" className="h-full w-full object-contain" />
+              </div>
+
+              <Link to="/register" className="text-indigo-600 hover:text-indigo-700 font-bold uppercase tracking-wider text-[11px] z-10 bg-white/40 px-1 rounded">
+                Create <span className="hidden sm:inline">Account</span>
               </Link>
             </div>
           )}
