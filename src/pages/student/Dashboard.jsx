@@ -90,6 +90,7 @@ export default function Dashboard() {
   const [semesters, setSemesters] = useState([])
   const [loading, setLoading] = useState(true)
   const [activeMentorIdx, setActiveMentorIdx] = useState(0)
+  const [selectedMentor, setSelectedMentor] = useState(null) // New state for Mentor Popup
   
   const [commentText, setCommentText] = useState('')
   const [submittingComment, setSubmittingComment] = useState(false)
@@ -574,6 +575,54 @@ export default function Dashboard() {
           </div>
         )}
 
+        {/* Mentor Detail Popup Modal */}
+        {selectedMentor && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm animate-fade-in" onClick={() => setSelectedMentor(null)}>
+            <div className="relative max-w-sm w-full bg-white rounded-[2rem] overflow-hidden shadow-2xl animate-scale-in" onClick={(e) => e.stopPropagation()}>
+              <button onClick={() => setSelectedMentor(null)} className="absolute top-4 right-4 z-20 bg-black/40 hover:bg-black/60 backdrop-blur-md text-white rounded-full p-2 transition-all">
+                <X className="w-5 h-5" />
+              </button>
+              
+              <div className="w-full aspect-[4/5] relative">
+                <img src={selectedMentor.image} alt={selectedMentor.name} className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
+                
+                <div className="absolute bottom-0 left-0 w-full p-6 text-center z-10">
+                  <h3 className="text-2xl font-black text-white tracking-wide">{selectedMentor.name}</h3>
+                  {selectedMentor.nickname && (
+                    <span className="inline-flex items-center gap-1 mt-2 text-xs font-bold px-3 py-1 bg-white/20 backdrop-blur-md text-white rounded-full border border-white/30">
+                      <Quote className="w-3 h-3" /> {selectedMentor.nickname}
+                    </span>
+                  )}
+                </div>
+              </div>
+              
+              <div className="p-6 bg-white space-y-3">
+                <div className="bg-indigo-50/80 rounded-2xl p-4 border border-indigo-100 flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0">
+                    <Sparkles className="w-5 h-5 text-indigo-600" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">Role / Subject</p>
+                    <p className="text-sm font-black text-indigo-900">{selectedMentor.role}</p>
+                  </div>
+                </div>
+                
+                <div className="flex gap-3">
+                  <div className="flex-1 bg-slate-50 rounded-2xl p-4 border border-slate-100 flex flex-col items-center justify-center text-center">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Batch</p>
+                    <p className="text-sm font-bold text-slate-700">{selectedMentor.batch}</p>
+                  </div>
+                  <div className="flex-1 bg-slate-50 rounded-2xl p-4 border border-slate-100 flex flex-col items-center justify-center text-center">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Dept</p>
+                    <p className="text-sm font-bold text-slate-700 capitalize">{selectedMentor.department}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="flex-grow space-y-8">
           <div className="flex justify-between items-start gap-4">
             <div>
@@ -666,15 +715,22 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <div className="relative min-h-[220px] sm:min-h-[140px] flex items-center justify-center">
+            {/* Changed heights below to make it look bigger */}
+            <div className="relative min-h-[260px] sm:min-h-[180px] flex items-center justify-center">
               {displayMentors.map((mentor, index) => {
                 const isActive = index === activeMentorIdx
                 return (
                   <div key={mentor.name} className={`absolute w-full flex flex-col sm:flex-row items-center gap-6 transition-all duration-700 ease-in-out transform ${isActive ? 'opacity-100 scale-100 translate-x-0 pointer-events-auto' : 'opacity-0 scale-95 translate-x-4 pointer-events-none'}`}>
-                    <div className="relative h-24 w-24 sm:h-28 sm:w-28 flex-shrink-0">
+                    
+                    {/* Changed image size to h-32 w-32 and added hover effect */}
+                    <div 
+                      onClick={() => setSelectedMentor(mentor)}
+                      className="relative h-32 w-32 sm:h-40 sm:w-40 flex-shrink-0 cursor-pointer hover:scale-105 transition-transform duration-300"
+                    >
                       <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded-2xl rotate-6 opacity-15 animate-pulse"></div>
                       <img src={mentor.image} alt={mentor.name} className="h-full w-full object-cover rounded-2xl border border-slate-100 shadow-sm relative z-10" />
                     </div>
+                    
                     <div className="text-center sm:text-left flex-1">
                       <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2.5 justify-center sm:justify-start">
                         <h4 className="text-xl font-bold text-slate-900">{mentor.name}</h4>
