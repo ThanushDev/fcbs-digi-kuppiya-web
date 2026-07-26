@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { Link, useNavigate } from 'react-router-dom' 
 import { useAuth } from '../../contexts/AuthContext'
 import { useAds } from '../../contexts/AdsContext'
@@ -27,7 +28,7 @@ const SEMESTER_THEMES = [
 ]
 
 const MENTORS = [
-  { name: "Mr.Thanush Nethsika", nickname: "සයිබර්", batch: "22/23", role: "Author of FCBS DIGI KUPPIYA", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614075/cyber_jz6wx6.jpg", department: "both" },
+  { name: "Mr.Thanush Nethsika", nickname: "සයිබර්", batch: "22/23", role: "Author of FCBS DIGI KUPPIYA", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614075/cyber_jz6wx6.jpg", department: "bms" },
   { name: "Ms. Imalsha Sathsarani", batch: "22/23", role: "Economics", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614075/ima_h6xjz3.jpg", department: "bms" },
   { name: "Ms. Kasuni Gaurika", batch: "22/23", role: "Mathematics", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614075/kasuni_omcklq.jpg", department: "bms" },
   { name: "Ms. Kavindi Nawodhya", batch: "22/23", role: "Mathematics", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614076/nawodhya_ylxmlr.jpg", department: "bms" },
@@ -90,7 +91,7 @@ export default function Dashboard() {
   const [semesters, setSemesters] = useState([])
   const [loading, setLoading] = useState(true)
   const [activeMentorIdx, setActiveMentorIdx] = useState(0)
-  const [selectedMentor, setSelectedMentor] = useState(null) // New state for Mentor Popup
+  const [selectedMentor, setSelectedMentor] = useState(null)
   
   const [commentText, setCommentText] = useState('')
   const [submittingComment, setSubmittingComment] = useState(false)
@@ -110,7 +111,6 @@ export default function Dashboard() {
   const chatEndRef = useRef(null)
   const adTriggeredRef = useRef(false)
 
-  // Ad Overlay Timer States
   const [isAdLoaded, setIsAdLoaded] = useState(false)
   const [countdown, setCountdown] = useState(7)
   const [isMuted, setIsMuted] = useState(true)
@@ -119,7 +119,18 @@ export default function Dashboard() {
   const userDept = (userData?.department || '').toLowerCase()
   const displayMentors = MENTORS.filter(m => m.department === 'both' || m.department === userDept)
 
-  // 1. Initialize countdown whenever a new ad is shown
+  // Prevent background scrolling when mentor modal is open
+  useEffect(() => {
+    if (selectedMentor) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+    return () => {
+      document.body.style.overflow = 'unset'
+    }
+  }, [selectedMentor])
+
   useEffect(() => {
     if (showAdPopup && currentAd) {
       setCountdown(currentAd.countdownDuration || 7)
@@ -127,20 +138,18 @@ export default function Dashboard() {
     }
   }, [showAdPopup, currentAd])
 
-  // 2. Safety fallback timer to prevent endless spinner if the media asset fails to fire load events
   useEffect(() => {
     let safetyTimer;
     if (showAdPopup && currentAd && currentAd.mediaUrl) {
       safetyTimer = setTimeout(() => {
         setIsAdLoaded(true);
-      }, 1500); // 1.5 seconds auto-bypass
+      }, 1500); 
     }
     return () => {
       if (safetyTimer) clearTimeout(safetyTimer);
     };
   }, [showAdPopup, currentAd]);
 
-  // 3. Gated Countdown Timer Tick Logic
   useEffect(() => {
     if (!showAdPopup || !isAdLoaded || countdown <= 0) return
 
@@ -267,7 +276,6 @@ export default function Dashboard() {
     load()
   }, [userData?.department, userData?.batch])
 
-  // Trigger forced ad popup once per Dashboard mount
   useEffect(() => {
     if (!loading && !adsLoading && !adTriggeredRef.current) {
       adTriggeredRef.current = true
@@ -575,9 +583,9 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Mentor Detail Popup Modal */}
-        {selectedMentor && (
-          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm animate-fade-in" onClick={() => setSelectedMentor(null)}>
+        {/* Mentor Detail Popup Modal with createPortal */}
+        {selectedMentor && createPortal(
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm animate-fade-in" onClick={() => setSelectedMentor(null)}>
             <div className="relative max-w-sm w-full bg-white rounded-[2rem] overflow-hidden shadow-2xl animate-scale-in" onClick={(e) => e.stopPropagation()}>
               <button onClick={() => setSelectedMentor(null)} className="absolute top-4 right-4 z-20 bg-black/40 hover:bg-black/60 backdrop-blur-md text-white rounded-full p-2 transition-all">
                 <X className="w-5 h-5" />
@@ -620,7 +628,8 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
-          </div>
+          </div>,
+          document.body
         )}
 
         <div className="flex-grow space-y-8">
@@ -715,14 +724,12 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* Changed heights below to make it look bigger */}
             <div className="relative min-h-[260px] sm:min-h-[180px] flex items-center justify-center">
               {displayMentors.map((mentor, index) => {
                 const isActive = index === activeMentorIdx
                 return (
                   <div key={mentor.name} className={`absolute w-full flex flex-col sm:flex-row items-center gap-6 transition-all duration-700 ease-in-out transform ${isActive ? 'opacity-100 scale-100 translate-x-0 pointer-events-auto' : 'opacity-0 scale-95 translate-x-4 pointer-events-none'}`}>
                     
-                    {/* Changed image size to h-32 w-32 and added hover effect */}
                     <div 
                       onClick={() => setSelectedMentor(mentor)}
                       className="relative h-32 w-32 sm:h-40 sm:w-40 flex-shrink-0 cursor-pointer hover:scale-105 transition-transform duration-300"
