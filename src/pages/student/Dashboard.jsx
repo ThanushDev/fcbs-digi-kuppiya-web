@@ -79,7 +79,7 @@ const academicTools = [
   { name: 'Finance Tracker', path: '/dashboard/finance', iconKey: 'finance', isInternalTool: true, theme: 'from-rose-50 to-pink-100/50 text-rose-700 border-rose-200' },
   { name: 'QR Generator', path: '/dashboard/tools/qr', iconKey: 'qr', isInternalTool: true, theme: 'from-slate-50 to-gray-200/50 text-slate-700 border-slate-300' },
   { name: 'AI Humanizer', path: '/dashboard/tools/ai-humanizer', iconKey: 'ai', isInternalTool: true, theme: 'from-violet-50 to-fuchsia-100/50 text-violet-700 border-violet-200' },
-  { name: 'CV Maker', path: '/dashboard/tools/cv-maker', iconKey: 'cv', isInternalTool: true, theme: 'from-blue-50 to-indigo-100/50 text-indigo-700 border-indigo-200' },
+  { name: 'CV Maker', path: 'https://digi-solutions-cv.vercel.app/', iconKey: 'cv', isExternal: true, theme: 'from-blue-50 to-indigo-100/50 text-indigo-700 border-indigo-200' },
   { name: 'PDF Generator', path: '/dashboard/tools/pdf-tool', iconKey: 'pdf', isInternalTool: true, theme: 'from-teal-50 to-emerald-100/50 text-teal-700 border-teal-200' },
   { name: 'Important Documents', path: '/dashboard/documents', iconKey: 'documents', isInternalTool: true, theme: 'from-indigo-50 to-violet-100/50 text-indigo-700 border-indigo-200' },
 ]
