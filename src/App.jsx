@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { ToastProvider } from './contexts/ToastContext'
@@ -52,75 +53,81 @@ function NavigationGuard({ children }) {
 }
 
 export default function App() {
+  useEffect(() => {
+    // Purge legacy game/simulation state from user storage
+    localStorage.removeItem('FCBS_EXECUTIVE_SIM_V2')
+    localStorage.removeItem('FCBS_GAME_SAVE_V1')
+  }, [])
+
   return (
     <AuthProvider>
       <ToastProvider>
         <AdsProvider>
-        <Routes>
-          {/* Public Routes */}
-          <Route element={<PublicOnlyRoute />}>
-            <Route index element={<Login />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-          </Route>
-
-          {/* Setup Page Route */}
-          <Route path="/setup" element={<FirstTimeSetup />} />
-
-          {/* Student & Shared Protected Routes */}
-          <Route element={
-            <NavigationGuard>
-              <ProtectedRoute allowedRoles={['student', 'admin', 'super_admin']} />
-            </NavigationGuard>
-          }>
-            <Route element={<StudentLayout />}>
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/dashboard/subjects/:semesterId" element={<SubjectList />} />
-              <Route path="/dashboard/subjects/:semesterId/subject/:subjectId" element={<SubjectDetail />} />
-              <Route path="/dashboard/search" element={<SearchResults />} />
-              <Route path="/dashboard/quizzes" element={<QuizList />} />
-              <Route path="/dashboard/quizzes/:quizId" element={<QuizTake />} />
-              <Route path="/dashboard/quizzes/:quizId/result/:attemptId" element={<QuizResult />} />
-              <Route path="/profile" element={<Profile />} />
-              
-              <Route path="/dashboard/tools/:toolKey" element={<ToolViewer />} />
-              <Route path="/dashboard/gpa" element={<GPACalculator />} />
-              <Route path="/dashboard/attendance" element={<AttendanceCalculator />} />
-              <Route path="/dashboard/ca" element={<CACalculator />} />
-              <Route path="/dashboard/finance" element={<FinanceTracker />} />
-              <Route path="/dashboard/documents" element={<StudentImportantDocuments />} />
+          <Routes>
+            {/* Public Routes */}
+            <Route element={<PublicOnlyRoute />}>
+              <Route index element={<Login />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
             </Route>
-          </Route>
 
-          {/* Admin Protected Routes */}
-          <Route element={
-            <NavigationGuard>
-              <ProtectedRoute allowedRoles={['admin', 'super_admin']} />
-            </NavigationGuard>
-          }>
-            <Route element={<AdminLayout />}>
-              <Route path="/admin" element={<AdminDashboard />} />
-              <Route path="/admin/semesters" element={<SemesterManagement />} />
-              <Route path="/admin/subjects" element={<SubjectManagement />} />
-              <Route path="/admin/documents" element={<AdminImportantDocuments />} />
-              <Route path="/admin/ads" element={<AdminAdManagement />} />
-              <Route path="/admin/chapters" element={<ChapterManagement />} />
-              <Route path="/admin/past-papers" element={<PastPaperManagement />} />
-              <Route path="/admin/short-notes" element={<ShortNoteManagement />} />
-              <Route path="/admin/videos" element={<VideoManagement />} />
-              <Route path="/admin/comments" element={<CommentManagement />} />
-              <Route path="/admin/batches" element={<BatchManagement />} />
-              <Route path="/admin/quizzes" element={<QuizManagement />} />
-              <Route path="/admin/quizzes/:quizId/questions" element={<QuizEditor />} />
-              <Route path="/admin/super/dashboard" element={<SuperAdminDashboard />} />
-              <Route path="/admin/super/admins" element={<AdminManagement />} />
-              <Route path="/admin/super/users" element={<UserManagement />} />
+            {/* Setup Page Route */}
+            <Route path="/setup" element={<FirstTimeSetup />} />
+
+            {/* Student & Shared Protected Routes */}
+            <Route element={
+              <NavigationGuard>
+                <ProtectedRoute allowedRoles={['student', 'admin', 'super_admin']} />
+              </NavigationGuard>
+            }>
+              <Route element={<StudentLayout />}>
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/dashboard/subjects/:semesterId" element={<SubjectList />} />
+                <Route path="/dashboard/subjects/:semesterId/subject/:subjectId" element={<SubjectDetail />} />
+                <Route path="/dashboard/search" element={<SearchResults />} />
+                <Route path="/dashboard/quizzes" element={<QuizList />} />
+                <Route path="/dashboard/quizzes/:quizId" element={<QuizTake />} />
+                <Route path="/dashboard/quizzes/:quizId/result/:attemptId" element={<QuizResult />} />
+                <Route path="/profile" element={<Profile />} />
+
+                <Route path="/dashboard/tools/:toolKey" element={<ToolViewer />} />
+                <Route path="/dashboard/gpa" element={<GPACalculator />} />
+                <Route path="/dashboard/attendance" element={<AttendanceCalculator />} />
+                <Route path="/dashboard/ca" element={<CACalculator />} />
+                <Route path="/dashboard/finance" element={<FinanceTracker />} />
+                <Route path="/dashboard/documents" element={<StudentImportantDocuments />} />
+              </Route>
             </Route>
-          </Route>
 
-          <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
+            {/* Admin Protected Routes */}
+            <Route element={
+              <NavigationGuard>
+                <ProtectedRoute allowedRoles={['admin', 'super_admin']} />
+              </NavigationGuard>
+            }>
+              <Route element={<AdminLayout />}>
+                <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/admin/semesters" element={<SemesterManagement />} />
+                <Route path="/admin/subjects" element={<SubjectManagement />} />
+                <Route path="/admin/documents" element={<AdminImportantDocuments />} />
+                <Route path="/admin/ads" element={<AdminAdManagement />} />
+                <Route path="/admin/chapters" element={<ChapterManagement />} />
+                <Route path="/admin/past-papers" element={<PastPaperManagement />} />
+                <Route path="/admin/short-notes" element={<ShortNoteManagement />} />
+                <Route path="/admin/videos" element={<VideoManagement />} />
+                <Route path="/admin/comments" element={<CommentManagement />} />
+                <Route path="/admin/batches" element={<BatchManagement />} />
+                <Route path="/admin/quizzes" element={<QuizManagement />} />
+                <Route path="/admin/quizzes/:quizId/questions" element={<QuizEditor />} />
+                <Route path="/admin/super/dashboard" element={<SuperAdminDashboard />} />
+                <Route path="/admin/super/admins" element={<AdminManagement />} />
+                <Route path="/admin/super/users" element={<UserManagement />} />
+              </Route>
+            </Route>
+
+            <Route path="*" element={<Navigate to="/login" replace />} />
+          </Routes>
         </AdsProvider>
       </ToastProvider>
     </AuthProvider>

@@ -219,6 +219,10 @@
     to { opacity: 1; transform: translateY(0); }
   }
 
+  @keyframes shimmer {
+    to { background-position: -200% 0; }
+  }
+
   /* ✦ ULTRA-PREMIUM GLOWING CONIC LOADER ✦ */
   .loader-glow {
     width: 52px;

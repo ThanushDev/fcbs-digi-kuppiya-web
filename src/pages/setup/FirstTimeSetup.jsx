@@ -5,6 +5,7 @@ import { signOut } from 'firebase/auth'
 import { auth, db } from '../../services/firebase'
 import { useAuth } from '../../contexts/AuthContext'
 import { DEPARTMENTS, BATCHES } from '../../utils/constants'
+import useFaceVerification from '../../hooks/useFaceVerification'
 import { Upload, Camera, CheckCircle2, XCircle, AlertTriangle, LogOut, ScanFace, User, BookOpen, CalendarDays, CreditCard } from 'lucide-react'
 import logo from '../../assets/logo.png'
 
@@ -12,6 +13,8 @@ export default function FirstTimeSetup() {
   const { user, userData, needsProfileSetup, needsFaceVerification, refreshUserData } = useAuth()
   const navigate = useNavigate()
   const canvasRef = useRef(null)
+  const faceOverlayRef = useRef(null)
+  const { status: faceStatus, progress: scanProgress, result: faceResult, analyze: runFaceAnalysis, reset: resetFaceScan } = useFaceVerification()
 
   const [loading, setLoading] = useState(false)
   const [image, setImage] = useState(null)
@@ -21,10 +24,6 @@ export default function FirstTimeSetup() {
     department: '',
     batch: ''
   })
-
-  // Face verification states
-  const [faceStatus, setFaceStatus] = useState('idle') // idle | analyzing | passed | failed
-  const [scanProgress, setScanProgress] = useState(0)
 
   // Security check: redirect if profile is complete
   useEffect(() => {
@@ -54,35 +53,15 @@ export default function FirstTimeSetup() {
     const file = e.target.files[0]
     if (file) {
       setImage(file)
-      setPreview(URL.createObjectURL(file))
-      setFaceStatus('idle')
-      setScanProgress(0)
+      const url = URL.createObjectURL(file)
+      setPreview(url)
+      // Auto-trigger AI face scan immediately on image selection
+      resetFaceScan()
+      setTimeout(() => runFaceAnalysis(url, faceOverlayRef), 60)
     }
   }
 
-  const runFaceAnalysis = () => {
-    if (!preview) return
-    setFaceStatus('analyzing')
-    setScanProgress(0)
-
-    const duration = 2500
-    const interval = 50
-    let elapsed = 0
-
-    const timer = setInterval(() => {
-      elapsed += interval
-      const progress = Math.min(elapsed / duration, 1)
-      setScanProgress(progress)
-
-      if (progress >= 1) {
-        clearInterval(timer)
-        // Simulate successful face detection (always pass for demo, but UI shows strict scanning)
-        setFaceStatus('passed')
-      }
-    }, interval)
-  }
-
-  // Draw bounding box overlay on canvas when analyzing
+  // Draw scanline animation on canvas while AI analysis is running
   useEffect(() => {
     if (!canvasRef.current || !preview || faceStatus !== 'analyzing') return
     const canvas = canvasRef.current
@@ -106,21 +85,13 @@ export default function FirstTimeSetup() {
       ctx.fillStyle = 'rgba(99, 102, 241, 0.12)'
       ctx.fillRect(0, 0, canvas.width, lineY)
 
-      // Bounding box (face area simulation)
+      // Corner brackets
       const bx = canvas.width * 0.15
       const by = canvas.height * 0.15
       const bw = canvas.width * 0.7
       const bh = canvas.height * 0.7
-
-      ctx.strokeStyle = 'rgba(99, 102, 241, 0.7)'
-      ctx.lineWidth = 2
-      ctx.setLineDash([8, 4])
-      ctx.strokeRect(bx, by, bw, bh)
-
-      // Corner brackets
       const cl = 18
       ctx.lineWidth = 3
-      ctx.setLineDash([])
       ctx.strokeStyle = '#818cf8'
       // Top-left
       ctx.beginPath(); ctx.moveTo(bx, by + cl); ctx.lineTo(bx, by); ctx.lineTo(bx + cl, by); ctx.stroke()
@@ -131,28 +102,11 @@ export default function FirstTimeSetup() {
       // Bottom-right
       ctx.beginPath(); ctx.moveTo(bx + bw - cl, by + bh); ctx.lineTo(bx + bw, by + bh); ctx.lineTo(bx + bw, by + bh - cl); ctx.stroke()
 
-      // Facial feature points
-      const drawPoint = (x, y) => {
-        ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI * 2)
-        ctx.fillStyle = '#a5b4fc'; ctx.fill()
-        ctx.strokeStyle = '#6366f1'; ctx.lineWidth = 1.5; ctx.stroke()
-      }
-
-      // Face grid reference points
-      const cx = canvas.width / 2
-      const cy = canvas.height / 2
-      drawPoint(cx, cy - canvas.height * 0.12) // forehead
-      drawPoint(cx - canvas.width * 0.12, cy + canvas.height * 0.02) // left eye
-      drawPoint(cx + canvas.width * 0.12, cy + canvas.height * 0.02) // right eye
-      drawPoint(cx, cy + canvas.height * 0.14) // nose
-      drawPoint(cx - canvas.width * 0.08, cy + canvas.height * 0.22) // mouth left
-      drawPoint(cx + canvas.width * 0.08, cy + canvas.height * 0.22) // mouth right
-
       // Scanning label
       ctx.fillStyle = 'rgba(255,255,255,0.85)'
       ctx.font = 'bold 13px system-ui, sans-serif'
       ctx.textAlign = 'center'
-      ctx.fillText('SCANNING FACE STRUCTURE', canvas.width / 2, 24)
+      ctx.fillText('AI FACE SCAN IN PROGRESS', canvas.width / 2, 24)
     }
   }, [preview, faceStatus, scanProgress])
 
@@ -294,6 +248,13 @@ export default function FirstTimeSetup() {
                         <img src={preview} alt="Face Preview" className="w-full h-full object-cover" />
                       )}
 
+                      {/* Real AI detection overlay (bounding box + landmarks) */}
+                      <canvas
+                        ref={faceOverlayRef}
+                        className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                        style={{ opacity: (faceStatus === 'passed' || faceStatus === 'failed') && faceResult ? 1 : 0 }}
+                      />
+
                       {/* Status Ring Overlay */}
                       {faceStatus === 'passed' && (
                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -371,9 +332,8 @@ export default function FirstTimeSetup() {
                 )}
 
                 {faceStatus === 'failed' && (
-                  <p className="text-[11px] text-rose-600 text-center font-semibold flex items-center justify-center gap-1">
-                    <XCircle className="w-3.5 h-3.5" />
-                    No human face detected — try a different photo
+                  <p className="text-[11px] font-semibold text-rose-600 text-center leading-relaxed">
+                    Face verification failed! No clear human face detected. Please upload a clear photo of your face.
                   </p>
                 )}
 
@@ -400,19 +360,17 @@ export default function FirstTimeSetup() {
                   </label>
                 </div>
 
-                {/* Trigger analysis */}
-                {image && faceStatus === 'idle' && (
-                  <button type="button" onClick={runFaceAnalysis}
-                    className="mt-2 w-full py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 text-[11px] font-bold text-white hover:from-indigo-700 hover:to-indigo-600 transition shadow-sm shadow-indigo-200 active:scale-[0.99]">
-                    <ScanFace className="w-3.5 h-3.5 inline mr-1.5" />
-                    Start Face Verification Scan
-                  </button>
-                )}
-
+                {/* Auto-scan progress */}
                 {faceStatus === 'analyzing' && (
                   <div className="mt-2 w-full py-2 rounded-xl bg-indigo-100 text-[11px] font-bold text-indigo-400 text-center flex items-center justify-center gap-2">
                     <div className="w-3.5 h-3.5 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" />
-                    Scanning...
+                    AI Scanning for human face...
+                  </div>
+                )}
+
+                {faceStatus === 'error' && (
+                  <div className="mt-2 w-full py-2 rounded-xl bg-rose-50 border border-rose-200 text-[11px] font-bold text-rose-500 text-center">
+                    Face verification unavailable. Please check your connection and try again.
                   </div>
                 )}
 
@@ -420,6 +378,15 @@ export default function FirstTimeSetup() {
                   <div className="mt-2 flex items-center justify-center gap-1">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
                     <span className="text-[10px] font-semibold text-emerald-600 uppercase tracking-wider">Face Verification Passed</span>
+                  </div>
+                )}
+
+                {faceStatus === 'failed' && (
+                  <div className="mt-2 flex items-start gap-1.5 bg-rose-50 border border-rose-300 rounded-xl p-2.5">
+                    <XCircle className="w-3.5 h-3.5 text-rose-600 shrink-0 mt-0.5" />
+                    <p className="text-[11px] font-semibold text-rose-700 leading-relaxed">
+                      Face verification failed! No clear human face detected. Please upload a clear photo of your face.
+                    </p>
                   </div>
                 )}
 

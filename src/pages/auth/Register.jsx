@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { registerUser } from '../../services/auth'
 import { useToast } from '../../contexts/ToastContext'
 import { DEPARTMENTS } from '../../utils/constants'
 import { validateEmail, validateMobile, validateRegNumber, validatePassword } from '../../utils/validators'
-import { User, Mail, Phone, CreditCard, BookOpen, CalendarDays, Lock, Eye, EyeOff, Upload, ArrowLeft } from 'lucide-react'
+import useFaceVerification from '../../hooks/useFaceVerification'
+import { User, Mail, Phone, CreditCard, BookOpen, CalendarDays, Lock, Eye, EyeOff, Upload, ArrowLeft, ScanFace, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react'
 import logo from '../../assets/logo.png'
 import { collection, getDocs, query, where } from 'firebase/firestore'
 import { db } from '../../services/firebase'
@@ -12,6 +13,8 @@ import { db } from '../../services/firebase'
 export default function Register() {
   const navigate = useNavigate()
   const { showToast } = useToast()
+  const photoOverlayRef = useRef(null)
+  const { status: faceStatus, progress: scanProgress, result: faceResult, analyze: analyzeFace, reset: resetFaceScan } = useFaceVerification()
   const [form, setForm] = useState({
     firstName: '', lastName: '', email: '', mobile: '',
     regNumber: '', department: '', batch: '', password: '',
@@ -61,13 +64,20 @@ export default function Register() {
     const file = e.target.files[0]
     if (file) {
       setPhoto(file)
-      setPhotoPreview(URL.createObjectURL(file))
+      const url = URL.createObjectURL(file)
+      setPhotoPreview(url)
+      // Auto-trigger AI face scan immediately on photo selection
+      resetFaceScan()
+      setTimeout(() => analyzeFace(url, photoOverlayRef), 60)
     }
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!photo) return showToast('A profile photo is required to register', 'error')
+    if (faceStatus !== 'passed') {
+      return showToast('Face verification failed! No clear human face detected. Please upload a clear photo of your face.', 'error')
+    }
     if (!validateEmail(form.email)) return showToast('Invalid email address', 'error')
     if (!validateMobile(form.mobile)) return showToast('Mobile must be exactly 10 digits', 'error')
     if (!validateRegNumber(form.regNumber, form.batch)) {
@@ -207,12 +217,18 @@ export default function Register() {
               </label>
               <div className="relative flex items-center gap-3">
                 <div className="relative shrink-0">
-                  <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-dashed border-slate-300 flex items-center justify-center bg-slate-50/60">
+                  <div className="w-16 h-16 rounded-xl overflow-hidden border-2 border-dashed border-slate-300 flex items-center justify-center bg-slate-50/60 relative">
                     {photoPreview ? (
                       <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
                     ) : (
                       <Upload className="w-4 h-4 text-slate-400" />
                     )}
+                    {/* Real AI detection overlay */}
+                    <canvas
+                      ref={photoOverlayRef}
+                      className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                      style={{ opacity: (faceStatus === 'passed' || faceStatus === 'failed') && faceResult ? 1 : 0 }}
+                    />
                   </div>
                 </div>
                 <div className="flex-1">
@@ -223,18 +239,60 @@ export default function Register() {
                     <Upload className="w-3.5 h-3.5" />
                     {photo ? 'Change Photo' : 'Upload Photo'}
                   </label>
-                  {!photo ? (
+                  {!photo && (
                     <p className="text-[10px] text-red-400 mt-1 font-medium">* Required — clear face photo</p>
-                  ) : (
-                    <p className="text-[10px] text-emerald-500 mt-1 font-medium">Photo selected</p>
                   )}
                 </div>
               </div>
+
+              {/* AI Face Verification Status */}
+              <div className={`mt-2 rounded-xl border p-2.5 text-[10px] font-medium transition-colors ${
+                faceStatus === 'passed' ? 'border-emerald-200 bg-emerald-50 text-emerald-700' :
+                faceStatus === 'failed' ? 'border-rose-200 bg-rose-50 text-rose-700' :
+                faceStatus === 'analyzing' ? 'border-indigo-200 bg-indigo-50 text-indigo-700' :
+                'border-slate-200 bg-slate-50 text-slate-500'
+              }`}>
+                {faceStatus === 'idle' && (
+                  <span className="flex items-center gap-1.5">
+                    <ScanFace className="w-3.5 h-3.5" /> AI face verification — upload a photo to scan automatically
+                  </span>
+                )}
+                {faceStatus === 'analyzing' && (
+                  <span className="flex items-center gap-1.5">
+                    <div className="w-3.5 h-3.5 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" />
+                    Scanning for a human face...
+                  </span>
+                )}
+                {faceStatus === 'passed' && (
+                  <span className="flex items-center gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> Human face detected & verified
+                  </span>
+                )}
+                {faceStatus === 'failed' && (
+                  <span className="flex items-start gap-1.5 text-rose-700 font-semibold leading-relaxed">
+                    <XCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                    Face verification failed! No clear human face detected. Please upload a clear photo of your face.
+                  </span>
+                )}
+                {faceStatus === 'error' && (
+                  <span className="flex items-center gap-1.5 text-rose-700">
+                    <AlertTriangle className="w-3.5 h-3.5" /> Face verification unavailable — check your connection and retry
+                  </span>
+                )}
+              </div>
+
+              {/* Scan progress bar */}
+              {faceStatus === 'analyzing' && (
+                <div className="h-1 bg-slate-200 rounded-full overflow-hidden mt-1">
+                  <div className="h-full bg-gradient-to-r from-indigo-400 to-indigo-600 transition-all duration-150 ease-linear rounded-r"
+                    style={{ width: `${scanProgress * 100}%` }} />
+                </div>
+              )}
             </div>
 
-            <button type="submit" disabled={loading || !photo}
+            <button type="submit" disabled={loading || !photo || faceStatus !== 'passed'}
               className="w-full py-2 text-xs font-bold rounded-xl text-white bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-700 hover:to-indigo-600 transition duration-200 active:scale-[0.99] shadow-md shadow-indigo-200 mt-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:from-slate-400 disabled:to-slate-400">
-              {loading ? 'Creating account...' : !photo ? 'Upload a Photo First' : 'Create Account'}
+              {loading ? 'Creating account...' : !photo ? 'Upload a Photo First' : faceStatus !== 'passed' ? 'Waiting for Face Verification...' : 'Create Account'}
             </button>
           </form>
 

@@ -13,7 +13,7 @@ import {
   Upload, Download, ZoomIn, CheckCircle, AlertCircle, Info, HelpCircle,
   ArrowUpRight, Volume2, VolumeX, Video
 } from 'lucide-react'
-import logo from '../../assets/logo.png' 
+import logo from '../../assets/logo.png'
 
 const semesterIcons = [BookOpen, BookMarked, GraduationCap, ClipboardList, BarChart3, Calendar, BookOpen, BookMarked]
 const SEMESTER_THEMES = [
