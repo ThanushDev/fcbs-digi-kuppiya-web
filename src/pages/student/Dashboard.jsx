@@ -28,7 +28,7 @@ const SEMESTER_THEMES = [
 ]
 
 const MENTORS = [
-  { name: "Mr.Thanush Nethsika", nickname: "සයිබර්", batch: "22/23", role: "Author of FCBS DIGI KUPPIYA", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614075/cyber_jz6wx6.jpg", department: "bms" },
+  { name: "Mr.Thanush Nethsika", nickname: "සයිබර්", batch: "22/23", role: "Author of FCBS DIGI KUPPIYA", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614075/cyber_jz6wx6.jpg", department: "both" },
   { name: "Ms. Imalsha Sathsarani", batch: "22/23", role: "Economics", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614075/ima_h6xjz3.jpg", department: "bms" },
   { name: "Ms. Kasuni Gaurika", batch: "22/23", role: "Mathematics", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614075/kasuni_omcklq.jpg", department: "bms" },
   { name: "Ms. Kavindi Nawodhya", batch: "22/23", role: "Mathematics", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614076/nawodhya_ylxmlr.jpg", department: "bms" },
@@ -750,8 +750,6 @@ export default function Dashboard() {
                         <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded-md border border-indigo-100/40 font-bold flex items-center gap-1">
                           <Users className="w-3 h-3" /> Batch: {mentor.batch}
                         </span>
-                        <span className="w-1 bg-slate-300 h-1 rounded-full"></span>
-                        <span className="text-[11px] capitalize">Department: {mentor.department}</span>
                       </div>
                     </div>
                   </div>
