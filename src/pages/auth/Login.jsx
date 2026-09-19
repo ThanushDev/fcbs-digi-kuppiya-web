@@ -13,7 +13,7 @@ import sadImg from '../../assets/sad.png'
 // --- Animated Image Avatar Component ---
 const AnimatedAvatar = ({ state }) => {
   return (
-    <div className="mx-auto mt-2 mb-4 h-32 w-32 md:h-44 md:w-44 relative">
+    <div className="mx-auto mt-1 mb-3 h-24 w-24 md:h-32 md:w-32 relative">
       {/* Happy State (Idle / Email Type කරද්දී) */}
       <img 
         src={happyImg} 
@@ -128,7 +128,7 @@ export default function Login() {
       </div>
 
       <div className="relative w-full max-w-md z-10 my-auto">
-        <div className="bg-white/80 backdrop-blur-2xl rounded-3xl shadow-2xl shadow-slate-300/60 border border-slate-300/70 p-7 md:p-9 relative overflow-hidden">
+        <div className="bg-white/80 backdrop-blur-2xl rounded-3xl shadow-2xl shadow-slate-300/60 border border-slate-300/70 p-6 md:p-8 relative overflow-hidden">
           <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-indigo-300 to-transparent" />
 
           <div className="mb-4 text-center">
@@ -187,9 +187,32 @@ export default function Login() {
               </div>
               {/* Button එකට mt-5 දීලා තියෙන්නේ gap එක ලස්සනට තියාගන්න */}
               <button type="submit" disabled={loading}
-                className="w-full mt-5 py-2.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-700 hover:to-indigo-600 transition duration-200 active:scale-[0.99] shadow-md shadow-indigo-200">
+                className="w-full mt-4 py-2.5 rounded-xl text-sm font-bold text-white bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-700 hover:to-indigo-600 transition duration-200 active:scale-[0.99] shadow-md shadow-indigo-200">
                 {loading ? 'Signing in...' : 'Sign In'}
               </button>
+
+              {/* New Sign Up Section */}
+              <div className="mt-2 text-center">
+                <p className="text-xs text-slate-500 font-medium">Don't have an account?</p>
+                <Link to="/register" className="mt-1 w-full inline-block">
+                  <button type="button"
+                    className="w-full py-2.5 rounded-xl text-sm font-bold text-white bg-red-500 hover:bg-red-600 transition duration-200 active:scale-[0.99] shadow-md shadow-red-200">
+                    Sign Up
+                  </button>
+                </Link>
+              </div>
+
+              {/* Footer Section - Inside Card */}
+              <div className="mt-4 flex items-center justify-between text-xs border-t border-slate-200 pt-4 font-medium relative">
+                <Link to="/forgot-password" className="text-slate-400 hover:text-indigo-500 transition inline-flex items-center gap-1.5 z-10 bg-white/40 px-1 rounded">
+                  <HelpCircle className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Forgot Password?</span><span className="sm:hidden">Forgot?</span>
+                </Link>
+
+                {/* Centered Logo overlapping divider */}
+                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex h-14 w-14 items-center justify-center bg-white rounded-full p-1.5 shadow-md border border-slate-100 z-20">
+                  <img src={logo} alt="Logo" className="h-full w-full object-contain" />
+                </div>
+              </div>
             </form>
           ) : (
             <form onSubmit={handleForceReset} className="space-y-3">
@@ -214,23 +237,6 @@ export default function Login() {
                 Back to Sign In
               </button>
             </form>
-          )}
-
-          {!isOldUser && (
-            <div className="mt-7 flex items-center justify-between text-xs border-t border-slate-200 pt-6 font-medium relative">
-              <Link to="/forgot-password" className="text-slate-400 hover:text-indigo-500 transition inline-flex items-center gap-1.5 z-10 bg-white/40 px-1 rounded">
-                <HelpCircle className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Forgot Password?</span><span className="sm:hidden">Forgot?</span>
-              </Link>
-
-              {/* ලොකු කරපු Logo එක (h-14 w-14) - Center වෙන්න position හදලා තියෙන්නේ */}
-              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex h-14 w-14 items-center justify-center bg-white rounded-full p-1.5 shadow-md border border-slate-100 z-20">
-                <img src={logo} alt="Logo" className="h-full w-full object-contain" />
-              </div>
-
-              <Link to="/register" className="text-indigo-600 hover:text-indigo-700 font-bold uppercase tracking-wider text-[11px] z-10 bg-white/40 px-1 rounded">
-                Create <span className="hidden sm:inline">Account</span>
-              </Link>
-            </div>
           )}
         </div>
       </div>
