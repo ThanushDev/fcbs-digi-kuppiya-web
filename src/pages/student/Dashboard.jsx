@@ -119,6 +119,16 @@ export default function Dashboard() {
   const userDept = (userData?.department || '').toLowerCase()
   const displayMentors = MENTORS.filter(m => m.department === 'both' || m.department === userDept)
 
+  // Load saved specialization from localStorage
+  useEffect(() => {
+    if (userDept) {
+      const savedSpec = localStorage.getItem(`spec_${userDept}`)
+      if (savedSpec) {
+        // We could auto-navigate, but for now just having it available for checks
+      }
+    }
+  }, [userDept])
+
   // Prevent background scrolling when mentor modal is open
   useEffect(() => {
     if (selectedMentor) {
@@ -300,14 +310,25 @@ export default function Dashboard() {
       setSpecModalOpen(true) 
     } 
     else if (isLCS && isYear2orAbove) {
-      e.preventDefault() 
-      setSelectedSemId(s.id)
-      setSpecModalDept('lcs')
-      setSpecModalOpen(true) 
+      // Check if LCS specialization is already saved
+      const savedSpec = localStorage.getItem('spec_lcs')
+      if (savedSpec) {
+        // Use saved specialization, skip modal
+        navigate(`/dashboard/subjects/${s.id}?spec=${savedSpec}`)
+      } else {
+        e.preventDefault() 
+        setSelectedSemId(s.id)
+        setSpecModalDept('lcs')
+        setSpecModalOpen(true) 
+      }
     }
   }
 
   const handleSpecSelect = (specType) => {
+    // Save specialization to localStorage for LCS
+    if (specModalDept === 'lcs') {
+      localStorage.setItem('spec_lcs', specType)
+    }
     setSpecModalOpen(false)
     navigate(`/dashboard/subjects/${selectedSemId}?spec=${specType}`)
   }
@@ -398,7 +419,7 @@ export default function Dashboard() {
   ]
 
   const lcsModalOptions = [
-    { type: 'communication', label: 'Communication Studies', color: 'hover:border-blue-400 bg-blue-950/20' },
+    { type: 'communication', label: 'Communication', color: 'hover:border-blue-400 bg-blue-950/20' },
     { type: 'languages', label: 'Languages', color: 'hover:border-emerald-400 bg-emerald-950/20' }
   ]
 

@@ -25,10 +25,12 @@ export default function SubjectList() {
       const subs = await getSubjects(semesterId)
       
       const isBMS = sem?.department === 'bms'
-      const isYear3or4 = sem?.name?.includes('Y3') || sem?.name?.includes('Y4')
+      const isLCS = sem?.department === 'lcs'
+      const isBMSYear3or4 = isBMS && (sem?.name?.includes('Y3') || sem?.name?.includes('Y4'))
+      const isLCSYear2Plus = isLCS && (sem?.name?.includes('Y2') || sem?.name?.includes('Y3') || sem?.name?.includes('Y4'))
       
       let filteredSubs = subs;
-      if (isBMS && isYear3or4) {
+      if (isBMSYear3or4 || isLCSYear2Plus) {
         filteredSubs = subs.filter(sub => {
           return !sub.specialization || sub.specialization === 'all' || sub.specialization === currentSpec
         })
@@ -63,7 +65,15 @@ export default function SubjectList() {
     return <div className="text-center py-16 text-gray-400">Semester not found.</div>
   }
 
-  const getSpecBadgeLabel = (spec) => {
+  const getSpecBadgeLabel = (spec, dept) => {
+    if (dept === 'lcs') {
+      const labels = {
+        communication: 'Communication',
+        languages: 'Languages',
+        all: 'General'
+      }
+      return labels[spec] || 'General'
+    }
     const labels = {
       accounting: 'Accounting Specialization',
       marketing: 'Marketing Specialization',
@@ -90,7 +100,13 @@ export default function SubjectList() {
 
         {semester.department === 'bms' && (semester.name?.includes('Y3') || semester.name?.includes('Y4')) && (
           <span className="inline-flex items-center gap-1.5 text-xs font-bold bg-indigo-50 border border-indigo-200 text-indigo-700 px-3 py-1.5 rounded-xl w-max uppercase tracking-wider shadow-sm">
-            <Stars className="w-3.5 h-3.5" /> {getSpecBadgeLabel(currentSpec)}
+            <Stars className="w-3.5 h-3.5" /> {getSpecBadgeLabel(currentSpec, 'bms')}
+          </span>
+        )}
+
+        {semester.department === 'lcs' && (semester.name?.includes('Y2') || semester.name?.includes('Y3') || semester.name?.includes('Y4')) && (
+          <span className="inline-flex items-center gap-1.5 text-xs font-bold bg-emerald-50 border border-emerald-200 text-emerald-700 px-3 py-1.5 rounded-xl w-max uppercase tracking-wider shadow-sm">
+            <Stars className="w-3.5 h-3.5" /> {getSpecBadgeLabel(currentSpec, 'lcs')}
           </span>
         )}
       </div>
