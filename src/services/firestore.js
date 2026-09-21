@@ -1,6 +1,6 @@
 import {
   collection, addDoc, getDocs, getDoc, doc, updateDoc, deleteDoc,
-  query, where, orderBy, serverTimestamp, onSnapshot
+  query, where, orderBy, serverTimestamp, onSnapshot, writeBatch
 } from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage'
 import { db, storage } from './firebase'
@@ -309,4 +309,88 @@ export async function setBatchPermission(batchName, semesterIds) {
 
 export async function deleteBatchPermission(id) {
   return deleteDoc(doc(db, 'batchPermissions', id))
+}
+
+/* ─── Exam Results ─── */
+const examResultsCol = collection(db, 'exam_results');
+
+export async function uploadExamResults(results, department, batch, semester) {
+  const batchWrite = writeBatch(db);
+  const timestamp = serverTimestamp();
+  
+  for (const r of results) {
+    const docRef = doc(examResultsCol);
+    batchWrite.set(docRef, {
+      indexNo: r.indexNo,
+      studentName: r.studentName || '',
+      subjectCode: r.subjectCode,
+      grade: r.grade,
+      department: department.toLowerCase(),
+      batch,
+      semester,
+      timestamp,
+    });
+  }
+  
+  await batchWrite.commit();
+  return results.length;
+}
+
+export async function getExamResults(indexNo, department, batch, semester) {
+  let q = query(
+    examResultsCol,
+    where('indexNo', '==', indexNo.toUpperCase()),
+    where('department', '==', department.toLowerCase()),
+    where('batch', '==', batch)
+  );
+  
+  if (semester) {
+    q = query(
+      examResultsCol,
+      where('indexNo', '==', indexNo.toUpperCase()),
+      where('department', '==', department.toLowerCase()),
+      where('batch', '==', batch),
+      where('semester', '==', semester)
+    );
+  }
+  
+  const snap = await getDocs(q);
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+
+export async function getExamSemesters(indexNo, department, batch) {
+  const q = query(
+    examResultsCol,
+    where('indexNo', '==', indexNo.toUpperCase()),
+    where('department', '==', department.toLowerCase()),
+    where('batch', '==', batch)
+  );
+  const snap = await getDocs(q);
+  const results = snap.docs.map(d => d.data());
+  // Extract unique semesters
+  const semesters = [...new Set(results.map(r => r.semester).filter(Boolean))];
+  return semesters.sort();
+}
+
+export async function getAllExamResultsForBatch(department, batch) {
+  const q = query(
+    examResultsCol,
+    where('department', '==', department.toLowerCase()),
+    where('batch', '==', batch)
+  );
+  const snap = await getDocs(q);
+  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+}
+
+export async function deleteExamResultsByBatch(department, batch) {
+  const q = query(
+    examResultsCol,
+    where('department', '==', department.toLowerCase()),
+    where('batch', '==', batch)
+  );
+  const snap = await getDocs(q);
+  const batchWrite = writeBatch(db);
+  snap.docs.forEach(d => batchWrite.delete(d.ref));
+  await batchWrite.commit();
+  return snap.size;
 }

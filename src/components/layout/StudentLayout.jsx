@@ -4,7 +4,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import { logoutUser } from '../../services/auth'
 import GlobalSearch from '../search/GlobalSearch'
 import AcademicBackground from '../ui/AcademicBackground'
-import { ChevronDown, LogOut, User, BookOpen } from 'lucide-react'
+import { ChevronDown, LogOut, User, BookOpen, FileText } from 'lucide-react'
 import logo from '../../assets/logo.png'
 import AdPopupModal from '../ads/AdPopupModal'
 
@@ -76,6 +76,12 @@ export default function StudentLayout() {
                   <Link to="/dashboard/quizzes" onClick={() => setProfileOpen(false)}
                     className="flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition">
                     <BookOpen className="w-3.5 h-3.5 text-slate-400" /> Quizzes</Link>
+                  <Link to="/dashboard/semester-results" onClick={() => setProfileOpen(false)}
+                    className="flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition">
+                    <FileText className="w-3.5 h-3.5 text-slate-400" /> Examination Results</Link>
+                  <Link to="/dashboard/cumulative-report" onClick={() => setProfileOpen(false)}
+                    className="flex items-center gap-2.5 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 transition">
+                    <FileText className="w-3.5 h-3.5 text-slate-400" /> Result Report</Link>
                   <button onClick={handleLogout}
                     className="flex items-center gap-2.5 w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 transition">
                     <LogOut className="w-3.5 h-3.5" /> Sign Out</button>

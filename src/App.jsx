@@ -24,6 +24,9 @@ import AttendanceCalculator from './pages/student/AttendanceCalculator'
 import CACalculator from './pages/student/CACalculator'
 import FinanceTracker from './pages/student/FinanceTracker'
 import StudentImportantDocuments from './pages/student/ImportantDocuments'
+import SemesterResults from './pages/student/SemesterResults'
+import CumulativeReport from './pages/student/CumulativeReport'
+import ExamResultsUpload from './pages/admin/ExamResultsUpload'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminImportantDocuments from './pages/admin/ImportantDocuments'
 import AdminAdManagement from './pages/admin/AdManagement'
@@ -97,6 +100,8 @@ export default function App() {
                 <Route path="/dashboard/ca" element={<CACalculator />} />
                 <Route path="/dashboard/finance" element={<FinanceTracker />} />
                 <Route path="/dashboard/documents" element={<StudentImportantDocuments />} />
+                <Route path="/dashboard/semester-results" element={<SemesterResults />} />
+                <Route path="/dashboard/cumulative-report" element={<CumulativeReport />} />
               </Route>
             </Route>
 
@@ -117,9 +122,11 @@ export default function App() {
                 <Route path="/admin/short-notes" element={<ShortNoteManagement />} />
                 <Route path="/admin/videos" element={<VideoManagement />} />
                 <Route path="/admin/comments" element={<CommentManagement />} />
-                <Route path="/admin/batches" element={<BatchManagement />} />
+<Route path="/admin/batches" element={<BatchManagement />} />
+                <Route path="/admin/comments" element={<CommentManagement />} />
                 <Route path="/admin/quizzes" element={<QuizManagement />} />
                 <Route path="/admin/quizzes/:quizId/questions" element={<QuizEditor />} />
+                <Route path="/admin/exam-results" element={<ExamResultsUpload />} />
                 <Route path="/admin/super/dashboard" element={<SuperAdminDashboard />} />
                 <Route path="/admin/super/admins" element={<AdminManagement />} />
                 <Route path="/admin/super/users" element={<UserManagement />} />
