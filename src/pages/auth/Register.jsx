@@ -105,7 +105,15 @@ export default function Register() {
       showToast('Account created successfully! Please sign in.', 'success')
       navigate('/login')
     } catch (err) {
-      showToast(err.message || 'Registration failed. Try again.', 'error')
+      if (err.message === 'EMAIL_ALREADY_EXISTS') {
+        showToast('An account with this email already exists.', 'error')
+      } else if (err.message === 'MOBILE_ALREADY_EXISTS') {
+        showToast('An account with this mobile number already exists.', 'error')
+      } else if (err.message === 'REG_NUMBER_ALREADY_EXISTS') {
+        showToast('An account with this registration number already exists.', 'error')
+      } else {
+        showToast(err.message || 'Registration failed. Try again.', 'error')
+      }
     } finally {
       setLoading(false)
     }

@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useToast } from '../../contexts/ToastContext'
-import { uploadExamResults, getBatchPermissions } from '../../services/firestore'
+import { uploadExamResults, getBatchPermissions, deleteExamResultsByBatchAndSemester, getExistingGrades } from '../../services/firestore'
+import { VALID_GRADES, getGradeWeight, isGradeBetter } from '../../utils/gradeWeights'
+import { normalizeSubjectCode } from '../../utils/subjectCode'
 import { FileText, Upload, AlertTriangle, Loader2, Eye, X, CheckCircle2, FileQuestion, Table } from 'lucide-react'
 import { parse } from 'papaparse'
 
@@ -16,8 +18,6 @@ const SEMESTERS = [
   { id: '41', label: 'Year 4 - Semester 1' },
   { id: '42', label: 'Year 4 - Semester 2' },
 ];
-
-const VALID_GRADES = ['A+', 'A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D+', 'D', 'E', 'AB'];
 
 const REQUIRED_HEADERS = ['Index Number', 'Student Name', 'Subject Code', 'Subject Name', 'Grade'];
 
@@ -36,6 +36,11 @@ export default function ExamResultsUpload() {
   const [step, setStep] = useState(1);
   const [progress, setProgress] = useState(0);
   const [csvData, setCsvData] = useState([]);
+  
+  // Bulk delete state
+  const [deleteBatch, setDeleteBatch] = useState('');
+  const [deleteSemester, setDeleteSemester] = useState('');
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const loadBatches = useCallback(async () => {
     try {
@@ -135,7 +140,7 @@ export default function ExamResultsUpload() {
       for (const row of csvData) {
         const indexNumber = (row['Index Number'] || '').trim();
         const studentName = (row['Student Name'] || '').trim();
-        const subjectCode = (row['Subject Code'] || '').trim().toUpperCase();
+        const subjectCode = normalizeSubjectCode((row['Subject Code'] || '').trim());
         const subjectName = (row['Subject Name'] || '').trim();
         const grade = (row['Grade'] || '').trim().toUpperCase();
 
@@ -163,7 +168,7 @@ export default function ExamResultsUpload() {
         const subjectMap = new Map();
         for (const result of student.results) {
           const key = result.subjectCode;
-          if (!subjectMap.has(key) || VALID_GRADES.indexOf(result.grade) < VALID_GRADES.indexOf(subjectMap.get(key).grade)) {
+          if (!subjectMap.has(key) || isGradeBetter(result.grade, subjectMap.get(key).grade)) {
             subjectMap.set(key, { subjectCode: result.subjectCode, subjectName: result.subjectName, grade: result.grade });
           }
         }
@@ -180,7 +185,7 @@ export default function ExamResultsUpload() {
       for (const student of finalData) {
         for (const result of student.results) {
           if (!VALID_GRADES.includes(result.grade)) {
-            errors.push(`Invalid grade "${result.grade}" for ${student.indexNumber} - ${result.subjectCode}`);
+            errs.push(`Invalid grade "${result.grade}" for ${student.indexNumber} - ${result.subjectCode}`);
           }
         }
       }
@@ -213,29 +218,72 @@ export default function ExamResultsUpload() {
 
     setLoading(true);
     try {
+      // Fetch existing grades for all students in this batch
+      const allIndexNos = [...new Set(extractedData.map(s => s.indexNumber))];
+      const existingGradesMap = {};
+      
+      showToast('Checking existing grades in database...', 'info');
+      
+      for (const indexNo of allIndexNos) {
+        const existing = await getExistingGrades(indexNo, department, batch);
+        // existing is already a map of key -> grade (highest grade for that subject)
+        Object.assign(existingGradesMap, existing);
+      }
+
       const records = [];
+      let updatedCount = 0;
+      let newCount = 0;
+      let skippedCount = 0;
+
       for (const student of extractedData) {
         for (const result of student.results) {
+          const subjectCode = normalizeSubjectCode(result.subjectCode);
+          const newGrade = result.grade.trim().toUpperCase();
+          const key = `${student.indexNumber}|${subjectCode}`;
+          
+          if (!VALID_GRADES.includes(newGrade)) continue;
+
+          const existingGrade = existingGradesMap[key];
+          const newGradeWeight = getGradeWeight(newGrade);
+          const existingGradeWeight = existingGrade ? getGradeWeight(existingGrade) : 0;
+          
+          if (existingGrade && existingGradeWeight >= newGradeWeight) {
+            skippedCount++;
+            continue;
+          }
+          
           records.push({
             indexNo: student.indexNumber,
             studentName: student.studentName,
-            subjectCode: result.subjectCode,
+            subjectCode,
             subjectName: result.subjectName,
-            grade: result.grade,
+            grade: newGrade,
             department: department.toLowerCase(),
             batch,
             semester
           });
+          
+          if (existingGrade) {
+            updatedCount++;
+          } else {
+            newCount++;
+          }
         }
       }
 
       if (records.length === 0) {
-        showToast('No valid grade records to upload', 'error');
+        showToast(`No new or improved grades to upload. ${skippedCount} records had equal or lower grades.`, 'info');
         return;
       }
 
       await uploadExamResults(records, department, batch, semester);
-      showToast(`Successfully uploaded ${records.length} grade records for ${batch} ${semester} (${department})`, 'success');
+      
+      let message = `Successfully uploaded ${records.length} grade records`;
+      if (updatedCount > 0) message += ` (${updatedCount} improved)`;
+      if (newCount > 0) message += ` (${newCount} new)`;
+      if (skippedCount > 0) message += ` (${skippedCount} skipped - existing grades were same or higher)`;
+      
+      showToast(message + ` for ${batch} ${semester} (${department})`, 'success');
 
       setFile(null);
       setFilePreview(null);
@@ -260,6 +308,33 @@ export default function ExamResultsUpload() {
     setStep(1);
     setProgress(0);
   }, []);
+
+  // Bulk delete by batch and semester
+  const handleBulkDelete = useCallback(async () => {
+    if (!deleteBatch || !deleteSemester) {
+      showToast('Please select both batch and semester', 'error');
+      return;
+    }
+
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete ALL exam results for Batch ${deleteBatch} and Semester ${deleteSemester}? This action cannot be undone!`
+    );
+
+    if (!confirmDelete) return;
+
+    setDeleteLoading(true);
+    try {
+      const deletedCount = await deleteExamResultsByBatchAndSemester(department, deleteBatch, deleteSemester);
+      showToast(`Successfully deleted ${deletedCount} exam results for Batch ${deleteBatch}, Semester ${deleteSemester}`, 'success');
+      setDeleteBatch('');
+      setDeleteSemester('');
+    } catch (err) {
+      console.error('Bulk delete error:', err);
+      showToast(err.message || 'Bulk delete failed', 'error');
+    } finally {
+      setDeleteLoading(false);
+    }
+  }, [department, deleteBatch, deleteSemester, showToast]);
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -376,6 +451,61 @@ export default function ExamResultsUpload() {
         </div>
       )}
 
+      {/* Bulk Delete Section */}
+      <div className="card p-6 space-y-4 border border-red-200 bg-red-50">
+        <h3 className="text-lg font-semibold text-red-700 flex items-center gap-2">
+          <AlertTriangle className="w-5 h-5" />
+          Bulk Delete Exam Results
+        </h3>
+        <p className="text-sm text-gray-600">
+          Select a Batch and Semester to permanently delete all exam results for that combination.
+          <strong className="text-red-600"> This action cannot be undone.</strong>
+        </p>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Batch</label>
+            <select
+              value={deleteBatch}
+              onChange={(e) => setDeleteBatch(e.target.value)}
+              className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-gray-900 outline-none focus:border-red-500 select-field"
+            >
+              <option value="">Select Batch</option>
+              {batches.map(b => <option key={b} value={b}>{b}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Semester</label>
+            <select
+              value={deleteSemester}
+              onChange={(e) => setDeleteSemester(e.target.value)}
+              className="w-full rounded-lg border border-gray-200 bg-white px-4 py-2.5 text-gray-900 outline-none focus:border-red-500 select-field"
+            >
+              <option value="">Select Semester</option>
+              {SEMESTERS.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
+            </select>
+          </div>
+          <div className="sm:col-span-3 flex items-end">
+            <button
+              onClick={handleBulkDelete}
+              disabled={deleteLoading || !deleteBatch || !deleteSemester}
+              className="px-6 py-2.5 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {deleteLoading ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                <>
+                  <AlertTriangle className="w-5 h-5" />
+Delete All Results for Batch & Semester
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+
       {step === 2 && (
         <div className="card p-6 space-y-6">
           <div className="flex items-center justify-between">
@@ -474,7 +604,7 @@ export default function ExamResultsUpload() {
               <ul className="list-disc list-inside space-y-1">
                 <li>Only the highest grade is displayed for each subject (repeat attempts with lower grades are excluded).</li>
                 <li><strong>AB</strong> indicates the student was absent for that examination.</li>
-                <li>This report is for reference only. Official transcripts must be obtained from the Examination Branch.</li>
+                <li>This report is for reference only</li>
               </ul>
             </div>
           </div>

@@ -1,37 +1,7 @@
-// Grade ranking: higher number = better grade
-// 'ab' (absent) is the absolute lowest (0)
-export const GRADE_RANK = {
-  'A+': 15, 'A': 14, 'A-': 13,
-  'B+': 12, 'B': 11, 'B-': 10,
-  'C+': 9, 'C': 8, 'C-': 7,
-  'D+': 6, 'D': 5, 'E': 4,
-  'ab': 1, 'AB': 1, 'Ab': 1,
-  '': 0, null: 0, undefined: 0
-};
+import { GRADE_WEIGHTS, getGradeWeight, getHighestGrade as getHighestGradeUtil, isValidGrade, isGradeBetter } from './gradeWeights';
 
-// Reverse lookup for display
-export const RANK_TO_GRADE = Object.fromEntries(
-  Object.entries(GRADE_RANK).map(([k, v]) => [v, k.toUpperCase()])
-);
-
-/**
- * Returns the highest grade from an array of grades
- * 'ab' is treated as the lowest possible grade
- */
-export function getHighestGrade(grades) {
-  if (!grades || grades.length === 0) return null;
-  
-  const validGrades = grades
-    .map(g => String(g).trim().toUpperCase())
-    .filter(g => g !== '');
-  
-  if (validGrades.length === 0) return null;
-  
-  // Sort by rank descending (highest first)
-  validGrades.sort((a, b) => (GRADE_RANK[b] || 0) - (GRADE_RANK[a] || 0));
-  
-  return validGrades[0];
-}
+// Re-export for backward compatibility
+export { GRADE_WEIGHTS, getGradeWeight, getHighestGradeUtil as getHighestGrade, isValidGrade, isGradeBetter };
 
 /**
  * Parse CSV content and return array of objects
@@ -97,10 +67,8 @@ export function deduplicateResults(results) {
   for (const r of results) {
     const key = `${r.indexNo}|${r.subjectCode}`;
     const existing = map.get(key);
-    const currentRank = GRADE_RANK[r.grade] || 0;
-    const existingRank = existing ? (GRADE_RANK[existing.grade] || 0) : 0;
     
-    if (!existing || currentRank > existingRank) {
+    if (!existing || isGradeBetter(r.grade, existing.grade)) {
       map.set(key, r);
     }
   }

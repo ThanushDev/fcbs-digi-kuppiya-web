@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { getExamResults, getExamSemesters } from '../../services/firestore'
-import { getHighestGrade, validateIndexNo } from '../../utils/examResults'
+import { getHighestGrade, validateIndexNo, isGradeBetter } from '../../utils/examResults'
+import { normalizeSubjectCode, getSubjectName } from '../../utils/subjectCode'
 import { ArrowLeft, Search, Loader2, AlertCircle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
@@ -211,10 +212,6 @@ function getSemesterLabel(code) {
   return SEMESTER_LABELS[code] || code;
 }
 
-function normalizeSubjectCode(code) {
-  return code.trim().toUpperCase().replace(/\s+/g, ' ');
-}
-
 export default function SemesterResults() {
   const { userData } = useAuth();
   const navigate = useNavigate();
@@ -312,17 +309,15 @@ export default function SemesterResults() {
       for (const r of rawResults) {
         const code = normalizeSubjectCode(r.subjectCode);
         const existing = grouped[code];
-        const currentGrade = getHighestGrade([r.grade]);
-        const existingGrade = existing ? getHighestGrade([existing.grade]) : null;
         
-        if (!existingGrade || (currentGrade && getHighestGrade([currentGrade, existingGrade]) === currentGrade)) {
+        if (!existing || isGradeBetter(r.grade, existing.grade)) {
           grouped[code] = { ...r, subjectCode: code };
         }
       }
       
       const finalResults = Object.values(grouped).map(r => ({
         ...r,
-        subjectName: SUBJECT_NAME_MAP[r.subjectCode] || r.subjectCode,
+        subjectName: getSubjectName(SUBJECT_NAME_MAP, r.subjectCode),
       })).sort((a, b) => a.subjectCode.localeCompare(b.subjectCode));
       
       setResults(finalResults);
@@ -484,7 +479,7 @@ export default function SemesterResults() {
                 <ul className="list-disc list-inside space-y-1">
                   <li>Only the highest grade is displayed for each subject (repeat attempts with lower grades are excluded).</li>
                   <li><strong>AB</strong> indicates the student was absent for that examination.</li>
-                  <li>This report is for reference only. Official transcripts must be obtained from the Examination Branch.</li>
+                  <li>This report is for reference only.</li>
                 </ul>
               </div>
             </div>

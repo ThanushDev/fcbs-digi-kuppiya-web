@@ -4,6 +4,9 @@ import {
 } from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage'
 import { db, storage } from './firebase'
+import { GRADE_WEIGHTS, getGradeWeight } from '../utils/gradeWeights'
+
+export { GRADE_WEIGHTS };
 
 /* ─── Semesters ─── */
 const semestersCol = collection(db, 'semesters')
@@ -393,4 +396,39 @@ export async function deleteExamResultsByBatch(department, batch) {
   snap.docs.forEach(d => batchWrite.delete(d.ref));
   await batchWrite.commit();
   return snap.size;
+}
+
+export async function deleteExamResultsByBatchAndSemester(department, batch, semester) {
+  const q = query(
+    examResultsCol,
+    where('department', '==', department.toLowerCase()),
+    where('batch', '==', batch),
+    where('semester', '==', semester)
+  );
+  const snap = await getDocs(q);
+  const batchWrite = writeBatch(db);
+  snap.docs.forEach(d => batchWrite.delete(d.ref));
+  await batchWrite.commit();
+  return snap.size;
+}
+
+export async function getExistingGrades(indexNo, department, batch) {
+  const q = query(
+    examResultsCol,
+    where('indexNo', '==', indexNo.toUpperCase()),
+    where('department', '==', department.toLowerCase()),
+    where('batch', '==', batch)
+  );
+  const snap = await getDocs(q);
+  const existing = {};
+  snap.docs.forEach(d => {
+    const data = d.data();
+    const key = `${data.indexNo}|${data.subjectCode}`;
+    const existingWeight = existing[key] ? getGradeWeight(existing[key]) : 0;
+    const newWeight = getGradeWeight(data.grade);
+    if (newWeight > existingWeight) {
+      existing[key] = data.grade;
+    }
+  });
+  return existing;
 }

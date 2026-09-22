@@ -72,32 +72,55 @@ export const loginUser = async (emailOrReg, password) => {
 
 export const registerUser = async (userData) => {
   if (!userData) throw new Error("No user data provided");
-  const { email, password, photoFile, ...extraData } = userData;
+  const { email, password, photoFile, mobile, regNumber, ...extraData } = userData;
+
+  if (!photoFile) {
+    throw new Error("A profile photo is required to register");
+  }
+
+  const usersRef = collection(db, "users");
+
+  const emailQuery = query(usersRef, where("email", "==", email));
+  const emailSnap = await getDocs(emailQuery);
+  if (!emailSnap.empty) {
+    throw new Error("EMAIL_ALREADY_EXISTS");
+  }
+
+  if (mobile) {
+    const mobileQuery = query(usersRef, where("mobile", "==", mobile));
+    const mobileSnap = await getDocs(mobileQuery);
+    if (!mobileSnap.empty) {
+      throw new Error("MOBILE_ALREADY_EXISTS");
+    }
+  }
+
+  if (regNumber) {
+    const regQuery = query(usersRef, where("regNumber", "==", regNumber));
+    const regSnap = await getDocs(regQuery);
+    if (!regSnap.empty) {
+      throw new Error("REG_NUMBER_ALREADY_EXISTS");
+    }
+  }
 
   try {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
-    let finalPhotoURL = "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"; 
-    
-    if (photoFile) {
-      const uploadedUrl = await uploadImageToCloudinary(photoFile);
-      if (uploadedUrl) {
-        finalPhotoURL = uploadedUrl;
-      }
+    const uploadedUrl = await uploadImageToCloudinary(photoFile);
+    if (!uploadedUrl) {
+      throw new Error("Failed to upload profile photo. Please try again.");
     }
 
-    // Firestore එකට සේව් කරන object එක
     await setDoc(doc(db, "users", user.uid), {
       uid: user.uid,
       email: email,
-      role: 'student', 
-      photoURL: finalPhotoURL,
-      profile_pic: finalPhotoURL, 
+      role: 'student',
+      photoURL: uploadedUrl,
+      profile_pic: uploadedUrl,
       createdAt: new Date().toISOString(),
-      requiresPasswordReset: false, 
+      requiresPasswordReset: false,
       hasValidFace: userData.hasValidFace !== undefined ? userData.hasValidFace : true,
-      ...extraData 
+      ...extraData
     });
 
     return user;
