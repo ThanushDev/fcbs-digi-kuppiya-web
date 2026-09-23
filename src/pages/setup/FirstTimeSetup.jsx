@@ -6,7 +6,7 @@ import { auth, db } from '../../services/firebase'
 import { useAuth } from '../../contexts/AuthContext'
 import { DEPARTMENTS, BATCHES } from '../../utils/constants'
 import useFaceVerification from '../../hooks/useFaceVerification'
-import { Upload, Camera, CheckCircle2, XCircle, AlertTriangle, LogOut, ScanFace, User, BookOpen, CalendarDays, CreditCard } from 'lucide-react'
+import { Upload, Camera, CheckCircle2, XCircle, AlertTriangle, LogOut, ScanFace, User, BookOpen, CalendarDays, CreditCard, Mail, Phone } from 'lucide-react'
 import logo from '../../assets/logo.png'
 
 export default function FirstTimeSetup() {
@@ -20,6 +20,10 @@ export default function FirstTimeSetup() {
   const [image, setImage] = useState(null)
   const [preview, setPreview] = useState(null)
   const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    mobile: '',
     regNumber: '',
     department: '',
     batch: ''
@@ -36,6 +40,10 @@ export default function FirstTimeSetup() {
   useEffect(() => {
     if (userData) {
       setFormData({
+        firstName: userData.firstName || '',
+        lastName: userData.lastName || '',
+        email: userData.email || '',
+        mobile: userData.mobile || '',
         regNumber: userData.regNumber || '',
         department: userData.department || '',
         batch: userData.batch || ''
@@ -45,6 +53,10 @@ export default function FirstTimeSetup() {
 
   const userPhoto = userData?.photoURL || userData?.profilePic || userData?.profile_pic
   const isImageMissing = needsFaceVerification
+  const isFirstNameMissing = !userData?.firstName || userData?.firstName.trim() === ''
+  const isLastNameMissing = !userData?.lastName || userData?.lastName.trim() === ''
+  const isEmailMissing = !userData?.email || userData?.email.trim() === ''
+  const isMobileMissing = !userData?.mobile || userData?.mobile.trim() === ''
   const isRegMissing = !userData?.regNumber || userData?.regNumber.trim() === ''
   const isDeptMissing = !userData?.department || userData?.department.trim() === ''
   const isBatchMissing = !userData?.batch || userData?.batch.trim() === ''
@@ -132,6 +144,36 @@ export default function FirstTimeSetup() {
       return
     }
 
+    // Validate all required fields
+    if (isFirstNameMissing && !formData.firstName.trim()) {
+      alert("First name is required!")
+      return
+    }
+    if (isLastNameMissing && !formData.lastName.trim()) {
+      alert("Last name is required!")
+      return
+    }
+    if (isEmailMissing && !formData.email.trim()) {
+      alert("Email address is required!")
+      return
+    }
+    if (isMobileMissing && !formData.mobile.trim()) {
+      alert("Mobile number is required!")
+      return
+    }
+    if (isRegMissing && !formData.regNumber.trim()) {
+      alert("Registration number is required!")
+      return
+    }
+    if (isDeptMissing && !formData.department) {
+      alert("Department is required!")
+      return
+    }
+    if (isBatchMissing && !formData.batch) {
+      alert("Batch is required!")
+      return
+    }
+
     const dept = formData.department.toLowerCase()
     const reg = formData.regNumber.toLowerCase()
     if (dept === 'bms' && !reg.includes('/ms/')) {
@@ -174,6 +216,10 @@ export default function FirstTimeSetup() {
       await updateDoc(userRef, {
         photoURL: imageUrl,
         profilePic: imageUrl,
+        firstName: formData.firstName.trim(),
+        lastName: formData.lastName.trim(),
+        email: formData.email.trim().toLowerCase(),
+        mobile: formData.mobile.trim(),
         regNumber: formData.regNumber.trim(),
         department: formData.department.toLowerCase(),
         batch: formData.batch,
@@ -396,6 +442,91 @@ export default function FirstTimeSetup() {
                   <p className="text-[10px] text-amber-700 leading-relaxed">
                     Non-human images (flowers, animals, objects) will be rejected. A valid human face is required to proceed.
                   </p>
+                </div>
+              </div>
+            )}
+
+            {/* === First Name === */}
+            {isFirstNameMissing && (
+              <div className="space-y-1">
+                <label className="text-[11px] font-semibold text-slate-600">
+                  <User className="w-3.5 h-3.5 inline mr-1 text-slate-400" />
+                  First Name <span className="text-rose-400">*</span>
+                </label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="Your first name"
+                    value={formData.firstName}
+                    onChange={(e) => setFormData({...formData, firstName: e.target.value})}
+                    className="input-field pl-9 py-2 text-xs"
+                    required
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* === Last Name === */}
+            {isLastNameMissing && (
+              <div className="space-y-1">
+                <label className="text-[11px] font-semibold text-slate-600">
+                  <User className="w-3.5 h-3.5 inline mr-1 text-slate-400" />
+                  Last Name <span className="text-rose-400">*</span>
+                </label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="Your last name"
+                    value={formData.lastName}
+                    onChange={(e) => setFormData({...formData, lastName: e.target.value})}
+                    className="input-field pl-9 py-2 text-xs"
+                    required
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* === Email === */}
+            {isEmailMissing && (
+              <div className="space-y-1">
+                <label className="text-[11px] font-semibold text-slate-600">
+                  <Mail className="w-3.5 h-3.5 inline mr-1 text-slate-400" />
+                  Email Address <span className="text-rose-400">*</span>
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                  <input
+                    type="email"
+                    placeholder="you@example.com"
+                    value={formData.email}
+                    onChange={(e) => setFormData({...formData, email: e.target.value})}
+                    className="input-field pl-9 py-2 text-xs"
+                    required
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* === Mobile === */}
+            {isMobileMissing && (
+              <div className="space-y-1">
+                <label className="text-[11px] font-semibold text-slate-600">
+                  <Phone className="w-3.5 h-3.5 inline mr-1 text-slate-400" />
+                  Mobile Number <span className="text-rose-400">*</span>
+                </label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="07XXXXXXXX"
+                    value={formData.mobile}
+                    onChange={(e) => setFormData({...formData, mobile: e.target.value})}
+                    maxLength={10}
+                    className="input-field pl-9 py-2 text-xs"
+                    required
+                  />
                 </div>
               </div>
             )}

@@ -60,13 +60,11 @@ export function AuthProvider({ children }) {
   const hasValidProfilePhoto = !!user && !isPhotoBrokenOrMissing
   const needsFaceVerification = !!user && role === 'student' && isPhotoBrokenOrMissing
 
-  const needsProfileSetup = !!user && role === 'student' && (
-    isPhotoBrokenOrMissing || 
-    !userData?.regNumber || 
-    userData?.regNumber.trim() === "" || 
-    !userData?.department || 
-    userData?.department.trim() === ""
-  )
+  const hasCompleteProfileData = !!userData && !!userData.firstName && !!userData.lastName && 
+    !!userData.email && !!userData.mobile && !!userData.regNumber && 
+    !!userData.department && !!userData.batch && hasValidProfilePhoto
+
+  const needsProfileSetup = !!user && role === 'student' && !hasCompleteProfileData
 
   return (
     <div className="w-full">
