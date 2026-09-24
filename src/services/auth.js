@@ -72,10 +72,24 @@ export const loginUser = async (emailOrReg, password) => {
 
 export const registerUser = async (userData) => {
   if (!userData) throw new Error("No user data provided");
-  const { email, password, photoFile, mobile, regNumber, ...extraData } = userData;
+  const { email, password, photoFile, mobile, regNumber, firstName, lastName, department, batch, ...extraData } = userData;
 
-  if (!photoFile) {
-    throw new Error("A profile photo is required to register");
+  const requiredFields = [
+    { key: 'firstName', value: firstName, label: 'First Name' },
+    { key: 'lastName', value: lastName, label: 'Last Name' },
+    { key: 'email', value: email, label: 'Email Address' },
+    { key: 'mobile', value: mobile, label: 'Mobile Number' },
+    { key: 'regNumber', value: regNumber, label: 'Registration Number' },
+    { key: 'department', value: department, label: 'Department' },
+    { key: 'batch', value: batch, label: 'Batch' },
+    { key: 'password', value: password, label: 'Password' },
+    { key: 'photoFile', value: photoFile, label: 'Profile Photo' }
+  ]
+
+  for (const field of requiredFields) {
+    if (!field.value || (typeof field.value === 'string' && !field.value.trim())) {
+      throw new Error(`${field.label} is required`)
+    }
   }
 
   const usersRef = collection(db, "users");

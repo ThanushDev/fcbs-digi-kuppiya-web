@@ -74,6 +74,25 @@ export default function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    
+    const requiredFields = [
+      { key: 'firstName', label: 'First Name' },
+      { key: 'lastName', label: 'Last Name' },
+      { key: 'email', label: 'Email Address' },
+      { key: 'mobile', label: 'Mobile Number' },
+      { key: 'regNumber', label: 'Registration Number' },
+      { key: 'department', label: 'Department' },
+      { key: 'batch', label: 'Batch' },
+      { key: 'password', label: 'Password' }
+    ]
+
+    for (const field of requiredFields) {
+      const value = form[field.key]
+      if (!value || !value.trim()) {
+        return showToast(`${field.label} is required`, 'error')
+      }
+    }
+
     if (!photo) return showToast('A profile photo is required to register', 'error')
     if (faceStatus !== 'passed') {
       return showToast('Face verification failed! No clear human face detected. Please upload a clear photo of your face.', 'error')
@@ -85,8 +104,6 @@ export default function Register() {
       return showToast(`Invalid registration number${batchMsg}`, 'error')
     }
     if (!validatePassword(form.password)) return showToast('Password must be at least 8 characters', 'error')
-    if (!form.department) return showToast('Select a department', 'error')
-    if (!form.batch) return showToast('Select a batch', 'error')
     if (form.department.toLowerCase() === 'bms' && !form.regNumber.toLowerCase().includes('/ms/')) {
       return showToast('Registration number for BMS must contain "ms" (e.g., 22/ms/00)', 'error')
     }
