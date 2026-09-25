@@ -314,121 +314,213 @@ export async function deleteBatchPermission(id) {
   return deleteDoc(doc(db, 'batchPermissions', id))
 }
 
-/* ─── Exam Results ─── */
+/* ─── Exam Results (Optimized Structure) ─── */
 const examResultsCol = collection(db, 'exam_results');
 
-export async function uploadExamResults(results, department, batch, semester) {
-  const batchWrite = writeBatch(db);
-  const timestamp = serverTimestamp();
+// Document ID format: {batch}_{department}_{year}_{semester}
+// e.g., "23/24_bms_1_11"
+// Document structure:
+// {
+//   batch: string,
+//   department: string,
+//   year: string,
+//   semester: string,
+//   subjectMap: { [subjectCode]: subjectName },
+//   students: {
+//     [indexNo]: { studentName: string, grades: { [subjectCode]: grade } }
+//   },
+//   updatedAt: timestamp
+// }
+
+function getDocId(batch, department, year, semester) {
+  return `${batch}_${department.toLowerCase()}_${year}_${semester}`;
+}
+
+function getYearFromSemester(semester) {
+  // semester format: '11', '12', '21', '22', '31', '32', '41', '42'
+  return semester.charAt(0);
+}
+
+export async function uploadExamResultsOptimized(results, department, batch, semester) {
+  const year = getYearFromSemester(semester);
+  const docId = getDocId(batch, department, year, semester);
+  const docRef = doc(examResultsCol, docId);
+  
+  // Build subjectMap and students object from results
+  const subjectMap = {};
+  const students = {};
   
   for (const r of results) {
-    const docRef = doc(examResultsCol);
-    batchWrite.set(docRef, {
-      indexNo: r.indexNo,
-      studentName: r.studentName || '',
-      subjectCode: r.subjectCode,
-      grade: r.grade,
-      department: department.toLowerCase(),
+    const subjectCode = r.subjectCode;
+    const subjectName = r.subjectName || subjectCode;
+    const indexNo = r.indexNo.toUpperCase();
+    const studentName = r.studentName || '';
+    const grade = r.grade;
+    
+    // Build subjectMap (only once per subject)
+    if (!subjectMap[subjectCode]) {
+      subjectMap[subjectCode] = subjectName;
+    }
+    
+    // Build students object
+    if (!students[indexNo]) {
+      students[indexNo] = {
+        studentName: studentName,
+        grades: {}
+      };
+    }
+    
+    // Apply grade comparison logic - keep higher grade
+    const existingGrade = students[indexNo].grades[subjectCode];
+    const newGradeWeight = getGradeWeight(grade);
+    const existingGradeWeight = existingGrade ? getGradeWeight(existingGrade) : 0;
+    
+    if (!existingGrade || newGradeWeight > existingGradeWeight) {
+      students[indexNo].grades[subjectCode] = grade;
+    }
+  }
+  
+  const docSnap = await getDoc(docRef);
+  
+  if (docSnap.exists()) {
+    // Merge with existing document
+    const existingData = docSnap.data();
+    const existingSubjectMap = existingData.subjectMap || {};
+    const existingStudents = existingData.students || {};
+    
+    // Merge subjectMap (new subjects get added, existing kept)
+    const mergedSubjectMap = { ...existingSubjectMap, ...subjectMap };
+    
+    // Merge students and grades with grade comparison
+    const mergedStudents = { ...existingStudents };
+    
+    for (const [indexNo, newStudentData] of Object.entries(students)) {
+      if (!mergedStudents[indexNo]) {
+        mergedStudents[indexNo] = newStudentData;
+      } else {
+        // Merge grades with comparison
+        const existingGrades = mergedStudents[indexNo].grades || {};
+        const newGrades = newStudentData.grades;
+        const mergedGrades = { ...existingGrades };
+        
+        for (const [subjectCode, newGrade] of Object.entries(newGrades)) {
+          const existingGrade = existingGrades[subjectCode];
+          const newGradeWeight = getGradeWeight(newGrade);
+          const existingGradeWeight = existingGrade ? getGradeWeight(existingGrade) : 0;
+          
+          if (!existingGrade || newGradeWeight > existingGradeWeight) {
+            mergedGrades[subjectCode] = newGrade;
+          }
+        }
+        
+        mergedStudents[indexNo] = {
+          studentName: newStudentData.studentName || mergedStudents[indexNo].studentName,
+          grades: mergedGrades
+        };
+      }
+    }
+    
+    await updateDoc(docRef, {
+      subjectMap: mergedSubjectMap,
+      students: mergedStudents,
+      updatedAt: serverTimestamp()
+    });
+  } else {
+    // Create new document
+    await setDoc(docRef, {
       batch,
+      department: department.toLowerCase(),
+      year: getYearFromSemester(semester),
       semester,
-      timestamp,
+      subjectMap,
+      students,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
     });
   }
   
-  await batchWrite.commit();
   return results.length;
 }
 
-export async function getExamResults(indexNo, department, batch, semester) {
-  let q = query(
+// Semester-isolated query: fetch single document and extract student data
+export async function getExamResultsOptimized(indexNo, department, batch, semester) {
+  const year = getYearFromSemester(semester);
+  const docId = getDocId(batch, department, year, semester);
+  const docRef = doc(examResultsCol, docId);
+  const docSnap = await getDoc(docRef);
+  
+  if (!docSnap.exists()) {
+    return [];
+  }
+  
+  const data = docSnap.data();
+  const students = data.students || {};
+  const subjectMap = data.subjectMap || {};
+  const studentData = students[indexNo.toUpperCase()];
+  
+  if (!studentData) {
+    return [];
+  }
+  
+  // Convert to flat array format for backward compatibility
+  const results = [];
+  for (const [subjectCode, grade] of Object.entries(studentData.grades)) {
+    results.push({
+      indexNo: indexNo.toUpperCase(),
+      studentName: studentData.studentName,
+      subjectCode,
+      subjectName: subjectMap[subjectCode] || subjectCode,
+      grade,
+      department: department.toLowerCase(),
+      batch,
+      semester
+    });
+  }
+  
+  return results;
+}
+
+export async function deleteExamResultsOptimized(department, batch, semester) {
+  const year = getYearFromSemester(semester);
+  const docId = getDocId(batch, department, year, semester);
+  const docRef = doc(examResultsCol, docId);
+  await deleteDoc(docRef);
+  return true;
+}
+
+export async function getExamSemestersOptimized(indexNo, department, batch) {
+  const q = query(
     examResultsCol,
     where('indexNo', '==', indexNo.toUpperCase()),
     where('department', '==', department.toLowerCase()),
     where('batch', '==', batch)
   );
-  
-  if (semester) {
-    q = query(
-      examResultsCol,
-      where('indexNo', '==', indexNo.toUpperCase()),
-      where('department', '==', department.toLowerCase()),
-      where('batch', '==', batch),
-      where('semester', '==', semester)
-    );
-  }
-  
   const snap = await getDocs(q);
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  
+  const semesters = new Set();
+  snap.docs.forEach(d => {
+    const data = d.data();
+    if (data.semester) {
+      semesters.add(data.semester);
+    }
+  });
+  
+  return Array.from(semesters).sort();
+}
+
+// Keep original functions for backward compatibility
+export async function uploadExamResults(results, department, batch, semester) {
+  return uploadExamResultsOptimized(results, department, batch, semester);
+}
+
+export async function getExamResults(indexNo, department, batch, semester) {
+  return getExamResultsOptimized(indexNo, department, batch, semester);
 }
 
 export async function getExamSemesters(indexNo, department, batch) {
-  const q = query(
-    examResultsCol,
-    where('indexNo', '==', indexNo.toUpperCase()),
-    where('department', '==', department.toLowerCase()),
-    where('batch', '==', batch)
-  );
-  const snap = await getDocs(q);
-  const results = snap.docs.map(d => d.data());
-  // Extract unique semesters
-  const semesters = [...new Set(results.map(r => r.semester).filter(Boolean))];
-  return semesters.sort();
-}
-
-export async function getAllExamResultsForBatch(department, batch) {
-  const q = query(
-    examResultsCol,
-    where('department', '==', department.toLowerCase()),
-    where('batch', '==', batch)
-  );
-  const snap = await getDocs(q);
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }));
-}
-
-export async function deleteExamResultsByBatch(department, batch) {
-  const q = query(
-    examResultsCol,
-    where('department', '==', department.toLowerCase()),
-    where('batch', '==', batch)
-  );
-  const snap = await getDocs(q);
-  const batchWrite = writeBatch(db);
-  snap.docs.forEach(d => batchWrite.delete(d.ref));
-  await batchWrite.commit();
-  return snap.size;
+  return getExamSemestersOptimized(indexNo, department, batch);
 }
 
 export async function deleteExamResultsByBatchAndSemester(department, batch, semester) {
-  const q = query(
-    examResultsCol,
-    where('department', '==', department.toLowerCase()),
-    where('batch', '==', batch),
-    where('semester', '==', semester)
-  );
-  const snap = await getDocs(q);
-  const batchWrite = writeBatch(db);
-  snap.docs.forEach(d => batchWrite.delete(d.ref));
-  await batchWrite.commit();
-  return snap.size;
-}
-
-export async function getExistingGrades(indexNo, department, batch) {
-  const q = query(
-    examResultsCol,
-    where('indexNo', '==', indexNo.toUpperCase()),
-    where('department', '==', department.toLowerCase()),
-    where('batch', '==', batch)
-  );
-  const snap = await getDocs(q);
-  const existing = {};
-  snap.docs.forEach(d => {
-    const data = d.data();
-    const key = `${data.indexNo}|${data.subjectCode}`;
-    const existingWeight = existing[key] ? getGradeWeight(existing[key]) : 0;
-    const newWeight = getGradeWeight(data.grade);
-    if (newWeight > existingWeight) {
-      existing[key] = data.grade;
-    }
-  });
-  return existing;
+  return deleteExamResultsOptimized(department, batch, semester);
 }

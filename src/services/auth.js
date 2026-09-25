@@ -100,20 +100,16 @@ export const registerUser = async (userData) => {
     throw new Error("EMAIL_ALREADY_EXISTS");
   }
 
-  if (mobile) {
-    const mobileQuery = query(usersRef, where("mobile", "==", mobile));
-    const mobileSnap = await getDocs(mobileQuery);
-    if (!mobileSnap.empty) {
-      throw new Error("MOBILE_ALREADY_EXISTS");
-    }
+  const mobileQuery = query(usersRef, where("mobile", "==", mobile.trim()));
+  const mobileSnap = await getDocs(mobileQuery);
+  if (!mobileSnap.empty) {
+    throw new Error("MOBILE_ALREADY_EXISTS");
   }
 
-  if (regNumber) {
-    const regQuery = query(usersRef, where("regNumber", "==", regNumber));
-    const regSnap = await getDocs(regQuery);
-    if (!regSnap.empty) {
-      throw new Error("REG_NUMBER_ALREADY_EXISTS");
-    }
+  const regQuery = query(usersRef, where("regNumber", "==", regNumber.trim()));
+  const regSnap = await getDocs(regQuery);
+  if (!regSnap.empty) {
+    throw new Error("REG_NUMBER_ALREADY_EXISTS");
   }
 
   try {
@@ -125,15 +121,24 @@ export const registerUser = async (userData) => {
       throw new Error("Failed to upload profile photo. Please try again.");
     }
 
+    // CRITICAL FIX: Explicitly persist ALL required fields to database
+    // The validation above guarantees they exist and are non-empty strings
     await setDoc(doc(db, "users", user.uid), {
       uid: user.uid,
-      email: email,
+      email: email.trim().toLowerCase(),
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+      mobile: mobile.trim(),
+      regNumber: regNumber.trim(),
+      department: department.toLowerCase().trim(),
+      batch: batch.trim(),
       role: 'student',
       photoURL: uploadedUrl,
       profile_pic: uploadedUrl,
       createdAt: new Date().toISOString(),
       requiresPasswordReset: false,
       hasValidFace: userData.hasValidFace !== undefined ? userData.hasValidFace : true,
+      // Include any additional safe fields from extraData
       ...extraData
     });
 

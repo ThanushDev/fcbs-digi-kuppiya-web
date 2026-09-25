@@ -29,14 +29,12 @@ export default function FirstTimeSetup() {
     batch: ''
   })
 
-  // Security check: redirect if profile is complete
   useEffect(() => {
     if (user && !needsProfileSetup && !needsFaceVerification) {
       navigate('/dashboard', { replace: true })
     }
   }, [user, needsProfileSetup, needsFaceVerification, navigate])
 
-  // Pre-load existing data
   useEffect(() => {
     if (userData) {
       setFormData({
@@ -52,7 +50,9 @@ export default function FirstTimeSetup() {
   }, [userData])
 
   const userPhoto = userData?.photoURL || userData?.profilePic || userData?.profile_pic
-  const isImageMissing = needsFaceVerification
+  const hasExistingValidPhoto = !!userPhoto && !String(userPhoto).includes('profile_')
+  const isImageMissing = !hasExistingValidPhoto
+
   const isFirstNameMissing = !userData?.firstName || userData?.firstName.trim() === ''
   const isLastNameMissing = !userData?.lastName || userData?.lastName.trim() === ''
   const isEmailMissing = !userData?.email || userData?.email.trim() === ''
@@ -67,13 +67,11 @@ export default function FirstTimeSetup() {
       setImage(file)
       const url = URL.createObjectURL(file)
       setPreview(url)
-      // Auto-trigger AI face scan immediately on image selection
       resetFaceScan()
       setTimeout(() => runFaceAnalysis(url, faceOverlayRef), 60)
     }
   }
 
-  // Draw scanline animation on canvas while AI analysis is running
   useEffect(() => {
     if (!canvasRef.current || !preview || faceStatus !== 'analyzing') return
     const canvas = canvasRef.current
@@ -84,20 +82,12 @@ export default function FirstTimeSetup() {
       canvas.width = img.width
       canvas.height = img.height
       ctx.clearRect(0, 0, canvas.width, canvas.height)
-
-      // Draw the image
       ctx.drawImage(img, 0, 0)
-
-      // Dim overlay
       ctx.fillStyle = 'rgba(0,0,0,0.15)'
       ctx.fillRect(0, 0, canvas.width, canvas.height)
-
-      // Scanline effect based on progress
       const lineY = (canvas.height * scanProgress)
       ctx.fillStyle = 'rgba(99, 102, 241, 0.12)'
       ctx.fillRect(0, 0, canvas.width, lineY)
-
-      // Corner brackets
       const bx = canvas.width * 0.15
       const by = canvas.height * 0.15
       const bw = canvas.width * 0.7
@@ -105,16 +95,10 @@ export default function FirstTimeSetup() {
       const cl = 18
       ctx.lineWidth = 3
       ctx.strokeStyle = '#818cf8'
-      // Top-left
       ctx.beginPath(); ctx.moveTo(bx, by + cl); ctx.lineTo(bx, by); ctx.lineTo(bx + cl, by); ctx.stroke()
-      // Top-right
       ctx.beginPath(); ctx.moveTo(bx + bw - cl, by); ctx.lineTo(bx + bw, by); ctx.lineTo(bx + bw, by + cl); ctx.stroke()
-      // Bottom-left
       ctx.beginPath(); ctx.moveTo(bx, by + bh - cl); ctx.lineTo(bx, by + bh); ctx.lineTo(bx + cl, by + bh); ctx.stroke()
-      // Bottom-right
       ctx.beginPath(); ctx.moveTo(bx + bw - cl, by + bh); ctx.lineTo(bx + bw, by + bh); ctx.lineTo(bx + bw, by + bh - cl); ctx.stroke()
-
-      // Scanning label
       ctx.fillStyle = 'rgba(255,255,255,0.85)'
       ctx.font = 'bold 13px system-ui, sans-serif'
       ctx.textAlign = 'center'
@@ -134,60 +118,33 @@ export default function FirstTimeSetup() {
   const handleSubmit = async (e) => {
     e.preventDefault()
 
-    if (isImageMissing && !image) {
-      alert("Please upload a clear photograph of your face for verification!")
-      return
+    if (isImageMissing) {
+      if (!image) {
+        alert("Please upload a clear photograph of your face for verification!")
+        return
+      }
+      if (faceStatus !== 'passed') {
+        alert("Face verification required. Please wait for the scan to complete.")
+        return
+      }
     }
 
-    if (faceStatus !== 'passed') {
-      alert("Face verification required. Please wait for the scan to complete.")
-      return
-    }
-
-    // Validate all required fields
-    if (isFirstNameMissing && !formData.firstName.trim()) {
-      alert("First name is required!")
-      return
-    }
-    if (isLastNameMissing && !formData.lastName.trim()) {
-      alert("Last name is required!")
-      return
-    }
-    if (isEmailMissing && !formData.email.trim()) {
-      alert("Email address is required!")
-      return
-    }
-    if (isMobileMissing && !formData.mobile.trim()) {
-      alert("Mobile number is required!")
-      return
-    }
-    if (isRegMissing && !formData.regNumber.trim()) {
-      alert("Registration number is required!")
-      return
-    }
-    if (isDeptMissing && !formData.department) {
-      alert("Department is required!")
-      return
-    }
-    if (isBatchMissing && !formData.batch) {
-      alert("Batch is required!")
-      return
-    }
+    if (isFirstNameMissing && !formData.firstName.trim()) { alert("First name is required!"); return }
+    if (isLastNameMissing && !formData.lastName.trim()) { alert("Last name is required!"); return }
+    if (isEmailMissing && !formData.email.trim()) { alert("Email address is required!"); return }
+    if (isMobileMissing && !formData.mobile.trim()) { alert("Mobile number is required!"); return }
+    if (isRegMissing && !formData.regNumber.trim()) { alert("Registration number is required!"); return }
+    if (isDeptMissing && !formData.department) { alert("Department is required!"); return }
+    if (isBatchMissing && !formData.batch) { alert("Batch is required!"); return }
 
     const dept = formData.department.toLowerCase()
     const reg = formData.regNumber.toLowerCase()
-    if (dept === 'bms' && !reg.includes('/ms/')) {
-      alert('Registration number for BMS must contain "ms" (e.g., 22/ms/00)')
-      return
-    }
-    if (dept === 'lcs' && !reg.includes('/cs/')) {
-      alert('Registration number for LCS must contain "cs" (e.g., 22/cs/00)')
-      return
-    }
+    if (dept === 'bms' && !reg.includes('/ms/')) { alert('Registration number for BMS must contain "ms" (e.g., 22/ms/00)'); return }
+    if (dept === 'lcs' && !reg.includes('/cs/')) { alert('Registration number for LCS must contain "cs" (e.g., 22/cs/00)'); return }
 
     setLoading(true)
     try {
-      let imageUrl = userPhoto || ''
+      let imageUrl = hasExistingValidPhoto ? userPhoto : ''
 
       if (image) {
         const data = new FormData()
@@ -213,9 +170,7 @@ export default function FirstTimeSetup() {
       }
 
       const userRef = doc(db, 'users', user.uid)
-      await updateDoc(userRef, {
-        photoURL: imageUrl,
-        profilePic: imageUrl,
+      const updateData = {
         firstName: formData.firstName.trim(),
         lastName: formData.lastName.trim(),
         email: formData.email.trim().toLowerCase(),
@@ -224,9 +179,15 @@ export default function FirstTimeSetup() {
         department: formData.department.toLowerCase(),
         batch: formData.batch,
         profileCompleted: true,
-        hasValidFace: faceStatus === 'passed'
-      })
+      }
 
+      if (image || isImageMissing) {
+        updateData.photoURL = imageUrl
+        updateData.profilePic = imageUrl
+        updateData.hasValidFace = faceStatus === 'passed' || hasExistingValidPhoto
+      }
+
+      await updateDoc(userRef, updateData)
       await refreshUserData(user.uid)
       navigate('/dashboard', { replace: true })
 
@@ -238,9 +199,12 @@ export default function FirstTimeSetup() {
     }
   }
 
+  // Compute simple booleans for JSX rendering
+  const showMissingImageView = isImageMissing
+  const showPreview = !!preview
+
   return (
     <div className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-indigo-50/40 p-4 md:p-6 overflow-hidden select-none">
-      {/* Background blur orbs */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] right-[-8%] w-[500px] h-[500px] rounded-full bg-violet-200/30 blur-[120px]" />
         <div className="absolute bottom-[-15%] left-[-10%] w-[500px] h-[500px] rounded-full bg-sky-200/25 blur-[120px]" />
@@ -251,7 +215,6 @@ export default function FirstTimeSetup() {
         <div className="bg-white/70 backdrop-blur-2xl rounded-3xl shadow-xl shadow-slate-200/60 border border-slate-200/60 p-6 md:p-8 relative overflow-hidden">
           <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-indigo-300 to-transparent" />
 
-          {/* Header */}
           <div className="mb-5 text-center">
             <div className="mx-auto mb-2 flex h-14 w-14 items-center justify-center">
               <img src={logo} alt="Logo" className="h-full w-full object-contain" />
@@ -264,8 +227,8 @@ export default function FirstTimeSetup() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
 
-            {/* === FACE VERIFICATION SECTION === */}
-            {isImageMissing && (
+            {/* FACE VERIFICATION SECTION - MISSING IMAGE VIEW */}
+            {showMissingImageView && (
               <div className={`rounded-2xl border p-5 transition-all duration-500 ${
                 faceStatus === 'passed' ? 'border-emerald-300 bg-emerald-50/40' :
                 faceStatus === 'failed' ? 'border-rose-300 bg-rose-50/40' :
@@ -284,9 +247,8 @@ export default function FirstTimeSetup() {
                   {faceStatus === 'failed' && <span className="ml-auto text-[10px] font-semibold text-rose-600 bg-rose-100 px-2 py-0.5 rounded-full">Failed</span>}
                 </div>
 
-                {/* Premium Canvas / Preview Area */}
                 <div className="relative w-full aspect-[4/3] rounded-xl overflow-hidden bg-slate-100 border border-slate-200 mb-3">
-                  {preview ? (
+                  {showPreview ? (
                     <>
                       {faceStatus === 'analyzing' ? (
                         <canvas ref={canvasRef} className="w-full h-full object-cover" />
@@ -294,14 +256,12 @@ export default function FirstTimeSetup() {
                         <img src={preview} alt="Face Preview" className="w-full h-full object-cover" />
                       )}
 
-                      {/* Real AI detection overlay (bounding box + landmarks) */}
                       <canvas
                         ref={faceOverlayRef}
                         className="absolute inset-0 w-full h-full object-cover pointer-events-none"
                         style={{ opacity: (faceStatus === 'passed' || faceStatus === 'failed') && faceResult ? 1 : 0 }}
                       />
 
-                      {/* Status Ring Overlay */}
                       {faceStatus === 'passed' && (
                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                           <svg className="w-full h-full" viewBox="0 0 100 100">
@@ -341,7 +301,6 @@ export default function FirstTimeSetup() {
                     </div>
                   )}
 
-                  {/* Analyzer scan progress bar */}
                   {faceStatus === 'analyzing' && (
                     <div className="absolute bottom-0 left-0 right-0 h-1 bg-slate-200">
                       <div
@@ -352,7 +311,6 @@ export default function FirstTimeSetup() {
                   )}
                 </div>
 
-                {/* Status text */}
                 {faceStatus === 'idle' && (
                   <p className="text-[11px] text-slate-500 text-center font-medium">
                     <Camera className="w-3.5 h-3.5 inline mr-1 text-indigo-400" />
@@ -383,7 +341,6 @@ export default function FirstTimeSetup() {
                   </p>
                 )}
 
-                {/* Upload Button Area */}
                 <div className="mt-3">
                   <label className={`cursor-pointer flex items-center justify-center gap-2 rounded-xl border-2 border-dashed py-3 px-4 transition ${
                     faceStatus === 'passed' ? 'border-emerald-300 bg-emerald-50/60 hover:bg-emerald-100/60' :
@@ -406,7 +363,6 @@ export default function FirstTimeSetup() {
                   </label>
                 </div>
 
-                {/* Auto-scan progress */}
                 {faceStatus === 'analyzing' && (
                   <div className="mt-2 w-full py-2 rounded-xl bg-indigo-100 text-[11px] font-bold text-indigo-400 text-center flex items-center justify-center gap-2">
                     <div className="w-3.5 h-3.5 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" />
@@ -436,12 +392,36 @@ export default function FirstTimeSetup() {
                   </div>
                 )}
 
-                {/* Prevention message */}
                 <div className="mt-2.5 flex items-start gap-1.5 bg-amber-50 border border-amber-200/60 rounded-xl p-2.5">
                   <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
                   <p className="text-[10px] text-amber-700 leading-relaxed">
                     Non-human images (flowers, animals, objects) will be rejected. A valid human face is required to proceed.
                   </p>
+                </div>
+              </div>
+            )}
+
+            {/* EXISTING VERIFIED PHOTO VIEW */}
+            {isImageMissing ? null : (
+              <div className="rounded-2xl border-2 border-emerald-300 bg-emerald-50/40 p-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600">Face Verification</span>
+                  <span className="ml-auto text-[10px] font-semibold text-emerald-600 bg-emerald-100 px-2 py-0.5 rounded-full">Verified</span>
+                </div>
+                <div className="relative w-24 h-24 mx-auto rounded-full overflow-hidden bg-slate-100 border-2 border-emerald-200 mb-3">
+                  <img src={userPhoto} alt="Verified Face" className="w-full h-full object-cover" />
+                </div>
+                <p className="text-[11px] text-emerald-600 text-center font-semibold flex items-center justify-center gap-1">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  Existing verified photo will be kept
+                </p>
+                <div className="mt-3 flex justify-center">
+                  <label className="cursor-pointer flex items-center justify-center gap-2 rounded-xl border-2 border-dashed py-3 px-4 transition border-emerald-300 bg-emerald-50/60 hover:bg-emerald-100/60">
+                    <Upload className="w-4 h-4 text-emerald-500" />
+                    <span className="text-[11px] font-bold text-emerald-700">Change Photo (Optional)</span>
+                    <input type="file" accept="image/jpeg,image/png" onChange={handleImageChange} className="hidden" />
+                  </label>
                 </div>
               </div>
             )}

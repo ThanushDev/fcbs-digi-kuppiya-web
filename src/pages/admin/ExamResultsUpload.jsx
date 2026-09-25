@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useToast } from '../../contexts/ToastContext'
-import { uploadExamResults, getBatchPermissions, deleteExamResultsByBatchAndSemester, getExistingGrades } from '../../services/firestore'
-import { VALID_GRADES, getGradeWeight, isGradeBetter } from '../../utils/gradeWeights'
+import { uploadExamResults, getBatchPermissions, deleteExamResultsByBatchAndSemester } from '../../services/firestore'
+import { VALID_GRADES } from '../../utils/gradeWeights'
 import { normalizeSubjectCode } from '../../utils/subjectCode'
 import { FileText, Upload, AlertTriangle, Loader2, Eye, X, CheckCircle2, FileQuestion, Table } from 'lucide-react'
 import { parse } from 'papaparse'
@@ -218,40 +218,18 @@ export default function ExamResultsUpload() {
 
     setLoading(true);
     try {
-      // Fetch existing grades for all students in this batch
-      const allIndexNos = [...new Set(extractedData.map(s => s.indexNumber))];
-      const existingGradesMap = {};
-      
-      showToast('Checking existing grades in database...', 'info');
-      
-      for (const indexNo of allIndexNos) {
-        const existing = await getExistingGrades(indexNo, department, batch);
-        // existing is already a map of key -> grade (highest grade for that subject)
-        Object.assign(existingGradesMap, existing);
-      }
+      showToast('Uploading exam results...', 'info');
 
+      // Build records array directly from extractedData (subjectName comes from CSV)
       const records = [];
-      let updatedCount = 0;
-      let newCount = 0;
-      let skippedCount = 0;
-
+      
       for (const student of extractedData) {
         for (const result of student.results) {
           const subjectCode = normalizeSubjectCode(result.subjectCode);
           const newGrade = result.grade.trim().toUpperCase();
-          const key = `${student.indexNumber}|${subjectCode}`;
           
           if (!VALID_GRADES.includes(newGrade)) continue;
 
-          const existingGrade = existingGradesMap[key];
-          const newGradeWeight = getGradeWeight(newGrade);
-          const existingGradeWeight = existingGrade ? getGradeWeight(existingGrade) : 0;
-          
-          if (existingGrade && existingGradeWeight >= newGradeWeight) {
-            skippedCount++;
-            continue;
-          }
-          
           records.push({
             indexNo: student.indexNumber,
             studentName: student.studentName,
@@ -262,28 +240,17 @@ export default function ExamResultsUpload() {
             batch,
             semester
           });
-          
-          if (existingGrade) {
-            updatedCount++;
-          } else {
-            newCount++;
-          }
         }
       }
 
       if (records.length === 0) {
-        showToast(`No new or improved grades to upload. ${skippedCount} records had equal or lower grades.`, 'info');
+        showToast('No valid records to upload', 'info');
         return;
       }
 
       await uploadExamResults(records, department, batch, semester);
       
-      let message = `Successfully uploaded ${records.length} grade records`;
-      if (updatedCount > 0) message += ` (${updatedCount} improved)`;
-      if (newCount > 0) message += ` (${newCount} new)`;
-      if (skippedCount > 0) message += ` (${skippedCount} skipped - existing grades were same or higher)`;
-      
-      showToast(message + ` for ${batch} ${semester} (${department})`, 'success');
+      showToast(`Successfully uploaded ${records.length} grade records for ${batch} ${semester} (${department})`, 'success');
 
       setFile(null);
       setFilePreview(null);
