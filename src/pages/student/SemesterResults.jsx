@@ -7,7 +7,6 @@ import { useNavigate } from 'react-router-dom'
 
 const BATCHES = ['20/21', '21/22', '22/23', '23/24', '24/25', '25/26'];
 
-// Semester code to display label mapping
 const SEMESTER_LABELS = {
   '11': 'Year I Semester I',
   '12': 'Year I Semester II',
@@ -39,7 +38,6 @@ export default function SemesterResults() {
 
   const userDept = (userData?.department || '').toLowerCase();
 
-  // Fetch available semesters when indexNo and batch change
   const fetchSemesters = useCallback(async () => {
     const normalizedIndex = indexNo.trim().toUpperCase();
     
@@ -59,18 +57,23 @@ export default function SemesterResults() {
     try {
       const semesters = await getExamSemestersOptimized(normalizedIndex, userDept, batch);
       setAvailableSemesters(semesters);
-      if (semesters.length > 0 && !semester) {
-        setSemester(semesters[0]); // Auto-select first semester
-      } else if (semester && !semesters.includes(semester)) {
-        setSemester(''); // Clear if selected semester no longer available
-      }
+      
+      // Menggunakan state sadurunge (prev) supaya ora perlu masang 'semester' ing dependensi array
+      setSemester(prev => {
+        if (semesters.length > 0 && !prev) {
+          return semesters[0].id; 
+        } else if (prev && !semesters.some(s => s.id === prev)) {
+          return ''; 
+        }
+        return prev;
+      });
     } catch (err) {
       console.error('Failed to fetch semesters:', err);
       setAvailableSemesters([]);
     } finally {
       setLoadingSemesters(false);
     }
-  }, [indexNo, batch, semester, userDept]);
+  }, [indexNo, batch, userDept]); // 'semester' dibusak saka kene kanggo mungkasi infinite loop
 
   useEffect(() => {
     fetchSemesters();
@@ -100,7 +103,6 @@ export default function SemesterResults() {
     
     setLoading(true);
     try {
-      // Query single document for this exact batch/department/year/semester
       const rawResults = await getExamResultsOptimized(normalizedIndex, userDept, batch, semester);
       
       if (rawResults.length === 0) {
@@ -110,13 +112,11 @@ export default function SemesterResults() {
         return;
       }
       
-      // Extract student name from first result
       const firstResult = rawResults[0];
       if (firstResult.studentName) {
         setStudentName(firstResult.studentName);
       }
       
-      // Results already have subjectName from subjectMap in the document
       const finalResults = rawResults
         .map(r => ({
           ...r,
@@ -165,7 +165,7 @@ export default function SemesterResults() {
                   maxLength={12}
                 />
               </div>
-              <p className="mt-1 text-xs text-gray-400">Format: XX/${userDept === 'bms' ? 'MS' : 'CS'}/XXXX</p>
+              <p className="mt-1 text-xs text-gray-400">Format: XX/{userDept === 'bms' ? 'MS' : 'CS'}/XXXX</p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Batch</label>
@@ -190,7 +190,7 @@ export default function SemesterResults() {
               >
                 <option value="">Select Semester</option>
                 {loadingSemesters && <option value="" disabled>Loading...</option>}
-                {availableSemesters.map(s => <option key={s} value={s}>{getSemesterLabel(s)}</option>)}
+                {availableSemesters.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
                 {availableSemesters.length === 0 && !loadingSemesters && batch && indexNo && (
                   <option value="" disabled>No semesters found</option>
                 )}
@@ -255,10 +255,10 @@ export default function SemesterResults() {
                 <tbody className="divide-y divide-gray-100">
                   {results.map((r, i) => {
                     const gradeClass = r.grade.startsWith('A') ? 'bg-green-100 text-green-800' : 
-                                      r.grade.startsWith('B') ? 'bg-blue-100 text-blue-800' :
-                                      r.grade.startsWith('C') ? 'bg-yellow-100 text-yellow-800' :
-                                      r.grade.startsWith('D') ? 'bg-orange-100 text-orange-800' :
-                                      r.grade === 'AB' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800';
+                                       r.grade.startsWith('B') ? 'bg-blue-100 text-blue-800' :
+                                       r.grade.startsWith('C') ? 'bg-yellow-100 text-yellow-800' :
+                                       r.grade.startsWith('D') ? 'bg-orange-100 text-orange-800' :
+                                       r.grade === 'AB' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800';
                     return (
                       <tr key={`${r.subjectCode}-${i}`} className="hover:bg-gray-50">
                         <td className="px-3 py-3 text-gray-500">{i + 1}</td>
