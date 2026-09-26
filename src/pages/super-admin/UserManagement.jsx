@@ -175,6 +175,33 @@ export default function UserManagement() {
         <span className="text-sm text-gray-500">{filtered.length} users</span>
       </div>
 
+      {/* Pagination Controls at Top (above table, below search/filter) */}
+      {totalPages > 1 && (
+        <div className="mb-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="text-sm text-gray-500 text-center sm:text-left w-full sm:w-auto">
+            Page <span className="text-gray-900">{page}</span> of <span className="text-gray-900">{totalPages}</span>
+          </div>
+          <div className="flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-end">
+            <button 
+              onClick={() => setPage(Math.max(1, page - 1))} 
+              disabled={page <= 1}
+              className="pagination-btn px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition min-w-[90px] touch-target"
+              aria-label="Previous page"
+            >
+              Previous
+            </button>
+            <button 
+              onClick={() => setPage(Math.min(totalPages, page + 1))} 
+              disabled={page >= totalPages}
+              className="pagination-btn px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition min-w-[90px] touch-target"
+              aria-label="Next page"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
+
       {loading ? (
         <div className="text-center py-16 text-gray-400">Loading users...</div>
       ) : paged.length === 0 ? (
@@ -258,30 +285,6 @@ export default function UserManagement() {
                 })}
               </tbody>
             </table>
-          </div>
-
-          <div className="mt-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div className="text-sm text-gray-500 text-center sm:text-left w-full sm:w-auto">
-              Page <span className="text-gray-900">{page}</span> of <span className="text-gray-900">{totalPages}</span>
-            </div>
-            <div className="flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-end">
-              <button 
-                onClick={() => setPage(Math.max(1, page - 1))} 
-                disabled={page <= 1}
-                className="pagination-btn px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition min-w-[90px] touch-target"
-                aria-label="Previous page"
-              >
-                Previous
-              </button>
-              <button 
-                onClick={() => setPage(Math.min(totalPages, page + 1))} 
-                disabled={page >= totalPages}
-                className="pagination-btn px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg transition min-w-[90px] touch-target"
-                aria-label="Next page"
-              >
-                Next
-              </button>
-            </div>
           </div>
         </>
       )}
