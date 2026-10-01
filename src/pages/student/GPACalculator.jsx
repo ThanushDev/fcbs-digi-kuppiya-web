@@ -31,7 +31,7 @@ const BMS_COURSES = {
     { code: 'BMT 2023', name: 'Management Information System', credits: 3 },
     { code: 'BMT 2033', name: 'Business Skills I', credits: 3 },
     { code: 'BMT 2043', name: 'Business Law', credits: 3 },
-    { code: 'NCC 2010', name: 'Career Guidance', credits: 3, isNonCredit: true },
+    { code: 'NCC 2010', name: 'Career Guidance', credits: 0, isNonCredit: true },
   ],
   '22': [
     { code: 'BMT 2053', name: 'Operations Management', credits: 3 }, 
@@ -228,6 +228,8 @@ const SEMESTERS = [
   { id: '42', label: 'Year IV - Semester II', year: 4, sem: 2 },
 ]
 
+const SPECIALIZATION_SELECTION_SEMESTERS = ['11', '12', '21', '22']
+
 function getCourses(semesterId, specialization) {
   if (BMS_COURSES[semesterId]) return BMS_COURSES[semesterId]
   if (specialization && SPECIALIZATION_COURSES[specialization]?.[semesterId]) {
@@ -294,6 +296,64 @@ function calcGPAFromAll(semesterGrades, semesterCourses) {
   return totalCredits > 0 ? (totalPoints / totalCredits) : 0
 }
 
+// Calculate GPA for specialization selection (first 4 semesters only)
+function calcSpecializationGPA(semesterGrades, semesterCourses) {
+  let totalPoints = 0, totalCredits = 0
+  for (const semId of SPECIALIZATION_SELECTION_SEMESTERS) {
+    const courses = semesterCourses[semId] || []
+    const grades = semesterGrades[semId] || {}
+    for (const course of courses) {
+      if (course.isNonCredit) continue
+      const grade = grades[course.code]
+      if (grade && GRADE_POINTS[grade] !== undefined) {
+        totalPoints += GRADE_POINTS[grade] * course.credits
+        totalCredits += course.credits
+      }
+    }
+  }
+  return totalCredits > 0 ? (totalPoints / totalCredits) : 0
+}
+
+// Calculate per-semester GPA for specialization selection
+function calcSemesterGPA(semId, semesterGrades, semesterCourses) {
+  const courses = semesterCourses[semId] || []
+  const grades = semesterGrades[semId] || {}
+  let totalPoints = 0, totalCredits = 0
+  for (const course of courses) {
+    if (course.isNonCredit) continue
+    const grade = grades[course.code]
+    if (grade && GRADE_POINTS[grade] !== undefined) {
+      totalPoints += GRADE_POINTS[grade] * course.credits
+      totalCredits += course.credits
+    }
+  }
+  return totalCredits > 0 ? (totalPoints / totalCredits) : 0
+}
+
+// Validation: Check if all required (credit) subjects across all 4 semesters have grades
+function isSpecializationComplete(semesterGrades, semesterCourses) {
+  for (const semId of SPECIALIZATION_SELECTION_SEMESTERS) {
+    const courses = semesterCourses[semId] || []
+    const grades = semesterGrades[semId] || {}
+    for (const course of courses) {
+      if (course.isNonCredit) continue
+      const grade = grades[course.code]
+      if (!grade || GRADE_POINTS[grade] === undefined) {
+        return false
+      }
+    }
+  }
+  return true
+}
+
+// Progress of a semester: how many credit subjects have a grade out of total credit subjects
+function getSemesterProgress(semId, semesterGrades, semesterCourses) {
+  const courses = (semesterCourses[semId] || []).filter((c) => !c.isNonCredit)
+  const grades = semesterGrades[semId] || {}
+  const graded = courses.filter((c) => grades[c.code] && GRADE_POINTS[grades[c.code]] !== undefined).length
+  return { graded, total: courses.length, complete: courses.length > 0 && graded === courses.length }
+}
+
 const GRADE_OPTIONS = Object.keys(GRADE_POINTS)
 
 export default function GPACalculator() {
@@ -305,6 +365,8 @@ export default function GPACalculator() {
   const [pendingSem, setPendingSem] = useState(null)
   const [loading, setLoading] = useState(true)
   const [grades, setGrades] = useState({})
+  const [currentView, setCurrentView] = useState('main')
+  const [selectedSpecSem, setSelectedSpecSem] = useState(null)
   
   const [batchPermissions, setBatchPermissions] = useState([])
   const [userBatch, setUserBatch] = useState('23/24') 
@@ -516,7 +578,242 @@ export default function GPACalculator() {
         </div>
       )}
 
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-4 mb-6">
+      {/* For Specialization Selection Toggle Button */}
+      {Object.keys(grades).length > 0 && currentView === 'main' && (
+        <button 
+          onClick={() => setCurrentView('specialization')}
+          className="w-full md:w-auto mb-6 px-4 py-2.5 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition flex items-center gap-2 justify-center md:justify-start"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          For Specialization Selection
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      )}
+
+      {/* Specialization Selection View */}
+      {currentView === 'specialization' && Object.keys(grades).length > 0 && (
+        <div className="card p-4 mb-6 border-indigo-200 bg-indigo-50 animate-fade-in">
+          {/* Back to Main Calculator Button */}
+          <button 
+            onClick={() => setCurrentView('main')}
+            className="mb-4 flex items-center gap-2 text-sm font-bold text-indigo-700 hover:text-indigo-900 transition bg-indigo-100/50 hover:bg-indigo-200 px-3 py-1.5 rounded-lg w-fit"
+          >
+            ← Back to Main Calculator
+          </button>
+          <div className="mb-4">
+            <h3 className="text-sm font-bold text-indigo-800 flex items-center gap-2">
+              <span className="bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded text-[10px] font-medium">FOR SPECIALIZATION SELECTION</span>
+            </h3>
+            <p className="text-xs text-indigo-600 mt-1">GPA calculation for Year I & Year II (Semesters 1-4) — used for specialization eligibility</p>
+          </div>
+
+          {/* Semester Selector Tabs */}
+          <div className="flex flex-wrap gap-2 mb-4 border-b border-indigo-200 pb-2">
+            {SPECIALIZATION_SELECTION_SEMESTERS.map((semId) => {
+              const sem = SEMESTERS.find((s) => s.id === semId)
+              const semData = grades[semId]
+              const courses = semesterCourses[semId]
+              if (!courses) return null
+              const hasGrades = semData ? Object.values(semData).some((g) => g) : false
+              const gpa = hasGrades ? calcSemesterGPA(semId, grades, semesterCourses) : null
+              const isSelected = selectedSpecSem === semId
+              return (
+                <button
+                  key={semId}
+                  onClick={() => setSelectedSpecSem(isSelected ? null : semId)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-1.5 ${
+                    isSelected
+                      ? 'bg-indigo-600 text-white shadow-sm'
+                      : 'bg-white text-indigo-700 border border-indigo-200 hover:bg-indigo-50'
+                  }`}>
+                  <span>{sem?.label || `Y${semId[0]}S${semId[1]}`}</span>
+                  {gpa !== null && (
+                    <span className={`font-bold ${
+                      isSelected
+                        ? (gpa >= 3.0 ? 'text-emerald-300' : gpa >= 2.0 ? 'text-amber-300' : 'text-red-300')
+                        : (gpa >= 3.0 ? 'text-emerald-600' : gpa >= 2.0 ? 'text-amber-600' : 'text-red-600')
+                    }`}>
+                      {gpa.toFixed(2)}
+                    </span>
+                  )}
+                  {!hasGrades && <span className={`text-[10px] ${isSelected ? 'text-indigo-200' : 'text-gray-400'}`}>No grades</span>}
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Specialization OGPA - Only show if ALL 4 semesters have all required grades */}
+          {/* Per-semester GPA cards (each semester calculated separately) */}
+          {(selectedSpecSem === null || selectedSpecSem === undefined) && (
+            <div className="grid gap-2 grid-cols-2 md:grid-cols-4 mb-4">
+              {SPECIALIZATION_SELECTION_SEMESTERS.map((semId) => {
+                const sem = SEMESTERS.find((s) => s.id === semId)
+                if (!semesterCourses[semId]) return null
+                const progress = getSemesterProgress(semId, grades, semesterCourses)
+                const semData = grades[semId]
+                const hasGrades = semData ? Object.values(semData).some((g) => g) : false
+                const gpa = hasGrades ? calcSemesterGPA(semId, grades, semesterCourses) : null
+                return (
+                  <button
+                    key={semId}
+                    onClick={() => setSelectedSpecSem(semId)}
+                    className="text-left bg-white rounded-lg p-3 border border-indigo-200 hover:border-indigo-400 hover:shadow-sm transition"
+                  >
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-indigo-500">
+                      {sem ? `Y${sem.year}S${sem.sem}` : semId}
+                    </p>
+                    <p className={`text-xl font-bold mt-1 ${
+                      gpa === null ? 'text-gray-300' : gpa >= 3.0 ? 'text-emerald-600' : gpa >= 2.0 ? 'text-amber-600' : 'text-red-600'
+                    }`}>
+                      {gpa === null ? '--' : gpa.toFixed(2)}
+                    </p>
+                    <p className={`text-[10px] mt-0.5 ${progress.complete ? 'text-emerald-600' : 'text-gray-400'}`}>
+                      {progress.complete ? 'Complete' : `${progress.graded}/${progress.total} graded`}
+                    </p>
+                  </button>
+                )
+              })}
+            </div>
+          )}
+
+          {/* Specialization OGPA - Only show if ALL 4 semesters have all required grades */}
+          {(selectedSpecSem === null || selectedSpecSem === undefined) && (
+            <div className="bg-white rounded-lg p-4 border border-indigo-200 mb-4">
+              {isSpecializationComplete(grades, semesterCourses) ? (
+                <>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-bold text-indigo-800">Specialization OGPA (Year I & II Only)</span>
+                    <span className={`text-2xl font-bold ${(() => { const g = calcSpecializationGPA(grades, semesterCourses); return g >= 3.0 ? 'text-emerald-600' : g >= 2.0 ? 'text-amber-600' : 'text-red-600' })()}`}>
+                      {calcSpecializationGPA(grades, semesterCourses).toFixed(2)}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-indigo-500">All 4 semesters complete. Excludes non-credit subjects. Based on 4 semesters (60 credits max).</p>
+                </>
+              ) : (
+                <div className="flex items-center gap-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                  <svg className="w-5 h-5 text-amber-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  <div>
+                    <p className="text-sm font-medium text-amber-800">Incomplete Grades</p>
+                    <p className="text-xs text-amber-700 mt-0.5">Please enter grades for all subjects across all 4 semesters to view your Specialization OGPA.
+                      {' '}Pending: {SPECIALIZATION_SELECTION_SEMESTERS
+                        .filter((semId) => !getSemesterProgress(semId, grades, semesterCourses).complete)
+                        .map((semId) => { const sm = SEMESTERS.find((x) => x.id === semId); return sm ? `Y${sm.year}S${sm.sem}` : semId })
+                        .join(', ')}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Individual Semester View */}
+          {selectedSpecSem && (
+            <div className="bg-white rounded-lg p-4 border border-indigo-200 mb-4">
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-sm font-bold text-indigo-800">
+                  {SEMESTERS.find((s) => s.id === selectedSpecSem)?.label || selectedSpecSem}
+                </h4>
+                <button
+                  onClick={() => setSelectedSpecSem(null)}
+                  className="text-xs text-indigo-600 hover:text-indigo-700 font-medium"
+                >
+                  Back to all semesters
+                </button>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="sticky top-0 bg-white z-10">
+                    <tr className="border-b border-indigo-200">
+                      <th className="py-2 pr-3 text-left text-[10px] font-bold uppercase tracking-wider text-indigo-500 w-16">Sem</th>
+                      <th className="py-2 pr-3 text-left text-[10px] font-bold uppercase tracking-wider text-indigo-500">Code</th>
+                      <th className="py-2 pr-3 text-left text-[10px] font-bold uppercase tracking-wider text-indigo-500">Course</th>
+                      <th className="py-2 pr-3 text-center text-[10px] font-bold uppercase tracking-wider text-indigo-500 w-16">Credits</th>
+                      <th className="py-2 text-center text-[10px] font-bold uppercase tracking-wider text-indigo-500 w-28">Grade</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-indigo-100">
+                    {(() => {
+                      const courses = semesterCourses[selectedSpecSem] || []
+                      const semInfo = SEMESTERS.find((s) => s.id === selectedSpecSem)
+                      return courses.map((course, index) => ({
+                        course,
+                        semId: selectedSpecSem,
+                        semInfo
+                      }))
+                    })().map(({ course, semId, semInfo }, index) => {
+                      const selectedGrade = grades[semId]?.[course.code] || ''
+                      const semGPA = calcSemesterGPA(semId, grades, semesterCourses)
+                      return (
+                        <tr key={`${semId}-${course.code}-${index}`} className={`hover:bg-indigo-50 transition ${course.isNonCredit ? 'bg-gray-50/50' : ''}`}>
+                          <td className="py-2 pr-3">
+                            <span className="text-[10px] font-mono font-semibold text-indigo-400 bg-indigo-50 px-1.5 py-0.5 rounded">
+                              {semInfo ? `Y${semInfo.year}S${semInfo.sem}` : semId}
+                            </span>
+                          </td>
+                          <td className="py-2 pr-3 text-gray-500 font-mono text-xs">{course.code}</td>
+                          <td className="py-2 pr-3">
+                            <span className="font-medium text-gray-900">{course.name}</span>
+                            {course.isNonCredit && (
+                              <span className="ml-2 text-[10px] bg-amber-50 text-amber-600 px-1.5 py-0.5 rounded font-medium">Non-credit</span>
+                            )}
+                          </td>
+                          <td className="py-2 pr-3 text-center">
+                            <span className={`text-xs ${course.isNonCredit ? 'text-gray-400 line-through' : 'text-gray-600'}`}>
+                              {course.credits}
+                            </span>
+                          </td>
+                          <td className="py-2 text-center">
+                            <select value={selectedGrade}
+                              onChange={(e) => handleGradeChange(semId, course.code, e.target.value)}
+                              className={`select-field text-xs w-full ${
+                                selectedGrade
+                                  ? 'border-indigo-300 bg-indigo-50 text-indigo-700 font-semibold'
+                                  : 'border-indigo-200'
+                              }`}>
+                              <option value="">—</option>
+                              {GRADE_OPTIONS.map((g) => (
+                                <option key={g} value={g}>{g}</option>
+                              ))}
+                            </select>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              {(() => {
+                const semId = selectedSpecSem
+                const semData = grades[semId]
+                const courses = semesterCourses[semId]
+                if (!semData || !courses) return null
+                const hasGrades = Object.values(semData).some((g) => g)
+                if (!hasGrades) return null
+                const gpa = calcSemesterGPA(semId, grades, semesterCourses)
+                return (
+                  <div className="mt-3 p-3 bg-indigo-50 rounded-lg border border-indigo-100 flex items-center justify-between">
+                    <span className="text-sm font-medium text-indigo-700">Semester GPA</span>
+                    <span className={`text-xl font-bold ${gpa >= 3.0 ? 'text-emerald-600' : gpa >= 2.0 ? 'text-amber-600' : 'text-red-600'}`}>
+                      {gpa.toFixed(2)}
+                    </span>
+                  </div>
+                )
+              })()}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Main View - Only visible when currentView is 'main' */}
+      {currentView === 'main' && (
+        <>
+          <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-4 mb-6">
         {SEMESTERS.map((sem) => {
           const isUpper = sem.year >= 3
           const currentBatchPerm = batchPermissions.find((p) => p.batchName === userBatch)
@@ -691,6 +988,10 @@ export default function GPACalculator() {
           </div>
         </div>
       )}
+
+      {/* Main View wrapper closing tag */}
+    </>
+      )}   {/* currentView === 'main' condition closing tag */}
 
       <div className="mt-8 text-center">
         <p className="text-[11px] text-gray-400">
