@@ -42,6 +42,7 @@ import QuizEditor from './pages/admin/QuizEditor'
 import SuperAdminDashboard from './pages/super-admin/SuperAdminDashboard'
 import AdminManagement from './pages/super-admin/AdminManagement'
 import UserManagement from './pages/super-admin/UserManagement'
+import PrivacyPolicy from './pages/student/PrivacyPolicy'
 
 function NavigationGuard({ children }) {
   const { user, needsProfileSetup, needsFaceVerification } = useAuth()
@@ -100,6 +101,7 @@ export default function App() {
                 <Route path="/dashboard/finance" element={<FinanceTracker />} />
                 <Route path="/dashboard/documents" element={<StudentImportantDocuments />} />
                 <Route path="/dashboard/semester-results" element={<SemesterResults />} />
+                <Route path="/privacy" element={<PrivacyPolicy />} />
               </Route>
             </Route>
 

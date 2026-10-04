@@ -3,7 +3,8 @@ import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import {
   LayoutDashboard, ClipboardList, BarChart3, Target, BookOpen, DollarSign,
-  QrCode, Bot, FileText, FileDown, Download, X, Menu, GraduationCap, ChevronRight
+  QrCode, Bot, FileText, FileDown, Download, X, Menu, GraduationCap, ChevronRight,
+  ShieldCheck
 } from 'lucide-react'
 
 export default function Sidebar() {
@@ -99,6 +100,15 @@ export default function Sidebar() {
                 </a>
               )
             })}
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Legal & Support</div>
+            <Link to="/privacy" onClick={() => setIsOpen(false)}
+              className="flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium text-gray-500 hover:text-gray-900 hover:bg-gray-50 transition">
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>Privacy Policy</span>
+            </Link>
           </div>
 
           <div className="mt-2">

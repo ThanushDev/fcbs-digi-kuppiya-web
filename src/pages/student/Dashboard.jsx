@@ -11,7 +11,7 @@ import {
   QrCode, Bot, FileText, FileDown, Bell, X, ExternalLink, Send, ChevronRight,
   DollarSign, Target, Users, MessageSquare, Sparkles, Lightbulb, Quote,
   Upload, Download, ZoomIn, CheckCircle, AlertCircle, Info, HelpCircle,
-  ArrowUpRight, Volume2, VolumeX, Video
+  ArrowUpRight, Volume2, VolumeX, Video, ShieldCheck
 } from 'lucide-react'
 import logo from '../../assets/logo.png'
 
@@ -799,10 +799,18 @@ export default function Dashboard() {
 
         <footer className="mt-auto pt-8 pb-4 border-t border-gray-100">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2.5">
-              <img src={logo} alt="Uniflow Logo" className="h-7 w-auto opacity-80 object-contain" />
-              <span className="text-sm font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent tracking-tight">FCBS DIGI KUPPIYA</span>
+            {/* Left: Logo + FCBS DIGI KUPPIYA text, Privacy Policy underneath */}
+            <div className="flex flex-col items-start gap-1.5">
+              <div className="flex items-center gap-2.5">
+                <img src={logo} alt="Uniflow Logo" className="h-7 w-auto opacity-80 object-contain" />
+                <span className="text-sm font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent tracking-tight">FCBS DIGI KUPPIYA</span>
+                <Link to="/privacy" className="flex items-center gap-1 text-xs text-gray-500 hover:text-indigo-600 transition-colors">
+                <ShieldCheck className="w-3.5 h-3.5" />
+                Privacy Policy
+              </Link>
+              </div>
             </div>
+            {/* Right: Copyright + Developer */}
             <div className="text-center md:text-right space-y-0.5">
               <p className="text-xs font-medium text-gray-400 tracking-wide">&copy; {new Date().getFullYear()} FCBS DIGI KUPPIYA. All rights reserved.</p>
               <p className="text-[11px] text-gray-400 font-medium">Developed by <span className="font-semibold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent hover:opacity-80 transition cursor-default">Mr.Thanush</span></p>
