@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import { Link, useNavigate } from 'react-router-dom' 
 import { useAuth } from '../../contexts/AuthContext'
 import { useAds } from '../../contexts/AdsContext'
-import { getSemesters, getBatchPermission, addComment } from '../../services/firestore' 
+import { getSemesters, getBatchPermission, addComment, getMentorsByDepartment } from '../../services/firestore' 
 import { collection, getDocs, query, orderBy } from 'firebase/firestore'
 import { db } from '../../services/firebase'
 import {
@@ -25,22 +25,6 @@ const SEMESTER_THEMES = [
   { bg: 'bg-gradient-to-br from-violet-50 to-purple-100/40', border: 'border-violet-200/80 hover:border-violet-400', text: 'text-violet-900', iconBg: 'bg-purple-500/10 text-purple-600' },
   { bg: 'bg-gradient-to-br from-cyan-50 to-blue-100/40', border: 'border-cyan-200/80 hover:border-cyan-400', text: 'text-cyan-900', iconBg: 'bg-cyan-500/10 text-cyan-600' },
   { bg: 'bg-gradient-to-br from-slate-50 to-gray-200/40', border: 'border-slate-200/80 hover:border-slate-400', text: 'text-slate-900', iconBg: 'bg-slate-500/10 text-slate-600' },
-]
-
-const MENTORS = [
-  { name: "Mr.Thanush Nethsika", nickname: "සයිබර්", batch: "22/23", role: "Author of FCBS DIGI KUPPIYA", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614075/cyber_jz6wx6.jpg", department: "both" },
-  { name: "Ms. Imalsha Sathsarani", batch: "22/23", role: "Economics", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614075/ima_h6xjz3.jpg", department: "bms" },
-  { name: "Ms. Kasuni Gaurika", batch: "22/23", role: "Mathematics", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614075/kasuni_omcklq.jpg", department: "bms" },
-  { name: "Ms. Kavindi Nawodhya", batch: "22/23", role: "Mathematics", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614076/nawodhya_ylxmlr.jpg", department: "bms" },
-  { name: "Ms. Jayathri Indrachapa", nickname: "මෙඩුසා", batch: "22/23", role: "Mathematics", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614067/chapa_drbwzz.jpg", department: "bms" },
-  { name: "Ms. Kavithma Damindi", batch: "22/23", role: "Management", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614072/kavithma_mmfkmr.jpg", department: "bms" },
-  { name: "Ms. Naduni Rathnayaka", batch: "22/23", role: "MIS", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614073/naduni_u9czqe.jpg", department: "bms" },
-  { name: "Ms. Liyoni Kaushalya", nickname: "ආල්‍යා", batch: "21/22", role: "MIS", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614069/liyoni_c4yb0l.jpg", department: "bms" },
-  { name: "Ms. Thakshila Wijesekara", nickname: "රපුන්සල්", batch: "21/22", role: "MIS", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614084/rapunsall_rbr0y0.jpg", department: "bms" },
-  { name: "Ms. Dakshila Dilshani", batch: "22/23", role: "Accounting", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614072/dakshi_vvtivc.jpg", department: "bms" },
-  { name: "Ms. Shashini Herath", nickname: "ශ්‍රිනී", batch: "21/22", role: "Accounting", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614078/shashini_rhwepa.jpg", department: "bms" },
-  { name: "Ms. Lihini Himasha", nickname: "ලාරා", batch: "21/22", role: "Accounting", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614071/lihini_s8ymh1.jpg", department: "bms" },
-  { name: "Ms. Diwangani Kavindya", nickname: "විනී", batch: "21/22", role: "Accounting", image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614068/diwangani_cyokye.jpg", department: "bms" },
 ]
 
 const normalizeSemName = (name) => {
@@ -89,6 +73,8 @@ export default function Dashboard() {
   const { currentAd, showAdPopup, tryShowAd, dismissAd, handleAdClick, loading: adsLoading } = useAds()
   const navigate = useNavigate()
   const [semesters, setSemesters] = useState([])
+  const [mentors, setMentors] = useState([])
+  const [mentorsLoading, setMentorsLoading] = useState(true)
   const [loading, setLoading] = useState(true)
   const [activeMentorIdx, setActiveMentorIdx] = useState(0)
   const [selectedMentor, setSelectedMentor] = useState(null)
@@ -117,7 +103,35 @@ export default function Dashboard() {
   const videoRef = useRef(null)
 
   const userDept = (userData?.department || '').toLowerCase()
-  const displayMentors = MENTORS.filter(m => m.department === 'both' || m.department === userDept)
+  
+  // Filter mentors based on department visibility:
+  // - Owner (isOwner: true) visible to ALL departments
+  // - Regular mentors visible only to their department
+  const displayMentors = mentors.filter(m => 
+    m.isOwner || m.department === 'both' || m.department === userDept
+  )
+
+  // Fetch mentors from Firestore
+  useEffect(() => {
+    const fetchMentors = async () => {
+      try {
+        setMentorsLoading(true)
+        const data = await getMentorsByDepartment(userDept)
+        if (data.length > 0) {
+          setMentors(data)
+        }
+      } catch (error) {
+        console.error('Error fetching mentors:', error)
+        // Keep fallback mentors on error
+      } finally {
+        setMentorsLoading(false)
+      }
+    }
+    
+    if (userDept) {
+      fetchMentors()
+    }
+  }, [userDept])
 
   // Load saved specialization from localStorage
   useEffect(() => {
@@ -181,11 +195,22 @@ export default function Dashboard() {
   }, [chatMessages, isChatOpen])
 
   useEffect(() => {
-    if(displayMentors.length === 0) return;
-    const interval = setInterval(() => {
-      setActiveMentorIdx((prev) => (prev + 1) % displayMentors.length)
-    }, 4000)
-    return () => clearInterval(interval)
+    if (displayMentors.length === 0) return;
+    
+    let intervalId
+    const advanceSlider = () => {
+      setActiveMentorIdx((prev) => {
+        const nextIdx = (prev + 1) % displayMentors.length
+        return nextIdx
+      })
+    }
+    
+    // Auto-transition every 7 seconds (7000ms)
+    intervalId = setInterval(advanceSlider, 7000)
+    
+    return () => {
+      clearInterval(intervalId)
+    }
   }, [displayMentors.length])
 
   useEffect(() => {
@@ -425,6 +450,83 @@ export default function Dashboard() {
 
   const activeModalOptions = specModalDept === 'bms' ? bmsModalOptions : lcsModalOptions
 
+  // Mentor slider rendering logic
+  const renderMentorSlider = () => {
+    if (mentorsLoading) {
+      // Skeleton Loader
+      return (
+        <div className="relative min-h-[260px] sm:min-h-[180px] flex items-center justify-center">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="absolute w-full flex flex-col sm:flex-row items-center gap-6 opacity-100 scale-100 translate-x-0">
+              <div className="relative h-32 w-32 sm:h-40 sm:w-40 flex-shrink-0">
+                <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded-2xl rotate-6 opacity-15"></div>
+                <div className="h-full w-full rounded-2xl border border-slate-100 bg-gray-200 animate-pulse" />
+              </div>
+              <div className="text-center sm:text-left flex-1">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2.5 justify-center sm:justify-start">
+                  <div className="h-6 w-48 bg-gray-200 animate-pulse rounded mx-auto sm:mx-0" />
+                </div>
+                <div className="h-3 w-32 bg-gray-200 animate-pulse rounded mt-1 mx-auto sm:mx-0" />
+                <div className="mt-3 flex items-center justify-center sm:justify-start gap-2">
+                  <div className="h-5 w-20 bg-gray-200 animate-pulse rounded-md" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )
+    }
+    
+    if (displayMentors.length === 0) {
+      // Empty State
+      return (
+        <div className="relative min-h-[260px] sm:min-h-[180px] flex items-center justify-center">
+          <div className="text-center py-12 px-6">
+            <Users className="w-16 h-16 mx-auto text-gray-300 mb-4" />
+            <h4 className="text-lg font-semibold text-gray-600 mb-2">No mentors available at the moment</h4>
+            <p className="text-sm text-gray-400">Check back later for updates.</p>
+          </div>
+        </div>
+      )
+    }
+    
+    // Mentor Cards
+    return (
+      <div className="relative min-h-[260px] sm:min-h-[180px] flex items-center justify-center">
+        {displayMentors.map((mentor, index) => {
+          const isActive = index === activeMentorIdx
+          return (
+            <div key={mentor.name} className={`absolute w-full flex flex-col sm:flex-row items-center gap-6 transition-all duration-700 ease-in-out transform ${isActive ? 'opacity-100 scale-100 translate-x-0 pointer-events-auto' : 'opacity-0 scale-95 translate-x-4 pointer-events-none'}`}>
+              
+              <div 
+                onClick={() => setSelectedMentor(mentor)}
+                className="relative h-32 w-32 sm:h-40 sm:w-40 flex-shrink-0 cursor-pointer hover:scale-105 transition-transform duration-300"
+              >
+                <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded-2xl rotate-6 opacity-15 animate-pulse"></div>
+                <img src={mentor.imageUrl || mentor.image || '/default-avatar.png'} alt={mentor.name} className="h-full w-full object-cover rounded-2xl border border-slate-100 shadow-sm relative z-10" />
+              </div>
+              
+              <div className="text-center sm:text-left flex-1">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2.5 justify-center sm:justify-start">
+                  <h4 className="text-xl font-bold text-slate-900">{mentor.name}</h4>
+                  {mentor.nickname && <span className="text-[10px] font-semibold px-2 py-0.5 bg-white/80 text-slate-600 rounded-full w-max mx-auto sm:mx-0 border border-slate-200/50 flex items-center gap-1">
+                    <Quote className="w-2.5 h-2.5" />{mentor.nickname}
+                  </span>}
+                </div>
+                <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wider mt-0.5">{mentor.role}</p>
+                <div className="mt-3 flex items-center justify-center sm:justify-start gap-2 text-xs font-medium text-slate-500">
+                  <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded-md border border-indigo-100/40 font-bold flex items-center gap-1">
+                    <Users className="w-3 h-3" /> Batch: {mentor.batch}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    )
+  }
+
   return (
     <>
       {/* IMMERSIVE AD POPUP OVERLAY */}
@@ -613,7 +715,7 @@ export default function Dashboard() {
               </button>
               
               <div className="w-full aspect-[4/5] relative">
-                <img src={selectedMentor.image} alt={selectedMentor.name} className="w-full h-full object-cover" />
+                <img src={selectedMentor.imageUrl || selectedMentor.image || '/default-avatar.png'} alt={selectedMentor.name} className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
                 
                 <div className="absolute bottom-0 left-0 w-full p-6 text-center z-10">
@@ -738,45 +840,16 @@ export default function Dashboard() {
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">Learn from the experienced undergraduates</p>
               </div>
-              <div className="flex space-x-1.5">
-                {displayMentors.map((_, idx) => (
-                  <button key={idx} onClick={() => setActiveMentorIdx(idx)} className={`h-1.5 rounded-full transition-all duration-300 ${activeMentorIdx === idx ? 'w-5 bg-indigo-600' : 'w-1.5 bg-slate-300 hover:bg-slate-400'}`} />
-                ))}
-              </div>
+              {!mentorsLoading && displayMentors.length > 0 && (
+                <div className="flex space-x-1.5">
+                  {displayMentors.map((_, idx) => (
+                    <button key={idx} onClick={() => setActiveMentorIdx(idx)} className={`h-1.5 rounded-full transition-all duration-300 ${activeMentorIdx === idx ? 'w-5 bg-indigo-600' : 'w-1.5 bg-slate-300 hover:bg-slate-400'}`} />
+                  ))}
+                </div>
+              )}
             </div>
 
-            <div className="relative min-h-[260px] sm:min-h-[180px] flex items-center justify-center">
-              {displayMentors.map((mentor, index) => {
-                const isActive = index === activeMentorIdx
-                return (
-                  <div key={mentor.name} className={`absolute w-full flex flex-col sm:flex-row items-center gap-6 transition-all duration-700 ease-in-out transform ${isActive ? 'opacity-100 scale-100 translate-x-0 pointer-events-auto' : 'opacity-0 scale-95 translate-x-4 pointer-events-none'}`}>
-                    
-                    <div 
-                      onClick={() => setSelectedMentor(mentor)}
-                      className="relative h-32 w-32 sm:h-40 sm:w-40 flex-shrink-0 cursor-pointer hover:scale-105 transition-transform duration-300"
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded-2xl rotate-6 opacity-15 animate-pulse"></div>
-                      <img src={mentor.image} alt={mentor.name} className="h-full w-full object-cover rounded-2xl border border-slate-100 shadow-sm relative z-10" />
-                    </div>
-                    
-                    <div className="text-center sm:text-left flex-1">
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2.5 justify-center sm:justify-start">
-                        <h4 className="text-xl font-bold text-slate-900">{mentor.name}</h4>
-                        {mentor.nickname && <span className="text-[10px] font-semibold px-2 py-0.5 bg-white/80 text-slate-600 rounded-full w-max mx-auto sm:mx-0 border border-slate-200/50 flex items-center gap-1">
-                          <Quote className="w-2.5 h-2.5" />{mentor.nickname}
-                        </span>}
-                      </div>
-                      <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wider mt-0.5">{mentor.role}</p>
-                      <div className="mt-3 flex items-center justify-center sm:justify-start gap-2 text-xs font-medium text-slate-500">
-                        <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded-md border border-indigo-100/40 font-bold flex items-center gap-1">
-                          <Users className="w-3 h-3" /> Batch: {mentor.batch}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
+            {renderMentorSlider()}
           </div>
 
           <div className="mt-12 bg-gradient-to-br from-indigo-50/40 to-purple-50/40 rounded-2xl shadow-sm border border-indigo-100/80 p-6 md:p-8 space-y-4">

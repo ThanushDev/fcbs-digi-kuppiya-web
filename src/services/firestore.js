@@ -521,3 +521,44 @@ export async function getExamSemesters(indexNo, department, batch) {
 export async function deleteExamResultsByBatchAndSemester(department, batch, semester) {
   return deleteExamResultsOptimized(department, batch, semester);
 }
+
+/* ─── Mentors ─── */
+const mentorsCol = collection(db, 'mentors')
+
+export async function getMentors() {
+  const q = query(mentorsCol, orderBy('createdAt'))
+  const snap = await getDocs(q)
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+}
+
+export async function getMentorsByDepartment(department) {
+  // Fetch all mentors and filter client-side to avoid composite index requirement
+  const allMentors = await getMentors()
+  return allMentors
+    .filter((m) => m.department === department || m.department === 'both')
+    .sort((a, b) => {
+      // Sort: owner first, then by createdAt
+      if (a.isOwner && !b.isOwner) return -1
+      if (!a.isOwner && b.isOwner) return 1
+      const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0)
+      const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0)
+      return dateA - dateB
+    })
+}
+
+export async function addMentor(data) {
+  return addDoc(mentorsCol, { ...data, createdAt: serverTimestamp(), updatedAt: serverTimestamp() })
+}
+
+export async function updateMentor(id, data) {
+  return updateDoc(doc(db, 'mentors', id), { ...data, updatedAt: serverTimestamp() })
+}
+
+export async function deleteMentor(id) {
+  return deleteDoc(doc(db, 'mentors', id))
+}
+
+export async function getMentor(id) {
+  const snap = await getDoc(doc(db, 'mentors', id))
+  return snap.exists() ? { id: snap.id, ...snap.data() } : null
+}

@@ -43,6 +43,7 @@ import SuperAdminDashboard from './pages/super-admin/SuperAdminDashboard'
 import AdminManagement from './pages/super-admin/AdminManagement'
 import UserManagement from './pages/super-admin/UserManagement'
 import PrivacyPolicy from './pages/student/PrivacyPolicy'
+import MentorManager from './pages/admin/MentorManager'
 
 function NavigationGuard({ children }) {
   const { user, needsProfileSetup, needsFaceVerification } = useAuth()
@@ -111,10 +112,11 @@ export default function App() {
                 <ProtectedRoute allowedRoles={['admin', 'super_admin']} />
               </NavigationGuard>
             }>
-              <Route element={<AdminLayout />}>
+<Route element={<AdminLayout />}>
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/admin/semesters" element={<SemesterManagement />} />
                 <Route path="/admin/subjects" element={<SubjectManagement />} />
+                <Route path="/admin/mentors" element={<MentorManager />} />
                 <Route path="/admin/documents" element={<AdminImportantDocuments />} />
                 <Route path="/admin/ads" element={<AdminAdManagement />} />
                 <Route path="/admin/chapters" element={<ChapterManagement />} />
@@ -122,7 +124,7 @@ export default function App() {
                 <Route path="/admin/short-notes" element={<ShortNoteManagement />} />
                 <Route path="/admin/videos" element={<VideoManagement />} />
                 <Route path="/admin/comments" element={<CommentManagement />} />
-<Route path="/admin/batches" element={<BatchManagement />} />
+                <Route path="/admin/batches" element={<BatchManagement />} />
                 <Route path="/admin/comments" element={<CommentManagement />} />
                 <Route path="/admin/quizzes" element={<QuizManagement />} />
                 <Route path="/admin/quizzes/:quizId/questions" element={<QuizEditor />} />

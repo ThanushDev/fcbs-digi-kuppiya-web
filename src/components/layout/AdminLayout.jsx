@@ -5,7 +5,7 @@ import { logoutUser } from '../../services/auth'
 import {
   LayoutDashboard, BookOpen, BookText, FileText, FileEdit, Video, ClipboardList,
   MessageSquare, Users, UserCog, BarChart3, Settings, LogOut, User, Menu, X,
-  ChevronRight, Shield, FileSpreadsheet
+  ChevronRight, Shield, FileSpreadsheet, UserRound
 } from 'lucide-react'
 import logo from '../../assets/logo.png'
 import AdPopupModal from '../ads/AdPopupModal'
@@ -50,6 +50,7 @@ export default function AdminLayout() {
     { to: '/admin/ads', label: 'Ad Management', show: true, icon: BarChart3 },
     { to: '/admin/comments', label: 'Comments', show: isSuperAdmin, icon: MessageSquare },
     { to: '/admin/batches', label: 'Batches', show: isSuperAdmin, icon: Users },
+    { to: '/admin/mentors', label: 'Mentors', show: true, icon: UserRound },
     { to: '/admin/super/users', label: 'User Mgmt', show: isSuperAdmin, icon: UserCog },
     { to: '/admin/exam-results', label: 'Exam Results', show: true, icon: FileSpreadsheet },
   ]

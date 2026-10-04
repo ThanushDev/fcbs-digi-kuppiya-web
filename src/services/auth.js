@@ -5,7 +5,7 @@ import { collection, query, where, getDocs, doc, setDoc } from 'firebase/firesto
 const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
 const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
 
-const uploadImageToCloudinary = async (file) => {
+export const uploadImageToCloudinary = async (file) => {
   if (!CLOUD_NAME) {
     console.warn("Cloudinary Cloud Name is missing in environment variables. Using default photo.");
     return null;

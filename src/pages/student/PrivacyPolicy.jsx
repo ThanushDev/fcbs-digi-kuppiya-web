@@ -147,7 +147,7 @@ const sections = [
       'Data Protection Impact Assessment (DPIA) conducted for biometric face verification processing.',
       'Data retention: Active account data retained while account exists. All personal data purged within 30 days of account deletion request (immediate for biometric data).',
       'Cross-border transfer: Firebase servers may reside outside Sri Lanka. Transfers rely on Google\'s adequacy commitments and SCCs per PDPA Section 31.',
-      'Data Protection Officer contact: dpo@fcbs.lk (or your institutional DPO).',
+      'Data Protection Officer contact: fcbsdigikuppiya@gmail.com (or your institutional DPO).',
       'Last updated: October 2026. Version 1.0.'
     ]
   }
