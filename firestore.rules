@@ -1,0 +1,111 @@
+rules_version = '2';
+
+// Helper functions
+function isAuth() {
+  return request.auth != null;
+}
+
+function isSuperAdmin() {
+  return isAuth() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'super_admin';
+}
+
+function isAdmin() {
+  return isAuth() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'super_admin'];
+}
+
+function isOwner(userId) {
+  return isAuth() && request.auth.uid == userId;
+}
+
+// Allow read if authenticated
+function isAuthRead() {
+  return isAuth();
+}
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /* ─── Users ─── */
+    match /users/{userId} {
+      // Anyone can create their own account (registration)
+      allow create: if isAuth() && request.auth.uid == userId;
+      // Users can read their own data; admins/super_admins can read all
+      allow read: if isOwner(userId) || isAdmin();
+      // Users can update their own non-role fields; super_admins can update anything
+      // First-time setup: allow student to claim super_admin if settings/setup doc doesn't exist
+      allow update: if (isOwner(userId) && (
+        request.resource.data.role == resource.data.role ||
+        (request.resource.data.role == 'super_admin' && resource.data.role == 'student' &&
+          !exists(/databases/$(database)/documents/settings/setup))
+      )) || isSuperAdmin();
+      // Only super admin can delete
+      allow delete: if isSuperAdmin();
+    }
+
+    /* ─── Semesters ─── */
+    match /semesters/{semesterId} {
+      allow read: if isAuthRead();
+      allow create, update, delete: if isAdmin();
+    }
+
+    /* ─── Subjects ─── */
+    match /subjects/{subjectId} {
+      allow read: if isAuthRead();
+      allow create, update, delete: if isAdmin();
+    }
+
+    /* ─── Chapters ─── */
+    match /chapters/{chapterId} {
+      allow read: if isAuthRead();
+      allow create, update, delete: if isAdmin();
+    }
+
+    /* ─── Resources ─── */
+    match /resources/{resourceId} {
+      allow read: if isAuthRead();
+      allow create, update, delete: if isAdmin();
+    }
+
+    /* ─── Quizzes ─── */
+    match /quizzes/{quizId} {
+      allow read: if isAuthRead();
+      allow create, update, delete: if isAdmin();
+    }
+
+    /* ─── Questions ─── */
+    match /questions/{questionId} {
+      allow read: if isAuthRead();
+      allow create, update, delete: if isAdmin();
+    }
+
+    /* ─── Attempts ─── */
+    match /attempts/{attemptId} {
+      // Students can read their own attempts; admins can read all
+      allow read: if isAuth() && (resource.data.userId == request.auth.uid || isAdmin());
+      // Only create if authenticated and userId matches
+      allow create: if isAuth() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAdmin();
+    }
+
+    /* ─── Settings ─── */
+    match /settings/{settingId} {
+      allow read: if isAuthRead();
+      allow create: if isAuthRead();
+      allow update, delete: if isAdmin();
+    }
+
+    /* ─── Batch Permissions ─── */
+    match /batchPermissions/{batchId} {
+      allow read: if isAuthRead();
+      allow write: if isAdmin();
+    }
+
+    /* ─── Comments ─── */
+    match /comments/{commentId} {
+      allow read: if isAuthRead();
+      allow create: if isAuth() && request.resource.data.userId == request.auth.uid;
+      allow delete: if isAuth() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow update: if isAdmin();
+    }
+  }
+}

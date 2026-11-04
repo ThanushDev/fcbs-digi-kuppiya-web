@@ -1,0 +1,37 @@
+{
+  "name": "fcbs-digi-kuppiya",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "oxlint",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "@vladmandic/face-api": "^1.7.15",
+    "cloudinary": "^2.10.0",
+    "firebase": "^12.15.0",
+    "firebase-admin": "^14.1.0",
+    "framer-motion": "^12.42.2",
+    "lucide-react": "^1.25.0",
+    "papaparse": "^5.7.0",
+    "pdfjs-dist": "^6.3.289",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "react-router-dom": "^7.18.1",
+    "tesseract.js": "^7.0.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.2",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.3",
+    "dotenv": "^18.0.5",
+    "oxlint": "^1.71.0",
+    "tailwindcss": "^4.3.2",
+    "vite": "^8.1.1"
+  }
+}

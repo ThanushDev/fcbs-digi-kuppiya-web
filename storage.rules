@@ -1,0 +1,31 @@
+rules_version = '2';
+
+// Helper: check auth and role
+function isAuth() {
+  return request.auth != null;
+}
+
+function isAdmin() {
+  return isAuth() && firestore.exists(/databases/$(database)/documents/users/$(request.auth.uid))
+    && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'super_admin'];
+}
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Profile photos: user can only access own, admin can access all
+    match /profiles/{userId}/{allPaths=**} {
+      allow read: if isAuth();
+      allow write: if isAuth() && request.auth.uid == userId;
+      allow delete: if isAuth() && (request.auth.uid == userId || isAdmin());
+    }
+
+    // Resources/documents: admins upload, everyone reads
+    match /resources/{chapterId}/{allPaths=**} {
+      allow read: if isAuth();
+      allow write: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+  }
+}
