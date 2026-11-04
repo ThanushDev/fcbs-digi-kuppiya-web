@@ -48,7 +48,7 @@ const SPECIALIZATION_COURSES = {
   'G': {
     '31': [
       { code: 'BMT 3013', name: 'Organizational Behavior', credits: 3 },
-      { code: 'BMT 3023', name: 'Operrational Reserch', credits: 3 },
+      { code: 'BMT 3023', name: 'Operrational Research', credits: 3 },
       { code: 'BMT 3033', name: 'Total Quality Management', credits: 3 },
       { code: 'BMT 3043', name: 'Organizational Development', credits: 3 },
       { code: 'BMT 3053', name: 'Micro Finance', credits: 3 },
@@ -56,7 +56,7 @@ const SPECIALIZATION_COURSES = {
     '32': [
       { code: 'BMT 3063', name: 'Project Management', credits: 3 },
       { code: 'BMT 3073', name: 'Managerial Economics', credits: 3 },
-      { code: 'BMT 3083', name: 'Reserch Methods', credits: 3 },
+      { code: 'BMT 3083', name: 'Research Methods', credits: 3 },
       { code: 'BMT 3093', name: 'Strategic Management', credits: 3 },
       { code: 'BMT 3113', name: 'Disaster Management', credits: 3 },
     ],
@@ -64,7 +64,7 @@ const SPECIALIZATION_COURSES = {
   'M': {
     '31': [
       { code: 'BMT 3013', name: 'Organizational Behavior', credits: 3 },
-      { code: 'BMT 3023', name: 'Operrational Reserch', credits: 3 },
+      { code: 'BMT 3023', name: 'Operrational Research', credits: 3 },
       { code: 'BMT 3033', name: 'Total Quality Management', credits: 3 },
       { code: 'BMT 3043', name: 'Organizational Development', credits: 3 },
       { code: 'BMT 3053', name: 'Micro Finance', credits: 3 },
@@ -72,7 +72,7 @@ const SPECIALIZATION_COURSES = {
     '32': [
       { code: 'BMT 3063', name: 'Project Management', credits: 3 },
       { code: 'BMT 3073', name: 'Managerial Economics', credits: 3 },
-      { code: 'BMT 3083', name: 'Reserch Methods', credits: 3 },
+      { code: 'BMT 3083', name: 'Research Methods', credits: 3 },
       { code: 'BMT 3093', name: 'Strategic Management', credits: 3 },
       { code: 'BMT 3113', name: 'Disaster Management', credits: 3 },
       { code: 'BMT 3123', name: 'Labor Law and Relations', credits: 3 },
@@ -86,14 +86,14 @@ const SPECIALIZATION_COURSES = {
       { code: 'BMT 3133', name: 'Contempory Issues in Management', credits: 3 },
     ],
     '42': [
-      { code: 'BMT 4076', name: 'Reserch', credits: 6 },
+      { code: 'BMT 4076', name: 'Research', credits: 6 },
       { code: 'BMT 4083', name: 'Internship', credits: 3 },
     ],
   },
   'HR': {
     '31': [
       { code: 'HRM 3013', name: 'Organizational Behavior', credits: 3 },
-      { code: 'HRM 3023', name: 'Operrational Reserch', credits: 3 },
+      { code: 'HRM 3023', name: 'Operrational Research', credits: 3 },
       { code: 'HRM 3033', name: 'Organizational Development', credits: 3 },
       { code: 'HRM 3043', name: 'Performance Appraisal', credits: 3 },
       { code: 'HRM 3053', name: 'Human Resource Planning', credits: 3 },
@@ -101,7 +101,7 @@ const SPECIALIZATION_COURSES = {
     '32': [
       { code: 'HRM 3063', name: 'Project Management', credits: 3 },
       { code: 'HRM 3073', name: 'Managerial Economics', credits: 3 },
-      { code: 'HRM 3083', name: 'Reserch Methods', credits: 3 },
+      { code: 'HRM 3083', name: 'Research Methods', credits: 3 },
       { code: 'HRM 3093', name: 'Strategic Management', credits: 3 },
       { code: 'HRM 3123', name: 'Labor Law and Relations', credits: 3 },
       { code: 'HRM 3113', name: 'Human Resource Development', credits: 3 },
@@ -115,14 +115,14 @@ const SPECIALIZATION_COURSES = {
       { code: 'HRM 4063', name: 'Human Resource Accounting', credits: 3 },
     ],
     '42': [
-      { code: 'HRM 4076', name: 'Reserch', credits: 6 },
+      { code: 'HRM 4076', name: 'Research', credits: 6 },
       { code: 'HRM 4083', name: 'Internship', credits: 3 },
     ],
   },
   'ACC': {
     '31': [
       { code: 'BMT 3013', name: 'Organizational Behavior', credits: 3 },
-      { code: 'BMT 3023', name: 'Operrational Reserch', credits: 3 },
+      { code: 'BMT 3023', name: 'Operrational Research', credits: 3 },
       { code: 'AFM 3033', name: 'Micro Finance', credits: 3 },
       { code: 'AFM 3043', name: 'Investment and Portfolio Management', credits: 3 },
       { code: 'AFM 3053', name: 'Advanced Financial Accounting', credits: 3 },
@@ -130,7 +130,7 @@ const SPECIALIZATION_COURSES = {
     '32': [
       { code: 'BMT 3063', name: 'Project Management', credits: 3 },
       { code: 'BMT 3073', name: 'Managerial Economics', credits: 3 },
-      { code: 'BMT 3083', name: 'Reserch Methods', credits: 3 },
+      { code: 'BMT 3083', name: 'Research Methods', credits: 3 },
       { code: 'BMT 3093', name: 'Strategic Management', credits: 3 },
       { code: 'AFM 3103', name: 'Auditing', credits: 3 },
       { code: 'AFM 3113', name: 'Computer Based Accounting', credits: 3 },
@@ -144,14 +144,14 @@ const SPECIALIZATION_COURSES = {
       { code: 'AFM 4063', name: 'Financial Reporting', credits: 3 },
     ],
     '42': [
-      { code: 'AFM 4076', name: 'Reserch', credits: 6 },
+      { code: 'AFM 4076', name: 'Research', credits: 6 },
       { code: 'AFM 4083', name: 'Internship', credits: 3 },
     ],
   },
   'Mkt': {
     '31': [
       { code: 'MMT 3013', name: 'Organizational Behavior', credits: 3 },
-      { code: 'MMT 3023', name: 'Operrational Reserch', credits: 3 },
+      { code: 'MMT 3023', name: 'Operrational Research', credits: 3 },
       { code: 'MMT 3033', name: 'Service Marketing', credits: 3 },
       { code: 'MMT 3043', name: 'Sales Management and Retail Marketing', credits: 3 },
       { code: 'MMT 3053', name: 'Marketing Research', credits: 3 },
@@ -159,7 +159,7 @@ const SPECIALIZATION_COURSES = {
     '32': [
       { code: 'MMT 3063', name: 'Project Management', credits: 3 },
       { code: 'MMT 3073', name: 'Managerial Economics', credits: 3 },
-      { code: 'MMT 3083', name: 'Reserch Methods', credits: 3 },
+      { code: 'MMT 3083', name: 'Research Methods', credits: 3 },
       { code: 'MMT 3093', name: 'Strategic Management', credits: 3 },
       { code: 'MMT 3103', name: 'Consumer Behavior', credits: 3 },
       { code: 'MMT 3113', name: 'Intergrated Marketing Communication', credits: 3 },
@@ -173,14 +173,14 @@ const SPECIALIZATION_COURSES = {
       { code: 'MMT 4063', name: 'Brand Management', credits: 3 },
     ],
     '42': [
-      { code: 'MMT 4076', name: 'Reserch', credits: 6 },
+      { code: 'MMT 4076', name: 'Research', credits: 6 },
       { code: 'MMT 4083', name: 'Internship', credits: 3 },
     ],
   },
   'IS': {
     '31': [
       { code: 'IMT 3013', name: 'Organizational Behavior', credits: 3 },
-      { code: 'IMT 3023', name: 'Operrational Reserch', credits: 3 },
+      { code: 'IMT 3023', name: 'Operrational Research', credits: 3 },
       { code: 'IMT 3033', name: 'Programming Concept', credits: 3 },
       { code: 'IMT 3043', name: 'Systems Analaysis and Design', credits: 3 },
       { code: 'IMT 3053', name: 'Data Communication and Computer Networks', credits: 3 },
@@ -188,7 +188,7 @@ const SPECIALIZATION_COURSES = {
     '32': [
       { code: 'IMT 3063', name: 'Project Management', credits: 3 },
       { code: 'IMT 3073', name: 'Managerial Economics', credits: 3 },
-      { code: 'IMT 3083', name: 'Reserch Methods', credits: 3 },
+      { code: 'IMT 3083', name: 'Research Methods', credits: 3 },
       { code: 'IMT 3093', name: 'Strategic Management', credits: 3 },
       { code: 'IMT 3103', name: 'Professional Ethics and Responsibility', credits: 3 },
       { code: 'IMT 3113', name: 'Software Engineering', credits: 3 },
@@ -202,7 +202,7 @@ const SPECIALIZATION_COURSES = {
       { code: 'IMT 4063', name: 'Database Management Systems', credits: 3 },
     ],
     '42': [
-      { code: 'IMT 4076', name: 'Reserch', credits: 6 },
+      { code: 'IMT 4076', name: 'Research', credits: 6 },
       { code: 'IMT 4083', name: 'Internship', credits: 3 },
     ],
   },
