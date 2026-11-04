@@ -14,6 +14,7 @@ import {
   ArrowUpRight, Volume2, VolumeX, Video, ShieldCheck
 } from 'lucide-react'
 import logo from '../../assets/logo.png'
+import LiveNowCard from '../../components/timetable/LiveNowCard'
 
 const semesterIcons = [BookOpen, BookMarked, GraduationCap, ClipboardList, BarChart3, Calendar, BookOpen, BookMarked]
 const SEMESTER_THEMES = [
@@ -86,9 +87,6 @@ export default function Dashboard() {
   const [activePopup, setActivePopup] = useState(null)
   const [showHistory, setShowHistory] = useState(false)
 
-  const [specModalOpen, setSpecModalOpen] = useState(false)
-  const [specModalDept, setSpecModalDept] = useState('bms') 
-  const [selectedSemId, setSelectedSemId] = useState('')
 
   const [isChatOpen, setIsChatOpen] = useState(false)
   const [chatMessages, setChatMessages] = useState([{ role: 'assistant', text: 'Hi! I am the DIGI KUPPIYA AI Assistant. How can I help you with your studies today?' }])
@@ -130,16 +128,6 @@ export default function Dashboard() {
     
     if (userDept) {
       fetchMentors()
-    }
-  }, [userDept])
-
-  // Load saved specialization from localStorage
-  useEffect(() => {
-    if (userDept) {
-      const savedSpec = localStorage.getItem(`spec_${userDept}`)
-      if (savedSpec) {
-        // We could auto-navigate, but for now just having it available for checks
-      }
     }
   }, [userDept])
 
@@ -319,43 +307,8 @@ export default function Dashboard() {
     }
   }, [loading, adsLoading, tryShowAd])
 
-  const handleSemesterClick = (s, e) => {
-    const dept = (userData?.department || '').toLowerCase()
-    const isBMS = dept === 'bms'
-    const isLCS = dept === 'lcs'
-    
-    const normalized = normalizeSemName(s.name)
-    const isYear3or4 = normalized.includes('Y3') || normalized.includes('Y4')
-    const isYear2orAbove = isYear3or4 || normalized.includes('Y2')
-
-    if (isBMS && isYear3or4) {
-      e.preventDefault() 
-      setSelectedSemId(s.id)
-      setSpecModalDept('bms')
-      setSpecModalOpen(true) 
-    } 
-    else if (isLCS && isYear2orAbove) {
-      // Check if LCS specialization is already saved
-      const savedSpec = localStorage.getItem('spec_lcs')
-      if (savedSpec) {
-        // Use saved specialization, skip modal
-        navigate(`/dashboard/subjects/${s.id}?spec=${savedSpec}`)
-      } else {
-        e.preventDefault() 
-        setSelectedSemId(s.id)
-        setSpecModalDept('lcs')
-        setSpecModalOpen(true) 
-      }
-    }
-  }
-
-  const handleSpecSelect = (specType) => {
-    // Save specialization to localStorage for LCS
-    if (specModalDept === 'lcs') {
-      localStorage.setItem('spec_lcs', specType)
-    }
-    setSpecModalOpen(false)
-    navigate(`/dashboard/subjects/${selectedSemId}?spec=${specType}`)
+  const handleSemesterClick = (s) => {
+    navigate(`/dashboard/subjects/${s.id}`)
   }
 
   const handleCommentSubmit = async (e) => {
@@ -433,22 +386,6 @@ export default function Dashboard() {
       setIsChatLoading(false)
     }
   }
-
-  const bmsModalOptions = [
-    { type: 'all', label: 'General Degree', color: 'hover:border-slate-400 bg-slate-900/50' },
-    { type: 'accounting', label: 'Accounting Specialization', color: 'hover:border-blue-400 bg-blue-950/20' },
-    { type: 'marketing', label: 'Marketing Specialization', color: 'hover:border-emerald-400 bg-emerald-950/20' },
-    { type: 'hrm', label: 'HRM Specialization', color: 'hover:border-rose-400 bg-rose-950/20' },
-    { type: 'management', label: 'Management Specialization', color: 'hover:border-purple-400 bg-purple-950/20' },
-    { type: 'info_management', label: 'Information Management Specialization', color: 'hover:border-cyan-400 bg-cyan-950/20' },
-  ]
-
-  const lcsModalOptions = [
-    { type: 'communication', label: 'Communication', color: 'hover:border-blue-400 bg-blue-950/20' },
-    { type: 'languages', label: 'Languages', color: 'hover:border-emerald-400 bg-emerald-950/20' }
-  ]
-
-  const activeModalOptions = specModalDept === 'bms' ? bmsModalOptions : lcsModalOptions
 
   // Mentor slider rendering logic
   const renderMentorSlider = () => {
@@ -648,30 +585,6 @@ export default function Dashboard() {
           </div>
         )}
 
-        {specModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
-            <div className="relative w-full max-w-md p-6 bg-[#0b1528] border border-white/10 rounded-3xl shadow-[0_0_50px_rgba(168,85,247,0.2)] animate-scale-in text-center">
-              <button onClick={() => setSpecModalOpen(false)} className="absolute top-4 right-4 text-slate-400 hover:text-white transition">
-                <X className="w-4 h-4" />
-              </button>
-              <h3 className="text-xl font-black text-white tracking-wide mb-1">Select Academic Path</h3>
-              <p className="text-xs text-slate-400 mb-6">Choose your degree stream to map relevant subjects.</p>
-              
-              <div className="grid grid-cols-1 gap-2.5">
-                {activeModalOptions.map((spec) => (
-                  <button
-                    key={spec.type}
-                    onClick={() => handleSpecSelect(spec.type)}
-                    className={`w-full py-3 px-4 rounded-xl text-left border border-white/10 text-sm font-bold text-slate-200 ${spec.color} transition duration-200 transform hover:-translate-x-1`}
-                  >
-                    {spec.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
         {showHistory && (
           <div className="fixed inset-y-0 right-0 z-50 w-full max-w-sm bg-white shadow-2xl border-l border-gray-100 p-6 flex flex-col animate-slide-in">
             <div className="flex justify-between items-center border-b pb-4 mb-4">
@@ -790,6 +703,9 @@ export default function Dashboard() {
               )
             })}
           </div>
+
+          {/* Live Lecture Card */}
+          <LiveNowCard />
 
           <div>
             {loading ? (

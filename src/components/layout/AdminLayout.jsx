@@ -5,7 +5,7 @@ import { logoutUser } from '../../services/auth'
 import {
   LayoutDashboard, BookOpen, BookText, FileText, FileEdit, Video, ClipboardList,
   MessageSquare, Users, UserCog, BarChart3, Settings, LogOut, User, Menu, X,
-  ChevronRight, Shield, FileSpreadsheet, UserRound
+  ChevronRight, Shield, FileSpreadsheet, UserRound, Clock
 } from 'lucide-react'
 import logo from '../../assets/logo.png'
 import AdPopupModal from '../ads/AdPopupModal'
@@ -53,6 +53,7 @@ export default function AdminLayout() {
     { to: '/admin/mentors', label: 'Mentors', show: true, icon: UserRound },
     { to: '/admin/super/users', label: 'User Mgmt', show: isSuperAdmin, icon: UserCog },
     { to: '/admin/exam-results', label: 'Exam Results', show: true, icon: FileSpreadsheet },
+    { to: '/admin/timetable', label: 'Timetable', show: true, icon: Clock },
   ]
 
   return (

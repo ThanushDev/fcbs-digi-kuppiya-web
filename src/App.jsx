@@ -26,6 +26,7 @@ import FinanceTracker from './pages/student/FinanceTracker'
 import StudentImportantDocuments from './pages/student/ImportantDocuments'
 import SemesterResults from './pages/student/SemesterResults'
 import ExamResultsUpload from './pages/admin/ExamResultsUpload'
+import TimetableManagement from './pages/admin/TimetableManagement'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminImportantDocuments from './pages/admin/ImportantDocuments'
 import AdminAdManagement from './pages/admin/AdManagement'
@@ -129,6 +130,7 @@ export default function App() {
                 <Route path="/admin/quizzes" element={<QuizManagement />} />
                 <Route path="/admin/quizzes/:quizId/questions" element={<QuizEditor />} />
                 <Route path="/admin/exam-results" element={<ExamResultsUpload />} />
+                <Route path="/admin/timetable" element={<TimetableManagement />} />
                 <Route path="/admin/super/dashboard" element={<SuperAdminDashboard />} />
                 <Route path="/admin/super/admins" element={<AdminManagement />} />
                 <Route path="/admin/super/users" element={<UserManagement />} />

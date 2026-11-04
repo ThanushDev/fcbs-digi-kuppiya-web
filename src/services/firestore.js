@@ -5,6 +5,7 @@ import {
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage'
 import { db, storage } from './firebase'
 import { GRADE_WEIGHTS, getGradeWeight } from '../utils/gradeWeights'
+import { normalizeSlot } from '../utils/timetable'
 
 export { GRADE_WEIGHTS };
 
@@ -561,4 +562,56 @@ export async function deleteMentor(id) {
 export async function getMentor(id) {
   const snap = await getDoc(doc(db, 'mentors', id))
   return snap.exists() ? { id: snap.id, ...snap.data() } : null
+}
+
+/* ─── Timetable Slots ─── */
+const timetableCol = collection(db, 'timetable_slots')
+
+export async function getTimetableSlots({ department, batchYear } = {}) {
+  const snap = await getDocs(timetableCol)
+  let slots = snap.docs.map((d) => normalizeSlot({ ...d.data(), id: d.id }))
+
+  if (department) {
+    const deptLower = String(department).toLowerCase().trim()
+    slots = slots.filter((s) => String(s.department || '').toLowerCase().trim() === deptLower)
+  }
+  if (batchYear) {
+    const batchStr = String(batchYear).trim()
+    slots = slots.filter((s) => {
+      const storedBatch = String(s.batchYear || s.batch || '').trim()
+      // Normalize: remove slashes, spaces, convert to comparable format
+      const normalizeBatch = (b) => String(b).replace(/[\/\-\s]/g, '').toLowerCase()
+      return normalizeBatch(storedBatch) === normalizeBatch(batchStr)
+    })
+  }
+  return slots
+}
+
+export async function addTimetableSlot(data) {
+  return addDoc(timetableCol, {
+    ...data,
+    department: data.department?.toLowerCase(),
+    createdAt: serverTimestamp(),
+  })
+}
+
+export async function updateTimetableSlot(id, data) {
+  return updateDoc(doc(db, 'timetable_slots', id), {
+    ...data,
+    updatedAt: serverTimestamp(),
+  })
+}
+
+export async function deleteTimetableSlot(id) {
+  return deleteDoc(doc(db, 'timetable_slots', id))
+}
+
+export async function deleteTimetableSlotsByBatchAndDept(department, batchYear) {
+  const snap = await getTimetableSlots({ department, batchYear })
+  const batch = writeBatch(db)
+  for (const doc of snap.docs) {
+    batch.delete(doc(doc(db, 'timetable_slots', doc.id)))
+  }
+  await batch.commit()
+  return snap.docs.length
 }
