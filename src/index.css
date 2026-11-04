@@ -13,7 +13,7 @@
     color: #1F2937;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
   }
-  :root {
+  :root   {
     --bg-primary: #FFFFFF;
     --bg-secondary: #F9FAFB;
     --bg-card: #FFFFFF;

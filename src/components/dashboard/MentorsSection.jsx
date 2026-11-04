@@ -1,104 +1,54 @@
 import { useState, useEffect } from 'react'
-
-// Mentor data (modify as needed)
-const MENTORS = [
-  {
-    name: "Mr.Thanush Nethsika",
-    nickname: "Cyber",
-    batch: "22/23",
-    role: "Author of FCBS DIGI KUPPIYA ",
-    image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614075/cyber_jz6wx6.jpg",
-  },
-  {
-    name: "Ms. Imalsha Sathsarani",
-    batch: "22/23",
-    role: "Economics",
-    image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614075/ima_h6xjz3.jpg",
-  },
-  {
-    name: "Ms. Kasuni Gaurika",
-    batch: "22/23",
-    role: "Mathematics",
-    image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614075/kasuni_omcklq.jpg",
-  },
-  {
-    name: "Ms. Kavindi Nawodhya",
-    batch: "22/23",
-    role: "Mathematics",
-    image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614076/nawodhya_ylxmlr.jpg",
-  },
-  {
-    name: "Ms. Jayathri Indrachapa",
-    nickname: "Medusa",
-    batch: "22/23",
-    role: "Mathematics",
-    image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614067/chapa_drbwzz.jpg",
-  },
-  {
-    name: "Ms. Kavithma Damindi",
-    batch: "22/23",
-    role: "Management",
-    image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614072/kavithma_mmfkmr.jpg",
-  },
-  {
-    name: "Ms.Naduni Rathnayaka",
-    batch: "22/23",
-    role: "MIS",
-    image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614073/naduni_u9czqe.jpg",
-  },
-  {
-    name: "Ms.Liyoni Kaushalya",
-    nickname: "Alya",
-    batch: "21/22",
-    role: "MIS",
-    image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614069/liyoni_c4yb0l.jpg",
-  },
-  {
-    name: "Ms. Thakshila Wijesekara",
-    nickname: "Rapunsel",
-    batch: "21/22",
-    role: "MIS",
-    image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614084/rapunsall_rbr0y0.jpg",
-  },
-  {
-    name: "Ms. Dakshila Dilshani",
-    batch: "22/23",
-    role: "Accounting",
-    image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614072/dakshi_vvtivc.jpg",
-  },
-  {
-    name: "Ms. Shashini Herath",
-    nickname: "Shrinee",
-    batch: "21/22",
-    role: "Accounting",
-    image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614078/shashini_rhwepa.jpg",
-  },
-  {
-    name: "Ms. Lihini Himasha",
-    nickname: "Lara",
-    batch: "21/22",
-    role: "Accounting",
-    image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614071/lihini_s8ymh1.jpg",
-  },
-  {
-    name: "Ms. Diwangani Kavindya",
-    nickname: "Vini",
-    batch: "21/22",
-    role: "Accounting",
-    image: "https://res.cloudinary.com/ddn08cpkt/image/upload/v1783614068/diwangani_cyokye.jpg",
-  },
-]
+import { getMentors } from '../../services/firestore'
 
 export default function MentorsSection() {
+  const [mentors, setMentors] = useState([])
+  const [loading, setLoading] = useState(true)
   const [activeIndex, setActiveIndex] = useState(0)
+
+  useEffect(() => {
+    const loadMentors = async () => {
+      try {
+        const data = await getMentors()
+        setMentors(data)
+      } catch (error) {
+        console.error('Error loading mentors:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadMentors()
+  }, [])
 
   // Auto-transition mentors every 4 seconds
   useEffect(() => {
+    if (mentors.length === 0) return
     const interval = setInterval(() => {
-      setActiveIndex((prevIndex) => (prevIndex + 1) % MENTORS.length)
+      setActiveIndex((prevIndex) => (prevIndex + 1) % mentors.length)
     }, 4000)
     return () => clearInterval(interval)
-  }, [])
+  }, [mentors.length])
+
+  if (loading) {
+    return (
+      <div className="card glass-panel mt-12 max-w-4xl mx-auto overflow-hidden">
+        <div className="p-8 text-center text-gray-400">
+          <div className="w-8 h-8 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin mb-4" />
+          <p className="text-sm text-gray-500">Loading mentors...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (mentors.length === 0) {
+    return (
+      <div className="card glass-panel mt-12 max-w-4xl mx-auto overflow-hidden">
+        <div className="p-8 text-center text-gray-500">
+          <p className="text-sm text-gray-500">No mentors found. Contact your admin to add mentors.</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="card glass-panel mt-12 max-w-4xl mx-auto overflow-hidden">
@@ -110,7 +60,7 @@ export default function MentorsSection() {
         </div>
         {/* Manual Dots Controls */}
         <div className="flex space-x-1.5">
-          {MENTORS.map((_, idx) => (
+          {mentors.map((_, idx) => (
             <button
               key={idx}
               onClick={() => setActiveIndex(idx)}
@@ -124,14 +74,14 @@ export default function MentorsSection() {
 
       {/* Slider Container */}
       <div className="relative min-h-[220px] sm:min-h-[180px] flex items-center justify-center">
-        {MENTORS.map((mentor, index) => {
+        {mentors.map((mentor, index) => {
           const isActive = index === activeIndex
           return (
             <div
-              key={mentor.name}
+              key={mentor.id}
               className={`absolute w-full flex flex-col sm:flex-row items-center gap-6 transition-all duration-700 ease-in-out transform ${
-                isActive 
-                  ? 'opacity-100 scale-100 translate-x-0 pointer-events-auto' 
+                isActive
+                  ? 'opacity-100 scale-100 translate-x-0 pointer-events-auto'
                   : 'opacity-0 scale-95 translate-x-4 pointer-events-none'
               }`}
             >
@@ -139,7 +89,7 @@ export default function MentorsSection() {
               <div className="relative h-28 w-28 sm:h-32 sm:w-32 flex-shrink-0">
                 <div className="absolute inset-0 bg-gradient-to-tr from-indigo-600 to-purple-500 rounded-2xl rotate-6 opacity-20 animate-pulse"></div>
                 <img
-                  src={mentor.image}
+                  src={mentor.imageUrl || mentor.image || '/default-avatar.png'}
                   alt={mentor.name}
                   className="h-full w-full object-cover rounded-2xl border-2 border-white shadow-md relative z-10"
                 />
@@ -169,8 +119,8 @@ export default function MentorsSection() {
                 </div>
               </div>
             </div>
-          )
-        })}
+          )}
+        )}
       </div>
     </div>
   )
