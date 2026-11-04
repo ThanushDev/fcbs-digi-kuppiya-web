@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import { Link, useNavigate } from 'react-router-dom' 
 import { useAuth } from '../../contexts/AuthContext'
 import { useAds } from '../../contexts/AdsContext'
-import { getSemesters, getBatchPermission, addComment, getMentorsByDepartment } from '../../services/firestore' 
+import { getSemesters, getBatchPermission, addComment, getMentorsByDepartment, getTimetableSlots } from '../../services/firestore' 
 import { collection, getDocs, query, orderBy } from 'firebase/firestore'
 import { db } from '../../services/firebase'
 import {
@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import logo from '../../assets/logo.png'
 import LiveNowCard from '../../components/timetable/LiveNowCard'
+import WeeklyTimetable from '../../components/timetable/WeeklyTimetable'
 
 const semesterIcons = [BookOpen, BookMarked, GraduationCap, ClipboardList, BarChart3, Calendar, BookOpen, BookMarked]
 const SEMESTER_THEMES = [
@@ -79,6 +80,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [activeMentorIdx, setActiveMentorIdx] = useState(0)
   const [selectedMentor, setSelectedMentor] = useState(null)
+  const [timetableSlots, setTimetableSlots] = useState([])
   
   const [commentText, setCommentText] = useState('')
   const [submittingComment, setSubmittingComment] = useState(false)
@@ -297,6 +299,28 @@ export default function Dashboard() {
       }
     }
     load()
+  }, [userData?.department, userData?.batch])
+
+  // Fetch timetable slots for live card and weekly timetable
+  useEffect(() => {
+    const loadTimetable = async () => {
+      if (!userData) return
+      try {
+        const dept = (userData?.department || '').toLowerCase()
+        const batch = userData?.batch ? String(userData.batch).trim() : ''
+        
+        if (dept && batch) {
+          const allSlots = await getTimetableSlots({ department: dept, batchYear: batch })
+          setTimetableSlots(allSlots)
+        } else {
+          setTimetableSlots([])
+        }
+      } catch (error) {
+        console.error('Error loading timetable:', error)
+        setTimetableSlots([])
+      }
+    }
+    loadTimetable()
   }, [userData?.department, userData?.batch])
 
   useEffect(() => {
@@ -706,6 +730,9 @@ export default function Dashboard() {
 
           {/* Live Lecture Card */}
           <LiveNowCard />
+
+          {/* Weekly Timetable */}
+          <WeeklyTimetable slots={timetableSlots} />
 
           <div>
             {loading ? (
