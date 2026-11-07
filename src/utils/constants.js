@@ -9,7 +9,7 @@ export const BMS_SPECIALIZATIONS = [
   { value: 'all', label: 'General Degree / Common' },
   { value: 'accounting', label: 'Accounting & Finance' },
   { value: 'marketing', label: 'Marketing' },
-  { value: 'hrm', label: 'Human Resource Management' },
+  { value: 'hrm', label: 'HRM' },
   { value: 'management', label: 'Management' },
   { value: 'info_management', label: 'Information Systems' },
 ]
