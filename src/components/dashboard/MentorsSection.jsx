@@ -20,14 +20,23 @@ export default function MentorsSection() {
     loadMentors()
   }, [])
 
-  // Auto-transition mentors every 4 seconds
+  // Auto-transition mentors: Author (index 0) stays 10 minutes, others 4 seconds
   useEffect(() => {
-    if (mentors.length === 0) return
-    const interval = setInterval(() => {
-      setActiveIndex((prevIndex) => (prevIndex + 1) % mentors.length)
-    }, 4000)
-    return () => clearInterval(interval)
-  }, [mentors.length])
+    if (mentors.length === 0) return;
+
+    let delay;
+    if (activeIndex === 0) {
+      delay = 600000; // 10 minutes for the Author (first mentor)
+    } else {
+      delay = 4000; // 4 seconds for all other mentors
+    }
+
+    const timer = setTimeout(() => {
+      setActiveIndex((prevIndex) => (prevIndex + 1) % mentors.length);
+    }, delay);
+
+    return () => clearTimeout(timer);
+  }, [activeIndex, mentors.length]);
 
   if (loading) {
     return (
@@ -110,11 +119,7 @@ export default function MentorsSection() {
                   {mentor.role}
                 </p>
 
-                <div className="pt-2 flex items-center justify-center sm:justify-start gap-2 text-xs font-medium text-gray-500">
-                  <span className="px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-lg">
-                    Batch: {mentor.batch}
-                  </span>
-                  <span className="w-1.5 h-1.5 bg-gray-300 rounded-full"></span>
+                <div className="pt-2 flex items-center justify-center sm:justify-start text-xs font-medium text-gray-500">
                   <span>Faculty Mentor</span>
                 </div>
               </div>

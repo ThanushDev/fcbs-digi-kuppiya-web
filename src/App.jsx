@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { ThemeProvider } from './contexts/ThemeContext'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { ToastProvider } from './contexts/ToastContext'
 import { AdsProvider } from './contexts/AdsContext'
@@ -65,10 +66,11 @@ export default function App() {
   }, [])
 
   return (
-    <AuthProvider>
-      <ToastProvider>
-        <AdsProvider>
-          <Routes>
+    <ThemeProvider>
+      <AuthProvider>
+        <ToastProvider>
+          <AdsProvider>
+            <Routes>
             {/* Public Routes */}
             <Route element={<PublicOnlyRoute />}>
               <Route index element={<Login />} />
@@ -142,5 +144,6 @@ export default function App() {
         </AdsProvider>
       </ToastProvider>
     </AuthProvider>
+  </ThemeProvider>
   )
 }

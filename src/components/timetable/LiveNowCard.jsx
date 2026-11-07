@@ -46,34 +46,28 @@ export default function LiveNowCard() {
 
   useEffect(() => { load() }, [load])
 
-  // Recompute live status every minute and whenever data changes
+  // Recompute live status whenever data changes
   useEffect(() => {
-    let timer
-    const recompute = () => {
-      const now = new Date()
-      const nowMins = now.getHours() * 60 + now.getMinutes()
-      const currentDayName = getCurrentDay()
+    const now = new Date()
+    const nowMins = now.getHours() * 60 + now.getMinutes()
+    const currentDayName = getCurrentDay()
 
-      const daySlots = slots.filter((s) => String(s.day).toLowerCase() === currentDayName.toLowerCase())
+    const daySlots = slots.filter((s) => String(s.day).toLowerCase() === currentDayName.toLowerCase())
 
-      // Find ALL ongoing slots at this exact time
-      const ongoing = daySlots.filter((s) => {
-        const start = timeToMinutes(s.startTime)
-        const end = s.endTime ? timeToMinutes(s.endTime) : start + (Number(s.durationMinutes) || 60)
-        return nowMins >= start && nowMins < end
-      })
+    // Find ALL ongoing slots at this exact time
+    const ongoing = daySlots.filter((s) => {
+      const start = timeToMinutes(s.startTime)
+      const end = s.endTime ? timeToMinutes(s.endTime) : start + (Number(s.durationMinutes) || 60)
+      return nowMins >= start && nowMins < end
+    })
 
-      // Find the next upcoming slot after now
-      const upcoming = daySlots
-        .map((s) => ({ ...s, startMins: timeToMinutes(s.startTime) }))
-        .filter((s) => s.startMins > nowMins)
-        .sort((a, b) => a.startMins - b.startMins)[0] || null
+    // Find the next upcoming slot after now
+    const upcoming = daySlots
+      .map((s) => ({ ...s, startMins: timeToMinutes(s.startTime) }))
+      .filter((s) => s.startMins > nowMins)
+      .sort((a, b) => a.startMins - b.startMins)[0] || null
 
-      setStatus({ status: ongoing.length > 0 ? 'ongoing' : upcoming ? 'upcoming' : 'none', ongoing, upcoming })
-    }
-    recompute()
-    timer = setInterval(recompute, 60000)
-    return () => clearInterval(timer)
+    setStatus({ status: ongoing.length > 0 ? 'ongoing' : upcoming ? 'upcoming' : 'none', ongoing, upcoming })
   }, [slots])
 
   const handleRefresh = async (e) => {
@@ -200,10 +194,8 @@ export default function LiveNowCard() {
               <div className="bg-indigo-50 rounded-xl border border-indigo-100 p-2 flex items-center gap-2">
                 <SkipForward className="w-3 h-3 text-cyan-600" />
                 <div>
-                  <p className="text-[9px] font-bold text-cyan-600 uppercase tracking-wider mb-0.5">Starts in</p>
-                  <p className="text-sm font-bold text-gray-800">
-                    {Math.max(0, upcoming.startMins - new Date().getHours() * 60 - new Date().getMinutes())} min
-                  </p>
+                  <p className="text-[9px] font-bold text-cyan-600 uppercase tracking-wider mb-0.5">Start Time</p>
+                  <p className="text-sm font-bold text-gray-800">{new Date(`1970-01-01T${upcoming.startTime}:00`).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                 </div>
               </div>
             </div>

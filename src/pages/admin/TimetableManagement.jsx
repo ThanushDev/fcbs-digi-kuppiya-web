@@ -472,6 +472,7 @@ export default function TimetableManagement() {
                         onChange={(e) => setAddForm({ ...addForm, day: e.target.value })}
                         className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs text-gray-900 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 select-field"
                       >
+                        <option value="" disabled>Select Day</option>
                         {WEEKDAYS.map(d => <option key={d} value={d}>{d}</option>)}
                       </select>
                     </div>
@@ -635,6 +636,7 @@ export default function TimetableManagement() {
                         onChange={(e) => setEditForm({ ...editForm, day: e.target.value })}
                         className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs text-gray-900 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 select-field"
                       >
+                        <option value="" disabled>Select Day</option>
                         {WEEKDAYS.map(d => <option key={d} value={d}>{d}</option>)}
                       </select>
                     </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useLayoutEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { Link, useNavigate } from 'react-router-dom' 
 import { useAuth } from '../../contexts/AuthContext'
@@ -11,23 +11,65 @@ import {
   QrCode, Bot, FileText, FileDown, Bell, X, ExternalLink, Send, ChevronRight,
   DollarSign, Target, Users, MessageSquare, Sparkles, Lightbulb, Quote,
   Upload, Download, ZoomIn, CheckCircle, AlertCircle, Info, HelpCircle,
-  ArrowUpRight, Volume2, VolumeX, Video, ShieldCheck
+  ArrowUpRight, Volume2, VolumeX, Video, ShieldCheck, Sun, Moon, ChevronLeft
 } from 'lucide-react'
 import logo from '../../assets/logo.png'
 import LiveNowCard from '../../components/timetable/LiveNowCard'
 import WeeklyTimetable from '../../components/timetable/WeeklyTimetable'
 
 const semesterIcons = [BookOpen, BookMarked, GraduationCap, ClipboardList, BarChart3, Calendar, BookOpen, BookMarked]
-const SEMESTER_THEMES = [
-  { bg: 'bg-gradient-to-br from-blue-50 to-indigo-100/40', border: 'border-blue-200/80 hover:border-blue-400', text: 'text-blue-900', iconBg: 'bg-blue-500/10 text-blue-600' },
-  { bg: 'bg-gradient-to-br from-emerald-50 to-teal-100/40', border: 'border-emerald-200/80 hover:border-emerald-400', text: 'text-emerald-900', iconBg: 'bg-emerald-500/10 text-emerald-600' },
-  { bg: 'bg-gradient-to-br from-rose-50 to-pink-100/40', border: 'border-rose-200/80 hover:border-rose-400', text: 'text-rose-900', iconBg: 'bg-rose-500/10 text-rose-600' },
-  { bg: 'bg-gradient-to-br from-amber-50 to-orange-100/40', border: 'border-amber-200/80 hover:border-amber-400', text: 'text-amber-900', iconBg: 'bg-amber-500/10 text-amber-600' },
-  { bg: 'bg-gradient-to-br from-purple-50 to-fuchsia-100/40', border: 'border-purple-200/80 hover:border-purple-400', text: 'text-purple-900', iconBg: 'bg-purple-500/10 text-purple-600' },
-  { bg: 'bg-gradient-to-br from-violet-50 to-purple-100/40', border: 'border-violet-200/80 hover:border-violet-400', text: 'text-violet-900', iconBg: 'bg-purple-500/10 text-purple-600' },
-  { bg: 'bg-gradient-to-br from-cyan-50 to-blue-100/40', border: 'border-cyan-200/80 hover:border-cyan-400', text: 'text-cyan-900', iconBg: 'bg-cyan-500/10 text-cyan-600' },
-  { bg: 'bg-gradient-to-br from-slate-50 to-gray-200/40', border: 'border-slate-200/80 hover:border-slate-400', text: 'text-slate-900', iconBg: 'bg-slate-500/10 text-slate-600' },
-]
+const SEMESTER_TONES = ['indigo', 'emerald', 'rose', 'amber', 'violet', 'sky', 'teal', 'slate']
+
+// ---- Theme tokens (light / dark). Applied via <html data-dk="light|dark"> ----
+const TONES = {
+  blue: ['#EFF6FF', '#2563EB', 'rgba(59,130,246,.16)', '#93C5FD'],
+  emerald: ['#ECFDF5', '#059669', 'rgba(16,185,129,.16)', '#6EE7B7'],
+  violet: ['#F5F3FF', '#7C3AED', 'rgba(139,92,246,.16)', '#C4B5FD'],
+  amber: ['#FFFBEB', '#D97706', 'rgba(245,158,11,.16)', '#FCD34D'],
+  rose: ['#FFF1F2', '#E11D48', 'rgba(244,63,94,.16)', '#FDA4AF'],
+  slate: ['#F1F5F9', '#475569', 'rgba(148,163,184,.16)', '#CBD5E1'],
+  fuchsia: ['#FDF4FF', '#C026D3', 'rgba(217,70,239,.16)', '#F0ABFC'],
+  indigo: ['#EEF2FF', '#4F46E5', 'rgba(99,102,241,.18)', '#A5B4FC'],
+  teal: ['#F0FDFA', '#0D9488', 'rgba(20,184,166,.16)', '#5EEAD4'],
+  sky: ['#F0F9FF', '#0284C7', 'rgba(14,165,233,.16)', '#7DD3FC'],
+}
+
+const DK_CSS = `
+:root{--dk-bg:#F4F6FB;--dk-surface:#FFFFFF;--dk-surface2:#F8FAFC;--dk-border:#E4E8F0;--dk-border2:#CBD5E1;--dk-text:#0F172A;--dk-text2:#475569;--dk-muted:#94A3B8;--dk-brand:#4F46E5;--dk-brand-hover:#4338CA;--dk-brand-soft:#EEF2FF;--dk-brand-text:#4338CA;--dk-shadow:0 1px 2px rgba(15,23,42,.05);--dk-shadow-lg:0 10px 28px -10px rgba(15,23,42,.18);--dk-chat-head:#0F172A}
+:root[data-dk="dark"]{--dk-bg:#0B1020;--dk-surface:#121829;--dk-surface2:#182036;--dk-border:#25304A;--dk-border2:#34405C;--dk-text:#E8ECF6;--dk-text2:#A5B0C8;--dk-muted:#6B7794;--dk-brand:#6366F1;--dk-brand-hover:#5558E8;--dk-brand-soft:rgba(99,102,241,.18);--dk-brand-text:#A5B4FC;--dk-shadow:0 1px 2px rgba(0,0,0,.35);--dk-shadow-lg:0 12px 30px -10px rgba(0,0,0,.6);--dk-chat-head:#182036}
+.dk-page{background:var(--dk-bg);transition:background-color .3s}
+.dk-card{background:var(--dk-surface);border:1px solid var(--dk-border);box-shadow:var(--dk-shadow)}
+.dk-card-i{transition:border-color .2s,box-shadow .2s,transform .2s}
+.dk-card-i:hover{border-color:color-mix(in srgb,var(--tone-fg,var(--dk-brand)) 40%,var(--dk-border));box-shadow:var(--dk-shadow-lg)}
+.dk-card-i:active{transform:scale(.985)}
+.dk-tile{background:var(--tone-bg,var(--dk-brand-soft));color:var(--tone-fg,var(--dk-brand-text))}
+.dk-sub{background:var(--dk-surface2);border:1px solid var(--dk-border)}
+.dk-text{color:var(--dk-text)}.dk-text2{color:var(--dk-text2)}.dk-muted{color:var(--dk-muted)}.dk-brandtext{color:var(--dk-brand-text)}
+.dk-brandsoft{background:var(--dk-brand-soft);color:var(--dk-brand-text)}
+.dk-divider{border-color:var(--dk-border)}
+.dk-imgborder{border:1px solid var(--dk-border)}
+.dk-input{background:var(--dk-surface2);border:1px solid var(--dk-border);color:var(--dk-text);transition:border-color .2s,box-shadow .2s}
+.dk-input::placeholder{color:var(--dk-muted)}
+.dk-input:focus{outline:none;border-color:var(--dk-brand);background:var(--dk-surface);box-shadow:0 0 0 3px color-mix(in srgb,var(--dk-brand) 25%,transparent)}
+.dk-btn{background:var(--dk-brand);color:#fff;transition:background-color .2s}
+.dk-btn:hover:not(:disabled){background:var(--dk-brand-hover)}
+.dk-icon-btn{background:var(--dk-surface);border:1px solid var(--dk-border);color:var(--dk-text2);box-shadow:var(--dk-shadow);transition:background-color .2s,color .2s}
+.dk-icon-btn:hover{background:var(--dk-surface2);color:var(--dk-text)}
+.dk-ghost:hover{background:var(--dk-surface2);color:var(--dk-text)}
+.dk-knob{background:var(--dk-brand-soft);box-shadow:var(--dk-shadow)}
+.dk-dot{background:var(--dk-border2)}
+.dk-chat-head{background:var(--dk-chat-head);color:#fff}
+.dk-focus:focus-visible{outline:2px solid var(--dk-brand);outline-offset:2px}
+.dk-skel{background:linear-gradient(90deg,var(--dk-surface2),var(--dk-border),var(--dk-surface2));background-size:200% 100%;animation:dk-shimmer 1.4s linear infinite}
+@keyframes dk-shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+:root[data-dk="dark"] .dk-adapt{filter:invert(.92) hue-rotate(180deg)}
+@media (prefers-reduced-motion:reduce){.dk-card-i,.dk-skel,.dk-page{transition:none;animation:none}}
+${Object.entries(TONES).map(([k, [lb, lf, db, df]]) =>
+  `.dk-tone-${k}{--tone-bg:${lb};--tone-fg:${lf}}:root[data-dk="dark"] .dk-tone-${k}{--tone-bg:${db};--tone-fg:${df}}`
+).join('\n')}
+`
+
+const QUICK_PROMPTS = ['Explain a concept simply', 'Plan my study week', 'Tips for exam revision']
 
 const normalizeSemName = (name) => {
   let norm = String(name || '').toUpperCase();
@@ -58,16 +100,16 @@ const toolIconMap = {
 }
 
 const academicTools = [
-  { name: 'Quiz System', path: '../qindex.php', iconKey: 'quiz', isExternal: true, isQuiz: true, theme: 'from-blue-50 to-cyan-100/50 text-blue-700 border-blue-200' },
-  { name: 'Attendance Calc', path: '/dashboard/attendance', iconKey: 'attendance', isInternalTool: true, theme: 'from-emerald-50 to-teal-100/50 text-emerald-700 border-emerald-200' },
-  { name: 'GPA Calculator', path: '/dashboard/gpa', iconKey: 'gpa', isInternalTool: true, theme: 'from-purple-50 to-indigo-100/50 text-purple-700 border-purple-200' },
-  { name: 'CA Calculator', path: '/dashboard/ca', iconKey: 'ca', isInternalTool: true, theme: 'from-amber-50 to-orange-100/50 text-amber-700 border-amber-200' },
-  { name: 'Finance Tracker', path: '/dashboard/finance', iconKey: 'finance', isInternalTool: true, theme: 'from-rose-50 to-pink-100/50 text-rose-700 border-rose-200' },
-  { name: 'QR Generator', path: '/dashboard/tools/qr', iconKey: 'qr', isInternalTool: true, theme: 'from-slate-50 to-gray-200/50 text-slate-700 border-slate-300' },
-  { name: 'AI Humanizer', path: '/dashboard/tools/ai-humanizer', iconKey: 'ai', isInternalTool: true, theme: 'from-violet-50 to-fuchsia-100/50 text-violet-700 border-violet-200' },
-  { name: 'CV Maker', path: 'https://digi-solutions-cv.vercel.app/', iconKey: 'cv', isExternal: true, theme: 'from-blue-50 to-indigo-100/50 text-indigo-700 border-indigo-200' },
-  { name: 'PDF Generator', path: '/dashboard/tools/pdf-tool', iconKey: 'pdf', isInternalTool: true, theme: 'from-teal-50 to-emerald-100/50 text-teal-700 border-teal-200' },
-  { name: 'Important Documents', path: '/dashboard/documents', iconKey: 'documents', isInternalTool: true, theme: 'from-indigo-50 to-violet-100/50 text-indigo-700 border-indigo-200' },
+  { name: 'Quiz System', path: '../qindex.php', iconKey: 'quiz', isExternal: true, isQuiz: true, tone: 'blue' },
+  { name: 'Attendance Calc', path: '/dashboard/attendance', iconKey: 'attendance', isInternalTool: true, tone: 'emerald' },
+  { name: 'GPA Calculator', path: '/dashboard/gpa', iconKey: 'gpa', isInternalTool: true, tone: 'violet' },
+  { name: 'CA Calculator', path: '/dashboard/ca', iconKey: 'ca', isInternalTool: true, tone: 'amber' },
+  { name: 'Finance Tracker', path: '/dashboard/finance', iconKey: 'finance', isInternalTool: true, tone: 'rose' },
+  { name: 'QR Generator', path: '/dashboard/tools/qr', iconKey: 'qr', isInternalTool: true, tone: 'slate' },
+  { name: 'AI Humanizer', path: '/dashboard/tools/ai-humanizer', iconKey: 'ai', isInternalTool: true, tone: 'fuchsia' },
+  { name: 'CV Maker', path: 'https://digi-solutions-cv.vercel.app/', iconKey: 'cv', isExternal: true, tone: 'indigo' },
+  { name: 'PDF Generator', path: '/dashboard/tools/pdf-tool', iconKey: 'pdf', isInternalTool: true, tone: 'teal' },
+  { name: 'Important Documents', path: '/dashboard/documents', iconKey: 'documents', isInternalTool: true, tone: 'sky' },
 ]
 
 export default function Dashboard() {
@@ -101,6 +143,41 @@ export default function Dashboard() {
   const [countdown, setCountdown] = useState(7)
   const [isMuted, setIsMuted] = useState(true)
   const videoRef = useRef(null)
+
+  // Theme (light / dark) - applied on <html> so portals and modals inherit it
+  const [theme, setTheme] = useState(() => {
+    try {
+      const saved = localStorage.getItem('dk-theme')
+      if (saved === 'light' || saved === 'dark') return saved
+    } catch (e) { /* ignore */ }
+    return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  })
+  const isDark = theme === 'dark'
+  const toggleTheme = () => setTheme((t) => (t === 'dark' ? 'light' : 'dark'))
+
+  useLayoutEffect(() => {
+    const root = document.documentElement
+    root.setAttribute('data-dk', theme)
+    root.classList.toggle('dark', theme === 'dark')
+    try { localStorage.setItem('dk-theme', theme) } catch (e) { /* ignore */ }
+    return () => {
+      root.removeAttribute('data-dk')
+      root.classList.remove('dark')
+    }
+  }, [theme])
+
+  // Esc closes popups, drawer and chat
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key !== 'Escape') return
+      setSelectedMentor(null)
+      setActivePopup(null)
+      setShowHistory(false)
+      setIsChatOpen(false)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
 
   const userDept = (userData?.department || '').toLowerCase()
   
@@ -417,40 +494,36 @@ export default function Dashboard() {
       // Skeleton Loader
       return (
         <div className="relative min-h-[260px] sm:min-h-[180px] flex items-center justify-center">
-          {[0, 1, 2].map((i) => (
-            <div key={i} className="absolute w-full flex flex-col sm:flex-row items-center gap-6 opacity-100 scale-100 translate-x-0">
-              <div className="relative h-32 w-32 sm:h-40 sm:w-40 flex-shrink-0">
-                <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded-2xl rotate-6 opacity-15"></div>
-                <div className="h-full w-full rounded-2xl border border-slate-100 bg-gray-200 animate-pulse" />
-              </div>
-              <div className="text-center sm:text-left flex-1">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2.5 justify-center sm:justify-start">
-                  <div className="h-6 w-48 bg-gray-200 animate-pulse rounded mx-auto sm:mx-0" />
-                </div>
-                <div className="h-3 w-32 bg-gray-200 animate-pulse rounded mt-1 mx-auto sm:mx-0" />
-                <div className="mt-3 flex items-center justify-center sm:justify-start gap-2">
-                  <div className="h-5 w-20 bg-gray-200 animate-pulse rounded-md" />
-                </div>
-              </div>
+          <div className="absolute w-full flex flex-col sm:flex-row items-center gap-6">
+            <div className="relative h-32 w-32 sm:h-40 sm:w-40 flex-shrink-0">
+              <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded-2xl rotate-6 opacity-15"></div>
+              <div className="relative z-10 h-full w-full rounded-2xl dk-imgborder dk-skel" />
             </div>
-          ))}
-        </div>
-      )
-    }
-    
-    if (displayMentors.length === 0) {
-      // Empty State
-      return (
-        <div className="relative min-h-[260px] sm:min-h-[180px] flex items-center justify-center">
-          <div className="text-center py-12 px-6">
-            <Users className="w-16 h-16 mx-auto text-gray-300 mb-4" />
-            <h4 className="text-lg font-semibold text-gray-600 mb-2">No mentors available at the moment</h4>
-            <p className="text-sm text-gray-400">Check back later for updates.</p>
+            <div className="flex-1 w-full space-y-3 flex flex-col items-center sm:items-start">
+              <div className="h-6 w-48 dk-skel rounded-md" />
+              <div className="h-3 w-32 dk-skel rounded-md" />
+              <div className="h-6 w-24 dk-skel rounded-lg" />
+            </div>
           </div>
         </div>
       )
     }
-    
+
+    if (displayMentors.length === 0) {
+      // Empty State
+      return (
+        <div className="relative min-h-[260px] sm:min-h-[180px] flex items-center justify-center">
+          <div className="text-center py-10 px-6">
+            <span className="dk-sub dk-muted mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl">
+              <Users className="w-6 h-6" />
+            </span>
+            <h4 className="text-sm font-semibold dk-text">No mentors available yet</h4>
+            <p className="mt-1 text-sm dk-text2">Mentors for your department will show up here.</p>
+          </div>
+        </div>
+      )
+    }
+
     // Mentor Cards
     return (
       <div className="relative min-h-[260px] sm:min-h-[180px] flex items-center justify-center">
@@ -458,26 +531,28 @@ export default function Dashboard() {
           const isActive = index === activeMentorIdx
           return (
             <div key={mentor.name} className={`absolute w-full flex flex-col sm:flex-row items-center gap-6 transition-all duration-700 ease-in-out transform ${isActive ? 'opacity-100 scale-100 translate-x-0 pointer-events-auto' : 'opacity-0 scale-95 translate-x-4 pointer-events-none'}`}>
-              
-              <div 
+
+              <div
                 onClick={() => setSelectedMentor(mentor)}
                 className="relative h-32 w-32 sm:h-40 sm:w-40 flex-shrink-0 cursor-pointer hover:scale-105 transition-transform duration-300"
               >
                 <div className="absolute inset-0 bg-gradient-to-tr from-indigo-500 to-purple-500 rounded-2xl rotate-6 opacity-15 animate-pulse"></div>
-                <img src={mentor.imageUrl || mentor.image || '/default-avatar.png'} alt={mentor.name} className="h-full w-full object-cover rounded-2xl border border-slate-100 shadow-sm relative z-10" />
+                <img src={mentor.imageUrl || mentor.image || '/default-avatar.png'} alt={mentor.name} className="h-full w-full object-cover rounded-2xl dk-imgborder shadow-sm relative z-10" />
               </div>
-              
+
               <div className="text-center sm:text-left flex-1">
-                <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2.5 justify-center sm:justify-start">
-                  <h4 className="text-xl font-bold text-slate-900">{mentor.name}</h4>
-                  {mentor.nickname && <span className="text-[10px] font-semibold px-2 py-0.5 bg-white/80 text-slate-600 rounded-full w-max mx-auto sm:mx-0 border border-slate-200/50 flex items-center gap-1">
-                    <Quote className="w-2.5 h-2.5" />{mentor.nickname}
-                  </span>}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2.5 justify-center sm:justify-start">
+                  <h4 className="text-xl font-semibold tracking-tight dk-text">{mentor.name}</h4>
+                  {mentor.nickname && (
+                    <span className="dk-sub dk-text2 inline-flex items-center gap-1 w-max mx-auto sm:mx-0 rounded-full px-2.5 py-0.5 text-[11px] font-medium">
+                      <Quote className="w-2.5 h-2.5" />{mentor.nickname}
+                    </span>
+                  )}
                 </div>
-                <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wider mt-0.5">{mentor.role}</p>
-                <div className="mt-3 flex items-center justify-center sm:justify-start gap-2 text-xs font-medium text-slate-500">
-                  <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded-md border border-indigo-100/40 font-bold flex items-center gap-1">
-                    <Users className="w-3 h-3" /> Batch: {mentor.batch}
+                <p className="mt-1 text-sm font-medium dk-brandtext">{mentor.role}</p>
+                <div className="mt-3 flex items-center justify-center sm:justify-start">
+                  <span className="dk-brandsoft inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-medium">
+                    <Users className="w-3.5 h-3.5" /> Batch {mentor.batch}
                   </span>
                 </div>
               </div>
@@ -488,8 +563,13 @@ export default function Dashboard() {
     )
   }
 
+  const hour = new Date().getHours()
+  const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening'
+  const todayLabel = new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })
+
   return (
     <>
+      <style>{DK_CSS}</style>
       {/* IMMERSIVE AD POPUP OVERLAY */}
       {showAdPopup && currentAd && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black animate-fade-in select-none">
@@ -583,57 +663,60 @@ export default function Dashboard() {
       )}
 
       {/* CORE DASHBOARD CONTENT VIEW PORT */}
-      <div className="animate-fade-in space-y-8 flex flex-col min-h-screen p-2 sm:p-4 relative">
-        
+      <div className="dk-page animate-fade-in space-y-8 flex flex-col min-h-screen p-3 sm:p-6 relative rounded-2xl">
+
         {activePopup && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md animate-fade-in">
-            <div className="relative w-full max-w-md p-6 bg-white/90 border border-indigo-100 rounded-2xl shadow-2xl backdrop-blur-xl animate-scale-in">
-              <button onClick={() => setActivePopup(null)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition p-1">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in">
+            <div role="dialog" aria-modal="true" className="dk-card relative w-full max-w-md p-6 rounded-2xl shadow-2xl animate-scale-in">
+              <button onClick={() => setActivePopup(null)} aria-label="Close" className="dk-ghost dk-muted absolute top-4 right-4 flex h-8 w-8 items-center justify-center rounded-lg transition">
                 <X className="w-4 h-4" />
               </button>
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center">
-                  {activePopup.type === 'zoom' ? <Video className="w-4 h-4 text-indigo-600" /> : activePopup.type === 'resource' ? <FileDown className="w-4 h-4 text-indigo-600" /> : <Bell className="w-4 h-4 text-indigo-600" />}
+              <div className="flex items-center gap-2.5 mb-4">
+                <div className="dk-brandsoft w-9 h-9 rounded-xl flex items-center justify-center">
+                  {activePopup.type === 'zoom' ? <Video className="w-4 h-4" /> : activePopup.type === 'resource' ? <FileDown className="w-4 h-4" /> : <Bell className="w-4 h-4" />}
                 </div>
-                <span className="text-[10px] font-extrabold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full uppercase tracking-wider">{activePopup.type}</span>
+                <span className="dk-brandsoft text-xs font-medium px-2.5 py-0.5 rounded-full capitalize">{activePopup.type}</span>
               </div>
-              <h3 className="text-lg font-black text-slate-900 leading-tight mb-2">{activePopup.title}</h3>
-              <p className="text-sm text-slate-600 leading-relaxed mb-5 whitespace-pre-wrap">{activePopup.message}</p>
+              <h3 className="text-lg font-semibold dk-text leading-snug mb-2 pr-6">{activePopup.title}</h3>
+              <p className="text-sm dk-text2 leading-relaxed mb-5 whitespace-pre-wrap">{activePopup.message}</p>
               {activePopup.type === 'zoom' && activePopup.zoomLink && (
-                <a href={activePopup.zoomLink} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 w-full py-2.5 text-center bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold text-xs rounded-xl shadow-md hover:opacity-90 transition">
-                  <ExternalLink className="w-3.5 h-3.5" /> Join Zoom Meeting
+                <a href={activePopup.zoomLink} target="_blank" rel="noopener noreferrer" className="dk-btn flex items-center justify-center gap-2 w-full py-2.5 font-medium text-sm rounded-xl shadow-sm">
+                  <ExternalLink className="w-4 h-4" /> Join Zoom meeting
                 </a>
               )}
-              <p className="text-[10px] text-gray-400 mt-4 text-right">Published: {new Date(activePopup.createdAt).toLocaleString()}</p>
+              <p className="text-xs dk-muted mt-4 text-right">Published {new Date(activePopup.createdAt).toLocaleString()}</p>
             </div>
           </div>
         )}
 
         {showHistory && (
-          <div className="fixed inset-y-0 right-0 z-50 w-full max-w-sm bg-white shadow-2xl border-l border-gray-100 p-6 flex flex-col animate-slide-in">
-            <div className="flex justify-between items-center border-b pb-4 mb-4">
-              <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
-                <Bell className="w-4 h-4 text-gray-500" /> Notifications History
+          <div className="dk-card fixed inset-y-0 right-0 z-50 w-full max-w-sm shadow-2xl flex flex-col animate-slide-in !rounded-none">
+            <div className="dk-divider flex justify-between items-center border-b px-6 py-4">
+              <h3 className="text-base font-semibold dk-text flex items-center gap-2">
+                <Bell className="w-4 h-4 dk-muted" /> Notifications
               </h3>
-              <button onClick={() => setShowHistory(false)} className="text-gray-400 hover:text-gray-600 transition">
+              <button onClick={() => setShowHistory(false)} aria-label="Close notifications" className="dk-ghost dk-muted flex h-8 w-8 items-center justify-center rounded-lg transition">
                 <X className="w-4 h-4" />
               </button>
             </div>
-            <div className="space-y-4 flex-grow overflow-y-auto pr-1">
+            <div className="space-y-3 flex-grow overflow-y-auto p-6">
               {allNotifications.length === 0 ? (
-                <p className="text-xs text-gray-400 text-center py-10">No notifications broadcasted yet.</p>
+                <div className="text-center py-16">
+                  <span className="dk-sub dk-muted mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-xl"><Bell className="w-5 h-5" /></span>
+                  <p className="text-sm dk-text2">You're all caught up. No notifications yet.</p>
+                </div>
               ) : (
                 allNotifications.map((n) => (
-                  <div key={n.id} className="p-3.5 bg-slate-50 border border-slate-100 rounded-xl space-y-1.5">
+                  <div key={n.id} className="dk-sub p-4 rounded-xl space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-[9px] font-bold uppercase bg-white text-slate-700 px-2 py-0.5 rounded border">{n.type}</span>
-                      <span className="text-[10px] text-gray-400 font-medium">{new Date(n.createdAt).toLocaleDateString()}</span>
+                      <span className="dk-brandsoft text-xs font-medium capitalize px-2 py-0.5 rounded-md">{n.type}</span>
+                      <span className="text-xs dk-muted">{new Date(n.createdAt).toLocaleDateString()}</span>
                     </div>
-                    <h4 className="text-sm font-bold text-slate-900">{n.title}</h4>
-                    <p className="text-xs text-slate-600 leading-relaxed">{n.message}</p>
+                    <h4 className="text-sm font-semibold dk-text">{n.title}</h4>
+                    <p className="text-sm dk-text2 leading-relaxed">{n.message}</p>
                     {n.type === 'zoom' && n.zoomLink && (
-                      <a href={n.zoomLink} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 mt-1 text-[11px] font-bold text-blue-600 hover:underline">
-                        <ExternalLink className="w-3 h-3" /> Click here to join
+                      <a href={n.zoomLink} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs font-medium dk-brandtext hover:underline">
+                        <ExternalLink className="w-3 h-3" /> Join meeting
                       </a>
                     )}
                   </div>
@@ -645,45 +728,43 @@ export default function Dashboard() {
 
         {/* Mentor Detail Popup Modal with createPortal */}
         {selectedMentor && createPortal(
-          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm animate-fade-in" onClick={() => setSelectedMentor(null)}>
-            <div className="relative max-w-sm w-full bg-white rounded-[2rem] overflow-hidden shadow-2xl animate-scale-in" onClick={(e) => e.stopPropagation()}>
-              <button onClick={() => setSelectedMentor(null)} className="absolute top-4 right-4 z-20 bg-black/40 hover:bg-black/60 backdrop-blur-md text-white rounded-full p-2 transition-all">
-                <X className="w-5 h-5" />
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm animate-fade-in" onClick={() => setSelectedMentor(null)}>
+            <div className="dk-card relative max-w-sm w-full rounded-3xl overflow-hidden shadow-2xl animate-scale-in" onClick={(e) => e.stopPropagation()}>
+              <button onClick={() => setSelectedMentor(null)} aria-label="Close" className="absolute top-4 right-4 z-20 bg-black/40 hover:bg-black/60 backdrop-blur-md text-white rounded-full p-2 transition-all">
+                <X className="w-4 h-4" />
               </button>
-              
+
               <div className="w-full aspect-[4/5] relative">
                 <img src={selectedMentor.imageUrl || selectedMentor.image || '/default-avatar.png'} alt={selectedMentor.name} className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
-                
-                <div className="absolute bottom-0 left-0 w-full p-6 text-center z-10">
-                  <h3 className="text-2xl font-black text-white tracking-wide">{selectedMentor.name}</h3>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                <div className="absolute bottom-0 left-0 w-full p-6 z-10">
+                  <h3 className="text-2xl font-semibold tracking-tight text-white">{selectedMentor.name}</h3>
                   {selectedMentor.nickname && (
-                    <span className="inline-flex items-center gap-1 mt-2 text-xs font-bold px-3 py-1 bg-white/20 backdrop-blur-md text-white rounded-full border border-white/30">
+                    <span className="inline-flex items-center gap-1 mt-2 text-xs font-medium px-3 py-1 bg-white/20 backdrop-blur-md text-white rounded-full border border-white/30">
                       <Quote className="w-3 h-3" /> {selectedMentor.nickname}
                     </span>
                   )}
                 </div>
               </div>
-              
-              <div className="p-6 bg-white space-y-3">
-                <div className="bg-indigo-50/80 rounded-2xl p-4 border border-indigo-100 flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0">
-                    <Sparkles className="w-5 h-5 text-indigo-600" />
+
+              <div className="p-5 space-y-3">
+                <div className="dk-sub rounded-xl p-4 flex items-center gap-3">
+                  <div className="dk-brandsoft w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Sparkles className="w-5 h-5" />
                   </div>
                   <div>
-                    <p className="text-[10px] font-bold text-indigo-400 uppercase tracking-widest">Role / Subject</p>
-                    <p className="text-sm font-black text-indigo-900">{selectedMentor.role}</p>
+                    <p className="text-xs dk-muted">Role / subject</p>
+                    <p className="text-sm font-semibold dk-text">{selectedMentor.role}</p>
                   </div>
                 </div>
-                
-                <div className="flex gap-3">
-                  <div className="flex-1 bg-slate-50 rounded-2xl p-4 border border-slate-100 flex flex-col items-center justify-center text-center">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Batch</p>
-                    <p className="text-sm font-bold text-slate-700">{selectedMentor.batch}</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="dk-sub rounded-xl p-4">
+                    <p className="text-xs dk-muted mb-0.5">Batch</p>
+                    <p className="text-sm font-semibold dk-text">{selectedMentor.batch}</p>
                   </div>
-                  <div className="flex-1 bg-slate-50 rounded-2xl p-4 border border-slate-100 flex flex-col items-center justify-center text-center">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Dept</p>
-                    <p className="text-sm font-bold text-slate-700 capitalize">{selectedMentor.department}</p>
+                  <div className="dk-sub rounded-xl p-4">
+                    <p className="text-xs dk-muted mb-0.5">Department</p>
+                    <p className="text-sm font-semibold dk-text capitalize">{selectedMentor.department}</p>
                   </div>
                 </div>
               </div>
@@ -693,175 +774,236 @@ export default function Dashboard() {
         )}
 
         <div className="flex-grow space-y-8">
+          {/* Header */}
           <div className="flex justify-between items-start gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Welcome, {userData?.firstName || 'Student'}</h1>
-              <p className="mt-1 text-sm text-gray-500">Select a semester to view your subjects and learning materials.</p>
+              <p className="text-sm dk-muted">{todayLabel}</p>
+              <h1 className="mt-1 text-2xl sm:text-[28px] font-semibold tracking-tight dk-text">{greeting}, {userData?.firstName || 'Student'}</h1>
+              <p className="mt-1 text-sm dk-text2">Pick a semester to open your subjects and learning materials.</p>
             </div>
-            <button onClick={() => setShowHistory(true)} className="relative p-2.5 bg-slate-100 hover:bg-slate-200/80 rounded-xl transition group shrink-0">
-              <Bell className="w-5 h-5 text-slate-500" />
-              {allNotifications.length > 0 && (
-                <span className="absolute top-1.5 right-1.5 flex h-2 w-2 rounded-full bg-red-500 animate-ping" />
-              )}
-            </button>
+            <div className="flex items-center gap-2 shrink-0">
+              {/* Light / dark switch */}
+              <button
+                type="button"
+                role="switch"
+                aria-checked={isDark}
+                aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+                title={isDark ? 'Light mode' : 'Dark mode'}
+                onClick={toggleTheme}
+                className="dk-icon-btn dk-focus relative grid grid-cols-2 items-center h-11 w-[88px] p-1 rounded-xl"
+              >
+                <span aria-hidden="true" className={`dk-knob absolute top-1 left-1 h-[34px] w-[39px] rounded-lg transition-transform duration-300 ease-out ${isDark ? 'translate-x-[39px]' : 'translate-x-0'}`} />
+                <span className={`relative z-10 flex h-[34px] items-center justify-center transition-colors ${!isDark ? 'dk-brandtext' : 'dk-muted'}`}><Sun className="w-[18px] h-[18px]" /></span>
+                <span className={`relative z-10 flex h-[34px] items-center justify-center transition-colors ${isDark ? 'dk-brandtext' : 'dk-muted'}`}><Moon className="w-[18px] h-[18px]" /></span>
+              </button>
+
+              <button
+                onClick={() => setShowHistory(true)}
+                aria-label="Open notifications"
+                className="dk-icon-btn dk-focus relative flex h-11 w-11 items-center justify-center rounded-xl"
+              >
+                <Bell className="w-5 h-5" />
+                {allNotifications.length > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-semibold text-white ring-2" style={{ '--tw-ring-color': 'var(--dk-bg)' }}>
+                    {allNotifications.length > 9 ? '9+' : allNotifications.length}
+                  </span>
+                )}
+              </button>
+            </div>
           </div>
 
-          <div className="flex flex-wrap gap-2.5">
-            {academicTools.map((tool) => {
-              if (tool.isQuiz && !userData?.quizEnabled) return null
-              const IconComp = toolIconMap[tool.iconKey]
-              const sharedClass = `inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition bg-gradient-to-br ${tool.theme} border shadow-sm hover:shadow-md hover:-translate-y-0.5 duration-200 transform`
-              if (tool.isInternalTool) {
-                return (
-                  <Link key={tool.name} to={tool.path} className={sharedClass}>
-                    {IconComp && <IconComp className="w-3.5 h-3.5" />}
-                    <span>{tool.name}</span>
-                  </Link>
+          {/* Study tools */}
+          <section>
+            <h2 className="mb-3 text-sm font-semibold dk-text">Study tools</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+              {academicTools.map((tool) => {
+                if (tool.isQuiz && !userData?.quizEnabled) return null
+                const IconComp = toolIconMap[tool.iconKey]
+                const sharedClass = `group dk-card dk-card-i dk-focus dk-tone-${tool.tone} flex items-center gap-3 p-3 rounded-xl`
+                const inner = (
+                  <>
+                    <span className="dk-tile flex h-9 w-9 shrink-0 items-center justify-center rounded-lg">
+                      {IconComp && <IconComp className="w-[18px] h-[18px]" />}
+                    </span>
+                    <span className="text-[13px] font-medium leading-tight dk-text">{tool.name}</span>
+                    {!tool.isInternalTool && <ArrowUpRight className="ml-auto w-3.5 h-3.5 shrink-0 dk-muted transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />}
+                  </>
                 )
-              }
-              return (
-                <a key={tool.name} href={tool.path} target="_blank" rel="noopener noreferrer" className={sharedClass}>
-                  {IconComp && <IconComp className="w-3.5 h-3.5" />}
-                  <span>{tool.name}</span>
-                </a>
-              )
-            })}
-          </div>
+                if (tool.isInternalTool) {
+                  return (
+                    <Link key={tool.name} to={tool.path} className={sharedClass}>
+                      {inner}
+                    </Link>
+                  )
+                }
+                return (
+                  <a key={tool.name} href={tool.path} target="_blank" rel="noopener noreferrer" className={sharedClass}>
+                    {inner}
+                  </a>
+                )
+              })}
+            </div>
+          </section>
 
           {/* Live Lecture Card */}
-          <LiveNowCard />
+          <div className="dk-adapt empty:hidden"><LiveNowCard /></div>
 
           {/* Weekly Timetable */}
-          <WeeklyTimetable slots={timetableSlots} />
+          <div className="dk-adapt empty:hidden"><WeeklyTimetable slots={timetableSlots} /></div>
 
-          <div>
+          {/* Semesters */}
+          <section>
+            <div className="mb-3 flex items-baseline justify-between">
+              <h2 className="text-sm font-semibold dk-text">Your semesters</h2>
+              {!loading && semesters.length > 0 && <span className="text-xs dk-muted">{semesters.length} available</span>}
+            </div>
             {loading ? (
               <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
                 {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="h-32 rounded-xl bg-gray-100 animate-pulse" />
+                  <div key={i} className="h-36 rounded-2xl dk-skel" />
                 ))}
               </div>
             ) : semesters.length === 0 ? (
-              <div className="flex h-48 items-center justify-center rounded-2xl border border-dashed border-gray-200 bg-gradient-to-br from-gray-50 to-gray-100/50">
-                <p className="text-sm text-gray-400">No semesters available for your batch or department yet.</p>
+              <div className="dk-card flex h-48 flex-col items-center justify-center gap-2 rounded-2xl border-dashed px-6 text-center">
+                <span className="dk-sub dk-muted flex h-11 w-11 items-center justify-center rounded-xl"><BookOpen className="w-5 h-5" /></span>
+                <p className="text-sm dk-text2">No semesters are available for your batch or department yet.</p>
               </div>
             ) : (
-              <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
                 {semesters.map((s, i) => {
-                  const theme = SEMESTER_THEMES[i % SEMESTER_THEMES.length];
+                  const tone = SEMESTER_TONES[i % SEMESTER_TONES.length];
                   const SemIcon = semesterIcons[i % semesterIcons.length];
                   return (
-                    <Link 
-                      key={s.id} 
+                    <Link
+                      key={s.id}
                       to={`/dashboard/subjects/${s.id}`}
-                      onClick={(e) => handleSemesterClick(s, e)} 
-                      className={`group p-5 flex flex-col justify-between min-h-[140px] rounded-2xl border shadow-sm transition-all duration-300 transform hover:-translate-y-1 hover:shadow-md ${theme.bg} ${theme.border}`}
+                      onClick={(e) => handleSemesterClick(s, e)}
+                      className={`group dk-card dk-card-i dk-focus dk-tone-${tone} flex flex-col justify-between min-h-[148px] p-5 rounded-2xl hover:-translate-y-0.5`}
                     >
-                      <div>
-                        <div className={`mb-3 flex h-10 w-10 items-center justify-center rounded-xl group-hover:scale-110 transition duration-300 ${theme.iconBg}`}>
+                      <div className="flex items-start justify-between">
+                        <span className="dk-tile flex h-11 w-11 items-center justify-center rounded-xl">
                           <SemIcon className="w-5 h-5" />
-                        </div>
-                        <h3 className={`text-base font-bold transition duration-200 ${theme.text}`}>
-                          {formatSemesterName(s.name)}
-                        </h3>
+                        </span>
+                        <ArrowUpRight className="w-4 h-4 dk-muted transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                       </div>
-                      <p className="mt-3 text-[10px] text-gray-600 capitalize font-bold bg-white/80 backdrop-blur-sm px-2.5 py-1 rounded-md w-fit border border-gray-200/50">
-                        {s.department || 'Both'}
-                      </p>
+                      <div className="mt-5">
+                        <h3 className="text-base font-semibold dk-text">{formatSemesterName(s.name)}</h3>
+                        <p className="mt-1 text-xs dk-text2 capitalize">{s.department || 'Both'} department</p>
+                      </div>
                     </Link>
                   );
                 })}
               </div>
             )}
-          </div>
+          </section>
 
-          <div className="mt-12 bg-gradient-to-br from-slate-50 to-blue-50/30 rounded-2xl shadow-sm border border-slate-200/80 p-6 md:p-8 overflow-hidden">
-            <div className="mb-6 border-b border-slate-100 pb-4 flex justify-between items-center">
-              <div>
-                <h3 className="text-sm font-bold text-slate-900 tracking-wide uppercase flex items-center gap-2">
-                  <Users className="w-4 h-4 text-indigo-500" /> Our Mentors
-                </h3>
-                <p className="text-xs text-slate-500 mt-0.5">Learn from the experienced undergraduates</p>
+          {/* Mentors */}
+          <section className="dk-card rounded-2xl p-6 md:p-8 overflow-hidden">
+            <div className="dk-divider mb-6 border-b pb-4 flex justify-between items-center gap-4">
+              <div className="flex items-center gap-3">
+                <span className="dk-brandsoft flex h-9 w-9 items-center justify-center rounded-xl"><Users className="w-[18px] h-[18px]" /></span>
+                <div>
+                  <h3 className="text-sm font-semibold dk-text">Our mentors</h3>
+                  <p className="text-xs dk-text2">Learn from experienced undergraduates</p>
+                </div>
               </div>
               {!mentorsLoading && displayMentors.length > 0 && (
-                <div className="flex space-x-1.5">
-                  {displayMentors.map((_, idx) => (
-                    <button key={idx} onClick={() => setActiveMentorIdx(idx)} className={`h-1.5 rounded-full transition-all duration-300 ${activeMentorIdx === idx ? 'w-5 bg-indigo-600' : 'w-1.5 bg-slate-300 hover:bg-slate-400'}`} />
-                  ))}
+                <div className="flex items-center gap-2">
+                  <button onClick={() => setActiveMentorIdx((p) => (p - 1 + displayMentors.length) % displayMentors.length)} aria-label="Previous mentor" className="dk-icon-btn dk-focus hidden sm:flex h-8 w-8 items-center justify-center rounded-lg">
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  <div className="flex items-center space-x-1.5">
+                    {displayMentors.map((_, idx) => (
+                      <button key={idx} onClick={() => setActiveMentorIdx(idx)} aria-label={`Show mentor ${idx + 1}`} className={`h-1.5 rounded-full transition-all duration-300 ${activeMentorIdx === idx ? 'w-5 bg-indigo-500' : 'w-1.5 dk-dot'}`} />
+                    ))}
+                  </div>
+                  <button onClick={() => setActiveMentorIdx((p) => (p + 1) % displayMentors.length)} aria-label="Next mentor" className="dk-icon-btn dk-focus hidden sm:flex h-8 w-8 items-center justify-center rounded-lg">
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
                 </div>
               )}
             </div>
 
             {renderMentorSlider()}
-          </div>
+          </section>
 
-          <div className="mt-12 bg-gradient-to-br from-indigo-50/40 to-purple-50/40 rounded-2xl shadow-sm border border-indigo-100/80 p-6 md:p-8 space-y-4">
-            <div>
-              <h3 className="text-sm font-bold text-indigo-950 uppercase tracking-wide flex items-center gap-2">
-                <MessageSquare className="w-4 h-4 text-indigo-500" /> Dashboard Feedback
-              </h3>
-              <p className="text-xs text-indigo-700/70 mt-0.5">Have suggestions or issues regarding LMS? Submit directly to admin.</p>
+          {/* Feedback */}
+          <section className="dk-card rounded-2xl p-6 md:p-8 space-y-4">
+            <div className="flex items-center gap-3">
+              <span className="dk-brandsoft flex h-9 w-9 items-center justify-center rounded-xl"><MessageSquare className="w-[18px] h-[18px]" /></span>
+              <div>
+                <h3 className="text-sm font-semibold dk-text">Send feedback</h3>
+                <p className="text-xs dk-text2">Share a suggestion or report an issue. It goes straight to the admin.</p>
+              </div>
             </div>
             <form onSubmit={handleCommentSubmit} className="space-y-3">
-              <textarea rows="3" value={commentText} onChange={(e) => setCommentText(e.target.value)} placeholder="Write your suggestions or feedback here..." className="w-full text-sm p-3 bg-white/80 border border-indigo-100 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:bg-white transition outline-none resize-none placeholder-gray-400 shadow-inner" maxLength={500} />
-              <div className="flex justify-end">
-                <button type="submit" disabled={submittingComment || !commentText.trim()} className="inline-flex items-center gap-1.5 px-5 py-2.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50">
-                  {submittingComment ? 'Submitting...' : 'Submit Feedback'} <Send className="w-3 h-3" />
+              <textarea rows="3" value={commentText} onChange={(e) => setCommentText(e.target.value)} placeholder="Write your suggestion or feedback here..." className="dk-input w-full text-sm p-3.5 rounded-xl resize-none" maxLength={500} />
+              <div className="flex items-center justify-between">
+                <span className="text-xs dk-muted">{commentText.length}/500</span>
+                <button type="submit" disabled={submittingComment || !commentText.trim()} className="dk-btn dk-focus inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium rounded-xl shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">
+                  {submittingComment ? 'Sending...' : 'Send feedback'} <Send className="w-3.5 h-3.5" />
                 </button>
               </div>
             </form>
-          </div>
+          </section>
         </div>
 
-        <footer className="mt-auto pt-8 pb-4 border-t border-gray-100">
+        <footer className="dk-divider mt-auto pt-6 pb-4 border-t">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            {/* Left: Logo + FCBS DIGI KUPPIYA text, Privacy Policy underneath */}
-            <div className="flex flex-col items-start gap-1.5">
-              <div className="flex items-center gap-2.5">
-                <img src={logo} alt="Uniflow Logo" className="h-7 w-auto opacity-80 object-contain" />
-                <span className="text-sm font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent tracking-tight">FCBS DIGI KUPPIYA</span>
-                <Link to="/privacy" className="flex items-center gap-1 text-xs text-gray-500 hover:text-indigo-600 transition-colors">
+            <div className="flex items-center gap-3">
+              <img src={logo} alt="Uniflow Logo" className="h-7 w-auto opacity-90 object-contain" />
+              <span className="text-sm font-semibold tracking-tight dk-text">FCBS DIGI KUPPIYA</span>
+              <span className="h-4 w-px dk-dot" />
+              <Link to="/privacy" className="flex items-center gap-1 text-xs dk-text2 hover:underline transition-colors">
                 <ShieldCheck className="w-3.5 h-3.5" />
                 Privacy Policy
               </Link>
-              </div>
             </div>
-            {/* Right: Copyright + Developer */}
             <div className="text-center md:text-right space-y-0.5">
-              <p className="text-xs font-medium text-gray-400 tracking-wide">&copy; {new Date().getFullYear()} FCBS DIGI KUPPIYA. All rights reserved.</p>
-              <p className="text-[11px] text-gray-400 font-medium">Developed by <span className="font-semibold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent hover:opacity-80 transition cursor-default">Mr.Thanush</span></p>
+              <p className="text-xs dk-text2">&copy; {new Date().getFullYear()} FCBS DIGI KUPPIYA. All rights reserved.</p>
+              <p className="text-xs dk-muted">Developed by <span className="font-medium dk-text2">Mr.Thanush</span></p>
             </div>
           </div>
         </footer>
       </div>
 
+      {/* AI chat widget */}
       <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end pointer-events-none">
         {isChatOpen && (
-          <div className="mb-4 w-80 sm:w-96 h-[400px] bg-white rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.3)] border border-gray-200 flex flex-col overflow-hidden animate-scale-in origin-bottom-right pointer-events-auto">
-            <div className="bg-gradient-to-r from-orange-600 to-amber-600 p-4 flex justify-between items-center text-white">
-              <div className="flex items-center gap-2">
-                <Bot className="w-5 h-5" />
+          <div className="dk-card mb-4 w-80 sm:w-96 h-[440px] rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-scale-in origin-bottom-right pointer-events-auto">
+            <div className="dk-chat-head px-4 py-3.5 flex justify-between items-center">
+              <div className="flex items-center gap-3">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-500"><Bot className="w-5 h-5" /></span>
                 <div>
-                  <h3 className="font-bold text-sm">DIGI KUPPIYA AI Assistant</h3>
-                  <p className="text-[10px] text-orange-100">Developed by Mr.Thanush</p>
+                  <h3 className="font-semibold text-sm leading-tight">DIGI KUPPIYA AI Assistant</h3>
+                  <p className="text-xs text-slate-400">Developed by Mr.Thanush</p>
                 </div>
               </div>
-              <button onClick={() => setIsChatOpen(false)} className="text-orange-100 hover:text-white transition">
+              <button onClick={() => setIsChatOpen(false)} aria-label="Close chat" className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-white/10 hover:text-white transition">
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="flex-1 p-4 overflow-y-auto bg-gray-50 space-y-3">
+            <div className="flex-1 p-4 overflow-y-auto space-y-3" style={{ background: 'var(--dk-bg)' }}>
               {chatMessages.map((msg, idx) => (
                 <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[85%] p-3 rounded-2xl text-sm shadow-sm ${msg.role === 'user' ? 'bg-orange-600 text-white rounded-br-sm' : 'bg-white text-gray-800 border border-gray-100 rounded-bl-sm'}`}>
+                  <div className={`max-w-[85%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed ${msg.role === 'user' ? 'dk-btn rounded-br-md' : 'dk-card dk-text rounded-bl-md'}`}>
                     {msg.text}
                   </div>
                 </div>
               ))}
+              {chatMessages.length === 1 && !isChatLoading && (
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {QUICK_PROMPTS.map((p) => (
+                    <button key={p} type="button" onClick={() => setChatInput(p)} className="dk-sub dk-text2 dk-ghost rounded-full px-3 py-1.5 text-xs font-medium transition">
+                      {p}
+                    </button>
+                  ))}
+                </div>
+              )}
               {isChatLoading && (
                 <div className="flex justify-start">
-                  <div className="bg-white border border-gray-100 text-gray-400 text-xs p-3 rounded-2xl rounded-bl-sm flex gap-1">
+                  <div className="dk-card dk-muted text-sm px-3.5 py-2 rounded-2xl rounded-bl-md flex gap-1">
                     <span className="animate-bounce">.</span><span className="animate-bounce delay-100">.</span><span className="animate-bounce delay-200">.</span>
                   </div>
                 </div>
@@ -869,19 +1011,20 @@ export default function Dashboard() {
               <div ref={chatEndRef} />
             </div>
 
-            <form onSubmit={handleChatSubmit} className="p-3 bg-white border-t border-gray-100 flex gap-2">
-              <input 
-                type="text" 
-                value={chatInput} 
-                onChange={(e) => setChatInput(e.target.value)} 
-                placeholder="Ask DIGI KUPPIYA AI anything..." 
-                className="flex-1 bg-gray-50 border border-gray-200 text-sm rounded-xl px-4 py-2 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition"
+            <form onSubmit={handleChatSubmit} className="dk-divider p-3 border-t flex gap-2" style={{ background: 'var(--dk-surface)' }}>
+              <input
+                type="text"
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                placeholder="Ask DIGI KUPPIYA AI anything..."
+                className="dk-input flex-1 text-sm rounded-xl px-4 py-2"
                 disabled={isChatLoading}
               />
-              <button 
-                type="submit" 
+              <button
+                type="submit"
+                aria-label="Send message"
                 disabled={!chatInput.trim() || isChatLoading}
-                className="bg-orange-600 text-white p-2.5 rounded-xl hover:bg-orange-700 disabled:opacity-50 transition shadow-sm"
+                className="dk-btn p-2.5 rounded-xl disabled:opacity-50 shadow-sm"
               >
                 <Send className="w-4 h-4" />
               </button>
@@ -889,15 +1032,12 @@ export default function Dashboard() {
           </div>
         )}
 
-        <button 
+        <button
           onClick={() => setIsChatOpen(!isChatOpen)}
-          className="h-14 w-14 bg-gradient-to-r from-orange-600 to-amber-600 text-white rounded-full shadow-xl flex items-center justify-center hover:scale-105 hover:shadow-2xl transition-all duration-300 border-2 border-white/20 pointer-events-auto"
+          aria-label={isChatOpen ? 'Close chat' : 'Open AI assistant'}
+          className="dk-btn dk-focus h-14 w-14 rounded-full shadow-lg shadow-indigo-600/30 flex items-center justify-center hover:scale-105 transition-transform duration-300 pointer-events-auto"
         >
-          {isChatOpen ? (
-            <X className="w-6 h-6" />
-          ) : (
-            <Bot className="w-7 h-7" />
-          )}
+          {isChatOpen ? <X className="w-6 h-6" /> : <Bot className="w-7 h-7" />}
         </button>
       </div>
     </>
