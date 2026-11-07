@@ -2,6 +2,7 @@ import { useState, useEffect, useLayoutEffect } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { getSubjects, getSemesters, getChapters } from '../../services/firestore'
 import { ArrowLeft, BookOpen, Stars, ChevronRight, Layers, AlertCircle, Sun, Moon } from 'lucide-react'
+import { getSpecializationsByDepartment, getSpecializationLabel, requiresSpecializationChoice } from '../../utils/constants'
 
 // ---- Light / dark theme (same storage key + <html data-dk> attribute as the Dashboard, so the choice carries across pages) ----
 
@@ -96,37 +97,59 @@ const SUBJECT_TONES = ['indigo', 'emerald', 'violet', 'sky', 'rose', 'teal', 'am
 
 export default function SubjectList() {
   const { semesterId } = useParams()
-  const [searchParams] = useSearchParams()
-  
+  const [searchParams, setSearchParams] = useSearchParams()
+
   const [semester, setSemester] = useState(null)
   const [subjects, setSubjects] = useState([])
   const [chapterCounts, setChapterCounts] = useState({})
   const [loading, setLoading] = useState(true)
+  const [showSpecModal, setShowSpecModal] = useState(false)
   const { isDark, toggleTheme } = useDkTheme()
 
-  const currentSpec = searchParams.get('spec') || 'all'
+  // `spec` is transient (URL param only) — never written to the user profile.
+  const currentSpec = searchParams.get('spec') || null
 
+  // Derived per-render from the resolved semester.
+  const requiresSpec = semester
+    ? requiresSpecializationChoice(semester.department, semester.name)
+    : false
+  const needsSpecChoice = requiresSpec && currentSpec === null
+
+  // 1) Resolve the semester record.
   useEffect(() => {
-    const load = async () => {
+    const loadSem = async () => {
       setLoading(true)
       const allSemesters = await getSemesters()
-      const sem = allSemesters.find((s) => s.id === semesterId)
-      setSemester(sem || null)
+      setSemester(allSemesters.find((s) => s.id === semesterId) || null)
+      setLoading(false)
+    }
+    loadSem()
+  }, [semesterId])
+
+  // 2) Fetch + filter subjects only once a spec is chosen (or not required).
+  useEffect(() => {
+    if (!semester) return
+
+    const load = async () => {
+      setLoading(true)
+
+      // Upper-year semester with no spec chosen yet: show nothing until the user picks.
+      if (needsSpecChoice) {
+        setSubjects([])
+        setChapterCounts({})
+        setLoading(false)
+        return
+      }
 
       const subs = await getSubjects(semesterId)
-      
-      const isBMS = sem?.department === 'bms'
-      const isLCS = sem?.department === 'lcs'
-      const isBMSYear3or4 = isBMS && (sem?.name?.includes('Y3') || sem?.name?.includes('Y4'))
-      const isLCSYear2Plus = isLCS && (sem?.name?.includes('Y2') || sem?.name?.includes('Y3') || sem?.name?.includes('Y4'))
-      
-      let filteredSubs = subs;
-      if (isBMSYear3or4 || isLCSYear2Plus) {
-        filteredSubs = subs.filter(sub => {
-          return !sub.specialization || sub.specialization === 'all' || sub.specialization === currentSpec
-        })
+
+      let filteredSubs = subs
+      if (requiresSpec) {
+        filteredSubs = subs.filter((sub) =>
+          !sub.specialization || sub.specialization === 'all' || sub.specialization === currentSpec
+        )
       }
-      
+
       setSubjects(filteredSubs)
 
       const counts = {}
@@ -138,7 +161,27 @@ export default function SubjectList() {
       setLoading(false)
     }
     load()
-  }, [semesterId, currentSpec])
+  }, [semester, semesterId, currentSpec, requiresSpec, needsSpecChoice])
+
+  const pickSpec = (value) => {
+    setSearchParams({ spec: value })
+    setShowSpecModal(false)
+  }
+
+  const specLabel = currentSpec
+    ? getSpecializationLabel(currentSpec, semester?.department)
+    : 'Select specialization'
+
+  const formatSemName = (name) =>
+    name
+      .replace(/Y1/g, 'Year I ')
+      .replace(/Y2/g, 'Year II ')
+      .replace(/Y3/g, 'Year III ')
+      .replace(/Y4/g, 'Year IV ')
+      .replace(/S1/g, 'Semester I')
+      .replace(/S2/g, 'Semester II')
+
+  const totalChapters = Object.values(chapterCounts).reduce((a, b) => a + b, 0)
 
   if (loading) {
     return (
@@ -178,27 +221,38 @@ export default function SubjectList() {
     )
   }
 
-  const getSpecBadgeLabel = (spec, dept) => {
-    if (dept === 'lcs') {
-      const labels = {
-        communication: 'Communication',
-        languages: 'Languages',
-        all: 'General'
-      }
-      return labels[spec] || 'General'
-    }
-    const labels = {
-      accounting: 'Accounting Specialization',
-      marketing: 'Marketing Specialization',
-      hrm: 'HRM Specialization',
-      management: 'Management Specialization',
-      info_management: 'Information Management Specialization',
-      all: 'General Degree'
-    }
-    return labels[spec] || 'General'
-  }
-
-  const totalChapters = Object.values(chapterCounts).reduce((a, b) => a + b, 0)
+  // Specialization prompt modal — appears the moment an upper-year semester is opened
+  // and no path has been chosen yet for this course view.
+  const specModal = (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowSpecModal(false)}>
+      <div className="dk-card w-full max-w-md p-6 rounded-2xl shadow-2xl mx-4" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center gap-2 mb-1">
+          <Stars className="w-5 h-5 dk-brandtext" />
+          <h2 className="text-lg font-bold dk-text">Choose your specialization path</h2>
+        </div>
+        <p className="text-sm dk-text2 mb-6">
+          {formatSemName(semester.name)} ({semester.department.toUpperCase()}) — select the stream whose subjects you want to view.
+        </p>
+        <div className="space-y-3">
+          {getSpecializationsByDepartment(semester.department).map((s) => (
+            <button
+              key={s.value}
+              onClick={() => pickSpec(s.value)}
+              className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border dk-sub text-sm dk-text transition ${
+                currentSpec === s.value ? 'dk-brandsoft dk-brandtext border-dk-brand' : 'hover:dk-brandsoft hover:dk-brandtext'
+              }`}
+            >
+              <span>{s.label}</span>
+              <ChevronRight className="w-4 h-4 dk-muted" />
+            </button>
+          ))}
+        </div>
+        <p className="mt-5 text-center text-xs dk-muted">
+          This choice only affects this course view — it is not saved to your profile.
+        </p>
+      </div>
+    </div>
+  )
 
   return (
     <div className="dk-page animate-fade-in p-3 sm:p-6 rounded-2xl min-h-screen">
@@ -208,10 +262,10 @@ export default function SubjectList() {
       <div className="mb-5 flex items-start justify-between gap-4">
         <div>
           <Link to="/dashboard" className="dk-focus dk-brandtext group inline-flex items-center gap-1.5 rounded-lg text-sm font-medium">
-            <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" /> Back to Semesters
+            <ArrowLeft className="w-3 h-3 group-hover:-translate-x-0.5 transition-transform" /> Back to Semesters
           </Link>
           <h1 className="mt-3 text-2xl sm:text-[28px] font-semibold tracking-tight dk-text">
-            {semester.name.replace(/Y1/g, 'Year I ').replace(/Y2/g, 'Year II ').replace(/Y3/g, 'Year III ').replace(/Y4/g, 'Year IV ').replace(/S1/g, 'Semester I').replace(/S2/g, 'Semester II')}
+            {formatSemName(semester.name)}
           </h1>
           <p className="mt-1 text-sm dk-text2 capitalize">{semester.department} Department</p>
         </div>
@@ -220,15 +274,20 @@ export default function SubjectList() {
 
       {/* Summary chips */}
       <div className="mb-6 flex flex-wrap items-center gap-2">
-        {semester.department === 'bms' && (semester.name?.includes('Y3') || semester.name?.includes('Y4')) && (
-          <span className="dk-tone-indigo dk-tile inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg w-max">
-            <Stars className="w-3.5 h-3.5" /> {getSpecBadgeLabel(currentSpec, 'bms')}
-          </span>
-        )}
-
-        {semester.department === 'lcs' && (semester.name?.includes('Y2') || semester.name?.includes('Y3') || semester.name?.includes('Y4')) && (
-          <span className="dk-tone-emerald dk-tile inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg w-max">
-            <Stars className="w-3.5 h-3.5" /> {getSpecBadgeLabel(currentSpec, 'lcs')}
+        {requiresSpec && (
+          <span
+            className="dk-tone-indigo dk-tile inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg w-max cursor-pointer hover:opacity-80 transition"
+            onClick={() => setShowSpecModal(true)}
+            title="Change specialization"
+          >
+            <Stars className="w-3.5 h-3.5" /> {specLabel}
+            {currentSpec ? (
+              <button onClick={(e) => { e.stopPropagation(); setShowSpecModal(true) }} className="ml-1.5 text-xs dk-muted underline underline-offset-2 hover:dk-brandtext">
+                Change
+              </button>
+            ) : (
+              <span className="ml-1 animate-pulse text-xs dk-brandtext">&#9733;</span>
+            )}
           </span>
         )}
 
@@ -240,7 +299,12 @@ export default function SubjectList() {
         </span>
       </div>
 
-      {subjects.length === 0 ? (
+      {needsSpecChoice ? (
+        <div className="dk-card flex h-64 flex-col items-center justify-center gap-3 rounded-2xl border-dashed px-6 text-center">
+          <span className="dk-sub dk-muted flex h-11 w-11 items-center justify-center rounded-xl"><Stars className="w-5 h-5" /></span>
+          <p className="text-sm dk-text2">Choose a specialization path above to view subjects.</p>
+        </div>
+      ) : subjects.length === 0 ? (
         <div className="dk-card flex h-48 flex-col items-center justify-center gap-2 rounded-2xl border-dashed px-6 text-center">
           <span className="dk-sub dk-muted flex h-11 w-11 items-center justify-center rounded-xl"><BookOpen className="w-5 h-5" /></span>
           <p className="text-sm dk-text2">No subjects available for this stream yet.</p>
@@ -250,7 +314,7 @@ export default function SubjectList() {
           {subjects.map((sub, i) => {
             const tone = SUBJECT_TONES[i % SUBJECT_TONES.length]
             return (
-              <Link key={sub.id} to={`/dashboard/subjects/${semesterId}/subject/${sub.id}?spec=${currentSpec}`}
+              <Link key={sub.id} to={`/dashboard/subjects/${semesterId}/subject/${sub.id}?spec=${currentSpec || 'all'}`}
                 className={`group dk-card dk-card-i dk-focus dk-tone-${tone} flex flex-col justify-between min-h-[168px] p-5 rounded-2xl`}>
                 <div>
                   <div className="mb-4 flex items-center justify-between gap-3">
@@ -278,6 +342,9 @@ export default function SubjectList() {
           })}
         </div>
       )}
+
+      {/* Specialization prompt modal (transient — never written to profile) */}
+      {(needsSpecChoice || showSpecModal) && requiresSpec && specModal}
     </div>
   )
 }
