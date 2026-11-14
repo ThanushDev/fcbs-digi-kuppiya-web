@@ -5,7 +5,6 @@ const TOOLS_MAP = {
   'qr': { title: 'QR Code Generator', url: 'https://thanushdev.github.io/Qr-Genarater/' },
   'ai-humanizer': { title: 'AI Humanizer', url: 'https://thanushdev.github.io/AI-Humanizer/' },
   'cv-maker': { title: 'Premium CV Maker', url: 'https://thanushdev.github.io/DigiSolutionsCV/' },
-  'pdf-tool': { title: 'PDF Generator Tool', url: 'https://thanushdev.github.io/Pdftool/' },
 }
 
 export default function ToolViewer() {

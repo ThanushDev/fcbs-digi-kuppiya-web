@@ -11,7 +11,8 @@ import {
   QrCode, Bot, FileText, FileDown, Bell, X, ExternalLink, Send, ChevronRight,
   DollarSign, Target, Users, MessageSquare, Sparkles, Lightbulb, Quote,
   Upload, Download, ZoomIn, CheckCircle, AlertCircle, Info, HelpCircle,
-  ArrowUpRight, Volume2, VolumeX, Video, ShieldCheck, Sun, Moon, ChevronLeft
+  ArrowUpRight, Volume2, VolumeX, Video, ShieldCheck, Sun, Moon, ChevronLeft,
+  Wrench
 } from 'lucide-react'
 import logo from '../../assets/logo.png'
 import LiveNowCard from '../../components/timetable/LiveNowCard'
@@ -95,8 +96,8 @@ const formatSemesterName = (name) => {
 
 const toolIconMap = {
   'quiz': ClipboardList, 'attendance': BarChart3, 'gpa': Target, 'ca': BookOpen,
-  'finance': DollarSign, 'qr': QrCode, 'ai': Bot, 'cv': FileText, 'pdf': FileDown,
-  'documents': FileText
+  'finance': DollarSign, 'qr': QrCode, 'ai': Bot, 'cv': FileText, 'documents': FileText,
+  'tools': Wrench
 }
 
 const academicTools = [
@@ -108,8 +109,8 @@ const academicTools = [
   { name: 'QR Generator', path: '/dashboard/tools/qr', iconKey: 'qr', isInternalTool: true, tone: 'slate' },
   { name: 'AI Humanizer', path: '/dashboard/tools/ai-humanizer', iconKey: 'ai', isInternalTool: true, tone: 'fuchsia' },
   { name: 'CV Maker', path: 'https://digi-solutions-cv.vercel.app/', iconKey: 'cv', isExternal: true, tone: 'indigo' },
-  { name: 'PDF Generator', path: '/dashboard/tools/pdf-tool', iconKey: 'pdf', isInternalTool: true, tone: 'teal' },
   { name: 'Important Documents', path: '/dashboard/documents', iconKey: 'documents', isInternalTool: true, tone: 'sky' },
+  { name: 'Tools Hub', path: '/dashboard/tools', iconKey: 'tools', isInternalTool: true, tone: 'indigo' },
 ]
 
 export default function Dashboard() {

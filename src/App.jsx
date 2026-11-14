@@ -19,8 +19,9 @@ import QuizTake from './pages/student/QuizTake'
 import QuizResult from './pages/student/QuizResult'
 import SearchResults from './pages/student/SearchResults'
 import Profile from './pages/student/Profile'
-import ToolViewer from './pages/student/ToolViewer'
 import GPACalculatorWrapper from './pages/student/GPACalculatorWrapper'
+import ToolsHub from './components/tools/ToolsHub'
+import ToolsRouter from './components/tools/ToolsRouter'
 import AttendanceCalculator from './pages/student/AttendanceCalculator'
 import CACalculator from './pages/student/CACalculator'
 import FinanceTracker from './pages/student/FinanceTracker'
@@ -98,7 +99,8 @@ export default function App() {
                 <Route path="/dashboard/quizzes/:quizId/result/:attemptId" element={<QuizResult />} />
                 <Route path="/profile" element={<Profile />} />
 
-                <Route path="/dashboard/tools/:toolKey" element={<ToolViewer />} />
+                <Route path="/dashboard/tools" element={<ToolsHub />} />
+                <Route path="/dashboard/tools/:toolId" element={<ToolsRouter />} />
                 <Route path="/dashboard/gpa" element={<GPACalculatorWrapper />} />
                 <Route path="/dashboard/attendance" element={<AttendanceCalculator />} />
                 <Route path="/dashboard/ca" element={<CACalculator />} />

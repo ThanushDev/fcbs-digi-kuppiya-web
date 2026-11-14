@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import {
   LayoutDashboard, ClipboardList, BarChart3, Target, BookOpen, DollarSign,
-  QrCode, Bot, FileText, FileDown, Download, X, Menu, GraduationCap, ChevronRight,
+  QrCode, Bot, FileText, Download, X, Menu, GraduationCap, ChevronRight,
   ShieldCheck
 } from 'lucide-react'
 
@@ -26,7 +26,6 @@ export default function Sidebar() {
     { name: 'QR Generator', path: '/dashboard/tools/qr', icon: QrCode, isInternalTool: true },
     { name: 'AI Humanizer', path: '/dashboard/tools/ai-humanizer', icon: Bot, isInternalTool: true },
     { name: 'CV Maker', path: '/dashboard/tools/cv-maker', icon: FileText, isInternalTool: true },
-    { name: 'PDF Generator', path: '/dashboard/tools/pdf-tool', icon: FileDown, isInternalTool: true },
   ]
 
   return (
