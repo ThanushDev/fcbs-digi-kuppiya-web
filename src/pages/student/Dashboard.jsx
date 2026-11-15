@@ -119,6 +119,12 @@ export default function Dashboard() {
   const navigate = useNavigate()
   const [semesters, setSemesters] = useState([])
   const [mentors, setMentors] = useState([])
+  const [embeddedTool, setEmbeddedTool] = useState(null)
+
+  const EXTERNAL_TOOL_URLS = {
+    'qr': 'https://thanushdev.github.io/Qr-Genarater/',
+    'ai-humanizer': 'https://thanushdev.github.io/AI-Humanizer/',
+  }
   const [mentorsLoading, setMentorsLoading] = useState(true)
   const [loading, setLoading] = useState(true)
   const [activeMentorIdx, setActiveMentorIdx] = useState(0)
@@ -830,6 +836,17 @@ export default function Dashboard() {
                     {!tool.isInternalTool && <ArrowUpRight className="ml-auto w-3.5 h-3.5 shrink-0 dk-muted transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />}
                   </>
                 )
+                if (tool.isExternalTool || tool.id === 'qr' || tool.id === 'ai-humanizer') {
+                  return (
+                    <button
+                      key={tool.name}
+                      onClick={() => setEmbeddedTool(tool.id)}
+                      className={sharedClass}
+                    >
+                      {inner}
+                    </button>
+                  )
+                }
                 if (tool.isInternalTool) {
                   return (
                     <Link key={tool.name} to={tool.path} className={sharedClass}>
@@ -845,6 +862,38 @@ export default function Dashboard() {
               })}
             </div>
           </section>
+
+          {/* Embedded External Tool View */}
+          {embeddedTool && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+              <div className="relative w-full max-w-4xl max-h-[90vh] rounded-2xl bg-white dark:bg-gray-900 overflow-hidden shadow-2xl animate-scale-in">
+                <button
+                  onClick={() => setEmbeddedTool(null)}
+                  className="absolute top-4 right-4 z-10 bg-black/40 hover:bg-black/60 backdrop-blur-md text-white rounded-full p-2 transition-all"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+                <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+                  <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+                    {embeddedTool === 'qr' ? 'QR Generator' : 'AI Humanizer'}
+                  </h2>
+                  <a
+                    href={EXTERNAL_TOOL_URLS[embeddedTool]}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs font-bold text-gray-900 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400 underline"
+                  >
+                    Open in New Tab
+                  </a>
+                </div>
+                <iframe
+                  src={EXTERNAL_TOOL_URLS[embeddedTool]}
+                  className="w-full h-[calc(100vh-240px)] border-none"
+                  title={embeddedTool === 'qr' ? 'QR Generator' : 'AI Humanizer'}
+                />
+              </div>
+            </div>
+          )}
 
           {/* Live Lecture Card */}
           <div className="dk-adapt empty:hidden"><LiveNowCard /></div>

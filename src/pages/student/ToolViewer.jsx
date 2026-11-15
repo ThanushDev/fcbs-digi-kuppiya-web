@@ -1,4 +1,3 @@
-import { useParams } from 'react-router-dom'
 import { Wrench } from 'lucide-react'
 
 const TOOLS_MAP = {
@@ -7,8 +6,7 @@ const TOOLS_MAP = {
   'cv-maker': { title: 'Premium CV Maker', url: 'https://thanushdev.github.io/DigiSolutionsCV/' },
 }
 
-export default function ToolViewer() {
-  const { toolKey } = useParams()
+export default function ToolViewer({ toolKey }) {
   const tool = TOOLS_MAP[toolKey]
 
   if (!tool) {
